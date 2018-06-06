@@ -1,0 +1,20 @@
+	
+	
+	I n s t a l l   o n   O S / 2
+	+----------------------------+
+
+							
+Just a couple of words about how to install the package.
+
+
+	1. Download it.
+	
+	2. Unzip the zipfile(s) in the desired directory.
+	
+	3. Go to usr/lib and run MakeOmfLibs.cmd
+	
+	4. Setup the environment using the gccenv.cmd rexx script which is
+	   located in usr/bin. "gccenv.cmd /?" for usage.
+
+	5. If you wanna use -Zomf you should check the usage output from emxomfld
+	   carefully, cause additional environment setup might be required.

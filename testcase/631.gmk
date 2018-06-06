@@ -1,0 +1,55 @@
+# $Id: 631.gmk 672 2003-09-09 13:47:42Z bird $
+## @file
+#
+# _System declaration and definition testcases.
+#
+# InnoTek Systemberatung GmbH confidential
+#
+# Copyright (c) 2003 InnoTek Systemberatung GmbH
+# Author: knut st. osmundsen <bird-srcspam@anduin.net>
+#
+# All Rights Reserved
+#
+#
+
+TESTCASE= 631
+CFLAGS  = -Zomf
+O		= .obj
+A	    = .lib
+CC		= gcc
+
+EXEOBJS = $(TESTCASE)main$O $(TESTCASE)asm$O
+	
+		
+all: $(TESTCASE).exe
+
+check: all
+	$(TESTCASE).exe
+	
+install:	
+	
+clean distclean:
+	rm -f *$(TESTCASE)*.obj *$(TESTCASE)*.o \
+	      *$(TESTCASE)*.lib *$(TESTCASE)*.a \
+		  *$(TESTCASE)*.map $(TESTCASE)*.exe
+
+
+.SUFFIXES:
+.SUFFIXES: .c .cpp .asm .s .o .obj
+.c$O:
+	$(CC) -c $(CFLAGS) -o "$(@)" "$<"
+	
+.cpp$O:
+	$(CC) -c $(CFLAGS) -o "$(@)" "$<"
+
+.asm$O:
+	../tools/x86.os2/masm/v6.0/binp/ml.exe -c /Zi $<
+	
+.s$O:
+	$(CC) -c $(CFLAGS) -o "$(@)" "$<"
+	
+				
+$(TESTCASE).exe: $(EXEOBJS) $(TESTCASE).gmk
+	if $(CC) -Zmap $(CFLAGS) -o "$@" $(EXEOBJS) -lstdc++; then true; \
+	else	rm -f $@; false; \
+	fi

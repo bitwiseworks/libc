@@ -1,0 +1,3 @@
+TARGET=simplecpp
+TARGET_SRCEXT=cpp
+include common.gmk

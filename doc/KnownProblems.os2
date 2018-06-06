@@ -1,0 +1,3 @@
+
+TCPIP32:
+ - res_init() will fail on the 2nd and subsequent calls.

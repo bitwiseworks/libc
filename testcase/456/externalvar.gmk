@@ -1,0 +1,3 @@
+TARGET=externalvar
+TARGET2=externalvar_2
+include common.gmk

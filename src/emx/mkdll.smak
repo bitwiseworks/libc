@@ -1,0 +1,32 @@
+# This submakefile is included when a module needs to build a DLL.
+# For a list of additional variables that can be defined prior to including
+# this submakefile see build.txt.
+
+include common.smak
+
+tools: $(.MODULE)
+
+# Linking rule
+$(eval $(call def_link_dll))
+
+# Add unstripped copy.					
+ifeq ($(MODE),opt)
+ifdef .TARGET
+ifneq ($(.TARGET),$(.TARGET:.dll=.dbg))
+INS.FILES += $(INS)$(.INSDIR)$(.TARGET:.dll=.dbg)
+$(INS)$(.INSDIR)$(.TARGET:.dll=.dbg): $.$(.TARG:.dll=.dbg)
+	$(call CP,$<,$@)
+endif	
+endif	
+endif				
+
+# Map file.
+ifdef .TARGET
+ifneq ($(.TARGET),$(.TARGET:.exe=.map))
+INS.FILES += $(INS)$(.INSDIR)$(.TARGET:.exe=.map)
+$(INS)$(.INSDIR)$(.TARGET:.exe=.map): $.$(.TARG:.exe=.map)
+	$(call CP,$<,$@)
+endif
+endif
+				
+include comend.smak

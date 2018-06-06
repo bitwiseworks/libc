@@ -1,0 +1,48 @@
+# $Id: mktime.gmk 1799 2005-01-28 20:15:43Z bird $
+## @file
+#
+# mktime/gmtime/localtime testcase from gnu configure
+#
+#
+
+TESTCASE= mktime
+CFLAGS  = -Zomf
+O		= .obj
+A	    = .lib
+CC		= gcc
+
+EXEOBJS = $(TESTCASE)$O
+	
+		
+all: $(TESTCASE).exe
+
+check: all
+	$(TESTCASE).exe
+	
+install:	
+	
+clean distclean:
+	rm -f *$(TESTCASE)*.obj *$(TESTCASE)*.o \
+	      *$(TESTCASE)*.lib *$(TESTCASE)*.a \
+		  *$(TESTCASE)*.map $(TESTCASE)*.exe
+
+
+.SUFFIXES:
+.SUFFIXES: .c .cpp .asm .s .o .obj
+.c$O:
+	$(CC) -c $(CFLAGS) -o "$(@)" "$<"
+	
+.cpp$O:
+	$(CC) -c $(CFLAGS) -o "$(@)" "$<"
+
+.asm$O:
+	../tools/x86.os2/masm/v6.0/binp/ml.exe -c /Zi $<
+	
+.s$O:
+	$(CC) -c $(CFLAGS) -o "$(@)" "$<"
+	
+				
+$(TESTCASE).exe: $(EXEOBJS) $(TESTCASE).gmk
+	if $(CC) -Zmap $(CFLAGS) -o "$@" $(EXEOBJS) -lstdc++; then true; \
+	else	rm -f $@; false; \
+	fi

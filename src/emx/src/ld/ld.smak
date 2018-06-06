@@ -1,0 +1,41 @@
+# The submakefile for building GNU ld (the old one, from 1995' binutils)
+
+.MODULE := ld
+.MDESC  := Old GNU ld, used for a.out linking
+.INSDIR := bin/
+
+.TARGET := ld.exe
+.TKIND	:= $(TOOLFMT)
+.TSRC   := $(wildcard src/ld/*.c)
+.TCF	:= -DEMX 
+.TLDF   := -liberty -Zstack 24575
+.TKEEP  := 1
+include mkexe.smak
+
+# must be installed in special gcc directory.
+INS.FILES += $(INS)i386-pc-os2-emx/bin/$(.TARGET)
+$(INS)i386-pc-os2-emx/bin/$(.TARGET): $.$(.TARG)
+	$(call CP,$<,$@)
+include comend.smak	
+
+.TARGET := ldstub.bin
+.TKIND	:= omf
+.TSRC.386 := src/ld/ldstub.asm
+.TSRC	:= $(.TSRC.$(CPU))
+#.TAF.src/ld/ldstub.asm = -DMICRO - bird: MICRO doesn't work... weird.
+.TDEP	:= src/ld/ldstub.def
+# link386 -> ilink
+#.TLDF	:= -nostdlib -los2 -s -Zlinker /align:1 -Zlinker /nosectoraligncode
+ifeq ($(EMXOMFLD_TYPE),wlink)
+.TLDF	:= -nostdlib -los2 -lend -s -Zlinker "OPTION ALIGN=4096"
+else # ilink:
+.TLDF	:= -nostdlib -los2 -lend -s -Zlinker /align:1
+endif
+.TKEEP  := 1
+include mkexe.smak
+
+# must be installed in special gcc directory.
+INS.FILES += $(INS)i386-pc-os2-emx/bin/$(.TARGET)
+$(INS)i386-pc-os2-emx/bin/$(.TARGET): $.$(.TARG)
+	$(call CP,$<,$@)
+include comend.smak	

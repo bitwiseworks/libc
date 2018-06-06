@@ -1,0 +1,3 @@
+TARGET=longnames
+TARGET_SRCEXT=cpp
+include common.gmk

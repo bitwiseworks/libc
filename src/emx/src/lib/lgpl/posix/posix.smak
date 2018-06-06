@@ -1,0 +1,2 @@
+libc.TSRC += $(filter-out $(addprefix src/lib/lgpl/posix/,regcomp.c regexec.c regex_internal.c), \
+	$(wildcard src/lib/lgpl/posix/*.c))

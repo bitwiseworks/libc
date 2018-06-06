@@ -1,0 +1,23 @@
+# This is the top-level submakefile for building EMX C runtime library
+include comend.smak
+
+.MODULE	:= libtermcap
+.MDESC	:= GNU termcap 1.3
+.MDEP   := emxomf
+
+.TARGET	:= libtermcap_p.a
+.TKIND	:= aout prof
+.TSRC	:= $(wildcard gnu/termcap/*.c)
+.TCF    := -DHAVE_CONFIG_H
+.INSDIR	= lib/
+.TKEEP	:= 1
+include mklib.smak
+include mkomflib.smak
+
+.TARGET	:= libtermcap.a
+.TKIND	:= aout
+include mklib.smak
+include mkomflib.smak
+
+# Forget temporary variables
+include comend.smak

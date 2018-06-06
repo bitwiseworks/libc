@@ -1,0 +1,28 @@
+.MODULE	:= app
+.MDESC	:= EMX.DLL 'replacement' for statically linked programs
+.MDEP	:= libc
+
+# Build two kinds of library: aout and aout-profile.
+# The OMF libraries will be derived from them.
+
+.TKIND	:= aout
+.TARGET	:= libc_app.a
+.TSRC	:= $(wildcard src/lib/app/*.c)
+.TCF	:= -I$.
+.TCF.src/lib/app/stdio.c := -D_NFILES=40
+.TCF.src/lib/app/iodata.c := -D_NFILES=40
+.INSDIR	= lib/
+.TKEEP	:= 1
+include mklib.smak
+
+# Save the list of object files to link them later into libc.dll
+LIBC.DLL.OBJS += $(.OBJS)
+
+.TKIND	:= aout log
+.TARGET	:= libc_app_l.a
+.TKEEP	:= 1
+include mklib.smak
+				
+.TKIND	:= aout prof
+.TARGET	:= libc_app_p.a
+include mklib.smak

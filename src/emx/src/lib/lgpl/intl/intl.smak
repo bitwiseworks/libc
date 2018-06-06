@@ -1,0 +1,5 @@
+libc.TSRC += $(filter-out %plural-eval.c,$(wildcard src/lib/lgpl/intl/*.c))
+
+#$(foreach srcfile,$(wildcard src/lib/lgpl/intl/*.c), \
+#	$(eval .TCF.$(srcfile) :=  ))
+

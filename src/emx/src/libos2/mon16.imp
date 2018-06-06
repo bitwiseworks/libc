@@ -1,0 +1,8 @@
+;
+; mon16.imp
+;
+Dos16MonWrite                   moncalls  1 F
+Dos16MonRead                    moncalls  2 F
+Dos16MonClose                   moncalls  3 F
+Dos16MonOpen                    moncalls  4 F
+Dos16MonReg                     moncalls  5 F

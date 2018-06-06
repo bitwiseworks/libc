@@ -1,0 +1,750 @@
+/* $Id: ChangeLog.LIBC 2822 2006-10-19 02:14:05Z bird $ */
+
+TODO: open replace on RAMFS fails with error 32!
+
+2006-10-18: knut st. osmundsen <bird-gccos2-spam@anduin.net>
+    - include/unidef.h:
+        o #128: UNI_SYSTEM_LOCALES, UNI_USER_LOCALES, ULS_LNAMEMAX, and N_LC_CATEGORIES are missing from unidef.h.
+
+2006-09-10: knut st. osmundsen <bird-gccos2-spam@anduin.net>
+    - emxomfld, various:
+        o #89: Support wlink as an alternative to ilink and link386.
+
+2006-09-09: knut st. osmundsen <bird-gccos2-spam@anduin.net>
+    - libc:
+        o #124: Link libstdc++ into the libc dll.
+        o #125: Implemented nan(), nanl(), and nanf().
+    - emxomfld:
+        o #123: Exit with 8 instead of -1 on weakld failures.
+
+2006-09-08: knut st. osmundsen <bird-gccos2-spam@anduin.net>
+    - libc:
+        o #122: Fixed file creation when opening with read-only access.
+
+2006-08-27: knut st. osmundsen <bird-gccos2-spam@anduin.net>
+    - libc:
+        o Lock the thread database before forking. Fixes #102.
+        o Fixed log problem in fork() child. Fixes #119.
+        o Corrected DosSetFHState mask. Fixes #118.
+        o Implemented the new length modifiers for *scanf. Adjusted the length
+          modifier implementation for *printf. Fixes #76.
+        o Fixed problems with fork() and module loading/unloading. Fixes #76.
+        o Fixed atexit() and on_exit() problem with callbacks in unloaded DLLs. Fixes #103.
+        o Added usage counting to _CRT_init and _CRT_term. Fixing #114.
+
+2006-03-26: knut st. osmundsen <bird-gccos2-spam@anduin.net>
+    - libc:
+        o Inlined _um_find_bucket.
+
+2006-03-17: knut st. osmundsen <bird-gccos2-spam@anduin.net>
+    - libc:
+        o Try put the log file handle above the range of the standard handles
+        o #71: Fixed incorrect fmutex padding in FILE which cause _fcloseall
+         (and perhaps others) to crash. (thanks to froloff)
+    - emxomf:
+        o #70: Demangle symbol names in debug info. (thanks to Yuri)
+
+2006-03-14: knut st. osmundsen <bird-gccos2-spam@anduin.net>
+    - libc:
+        o #69: Corrected a few problems related to dos drives and slashes in basename and dirname.
+        o __read & __write logging, and added support for more size flags to the log formatter.
+        o #68: Implemented the _GETOPT_DECLARED blocker in getopt.h too.
+
+2006-03-12: knut st. osmundsen <bird-gccos2-spam@anduin.net>
+    - libc:
+        o #67: Removed termcap.h, curses.h, bsd/curses.h, bsd/termcap.h,
+          gnu/curses.h and gnu/termcap.h because we never built the libs for them.
+        o #65: Added sys/_timespec.h and uncommented it's inclusion in
+          sys/stat.h. This fixes the bustage in non-BSD source mode.
+        o Fixed wrong target name written into the symlink.
+
+2006-03-09: knut st. osmundsen <bird-gccos2-spam@anduin.net>
+    - libc:
+        o #62: Fixed incorrect EOF treatment in getdelim (and in getline since that's just a
+          special case of getdelim).
+
+2006-03-07: knut st. osmundsen <bird-gccos2-spam@anduin.net>
+    - libc:
+        o #49: Fixed stat backend so ctime is set, and made fstat, lstat and stat convert birthtime too.
+        o #61: Fixed incorrect ENOENT errno on symlink when it should return EEXIST.
+
+2006-03-06: knut st. osmundsen <bird-gccos2-spam@anduin.net>
+    - libc:
+        o #60: Fixed blunder in exec/spawn filehandle inheritance code.
+
+2006-03-04: knut st. osmundsen <bird-gccos2-spam@anduin.net>
+    - emxomfld:
+        o #55: delete the response file when reinit the args.
+        o #46: specify .map file extension to the linker.
+
+2006-03-01: knut st. osmundsen <bird-gccos2-spam@anduin.net>
+    - libc:
+        o #58: The standard file handles are always initialized as open.
+
+2006-02-06: knut st. osmundsen <bird-gccos2-spam@anduin.net>
+    - libc:
+        o #54: Fixed unitialized directory handle member fInUnixTree.
+        o #53: Fixed LIBC panic when _openstream locks the stream vector
+          in any of it's error cases.
+        o #52: Fixed two 'symlink/' problems in the path resolver.
+        o #51: Made unlink able to delete readonly files.
+        o #50: Inherit umask.
+        o #30: Committed forgotten header.
+        o #48: Quick implementation of the freopen(NULL,,) operation
+          to make cat from coreutils happy.
+
+2006-02-04: knut st. osmundsen <bird-gccos2-spam@anduin.net>
+    - emxbind:
+        o #38: Fixed truncation bug writing to the LX nametable. (Yuri)
+        o #38: Imports and exports are limited to 255 not 127 chars. (Yuri)
+    - emxomfld:
+        o #34: Removed all the silliness trying to deal with truncated symbols.
+    - libsocket:
+        o #25: Ensure correct address length returns from recvmsg and recvfrom.
+    - libc:
+        o memalign and valloc shouldn't be in __USE_GNU in malloc.h.
+        o #30: Fixed toupper / tolower EOF regression.
+        o Fixed incorrect assertion in __libc_back_fsInfoObjRelease.
+        o #41: And added special file mode mask getter and extra validations to check that
+          the mode mask we read has a valid type. This also shuts up some bad [f]chmod paths.
+        o #41: Calc st_ino and st_dev at the end of the unix attrib getter if they are not present.
+        o #40: Fixed double slash preventing root directories from being opened.
+        o #23: Fixed two incorrect EA size fields, now creating symlinks really works.
+        o #21: Restrict reading and writing of UnixEAs to HPFS, JFS, FAT and RAMFS.
+        o #38: Added DosSysCtl prototype and use it on panic to check for debugger.
+        o #33: Fixed a return path in __libc_back_signalWait which didn't reacquire the semaphore.
+        o #32: Fixed incorrect readdir_r return code when out of files.
+
+2006-02-03: knut st. osmundsen <bird-gccos2-spam@anduin.net>
+    - emxomfld:
+        o #20: use mkstemp + close instead of mktemp for the response file.
+    - ld:
+        o #20: use make_temp_file instead of mktemp. This involved including
+          libiberty.h which required some adjustments of duplicate code to work.
+
+2006-01-18: knut st. osmundsen <bird-gccos2-spam@anduin.net>
+    - libc:
+        o #30: Fixed two locale bugs. First, setlocale called a locale
+          dependent function for getting ctype flags. Second, all the
+          is<>() macros / functions was busted for non-ascii chars (-1..-128).
+
+2005-12-14: knut st. osmundsen <bird-gccos2-spam@anduin.net>
+    - emxbind:
+        o #28: Use DLL name from the .def file when present.
+    - ld:
+        o #27: Applied fix from Yuri.
+
+2005-12-18: knut st. osmundsen <bird-gccos2-spam@anduin.net>
+    - libc:
+        o #23: Corrected EA name in template from "FLAGS" to "SYMLINK".
+        o #24: Fixed chdir() crash in fts.c.
+        o #24: Fixed dirfd() problem in fts.c which prevent us from getting
+          any results in child directories.
+        o #22: Added DosFindFirst() as fallback when DosQueryPathInfo() fails
+          to query the symlink EA in the path resolver. This problem occurs
+          when doing stat() on an open file (pwd_mkdb example).
+    - emxomfld:
+        o Don't display usage() on failure, just the error message.
+    - *:
+        o Changed version to 0.6.1 and create the libc06.dll forwarder.
+
+2005-11-15: knut st. osmundsen <bird-gccos2-spam@anduin.net>
+    - libmoddef:
+        o Allow '.' and '@' in LIBRARY/NAME names.
+
+2005-11-13: knut st. osmundsen <bird-gccos2-spam@anduin.net>
+    - *:
+        o Created the 0.6 release branch.
+
+2005-11-12: knut st. osmundsen <bird-gccos2-spam@anduin.net>
+    - emxomf:
+        o Fixed problems with symbol truncation.
+          Kudos to Yuri for tracking down the places which required attention.
+    - libc:
+        o Committed the getdirents implementation (forgot to add it apparently).
+        o Created proper backend for fcntl removing F_GETOSFD in the process. Using
+          fcntl to set O_NONBLOCK on sockets works now.
+        o Fixed a generic error handling bug in ioctl, write, read, dup and dup
+          which was causing incorrect errnos.
+        o Changed line buffer from 512 to 8192 bytes in _response().
+        o Corrected shmat to return -1 instead of NULL on failure.
+        o Fixed bug in the sigsuspend (includes pause ++) handling,
+          would usually never return.
+
+2005-10-31: knut st. osmundsen <bird-gccos2-spam@anduin.net>
+    - libc:
+        o Fixed sharedpm problem on legacy systems. (Thanks to Andrew Below
+          for pointing it out.)
+
+2005-10-26: knut st. osmundsen <bird-gccos2-spam@anduin.net>
+    - libc:
+        o Implemented getdirents().
+
+2005-09-26: knut st. osmundsen <bird-gccos2-spam@anduin.net>
+    - libc:
+        o Implemented __libc_Back_ioFHToPath using __LIBC_FH::pszNativePath.
+
+2005-09-25: knut st. osmundsen <bird-gccos2-spam@anduin.net>
+    - libc:
+        o Implemented fchdir().
+        o Implemented inheritance of open directory handles. Unfortunately,
+          I ran out of size bits for the bundle type, so the SPM bit is no
+          longer compatible with earlier versions. The consequences
+          of this are related to inheritance and signaling - so recompile!
+
+2005-08-28: knut st. osmundsen <bird-gccos2-spam@anduin.net>
+    - libc:
+        o Reworked the open backend, adding directory support. Some O_*
+          flags was changed in the process, breaking the old ABI.
+          This is not fully tested.
+        o Added more BSD fields to struct stat, breaking the old ABI.
+          The mtime field and ctime fields will now keep the same values
+          and the creation time is to be found in birthtime. This means that
+          ctime will be updated in a few places where it doesn't on unix - but
+          this is probably better than previously where it wasn't ever updated
+          when it should.
+        o Removed forwarder dlls since struct stat, O_* and __LIBC_FH is
+          soon going to be incompatible with rc1 and older versions.
+    - version.smak:
+        o Changed version number back to 3.3.5 / 0.6 rc2.
+
+2005-08-27: knut st. osmundsen <bird-gccos2-spam@anduin.net>
+    - libc:
+        o Fixed lot's of unix attribute (in EA) handling.
+        o Started preparing for open() to work on directories so
+          fchdir() can be implemented and opendir reimplemented.
+          This will break libsocket backwards compatability.
+        o Added _hstrdup.
+        o Fixed two cases where the signal semaphore was incorrectly unlocked
+          after signalDeliver().
+        o Don't try the '.exe' too early on executables (exec/spawn), this broke
+          execution of './configure' and other scripts with no extension.
+
+2005-08-24: knut st. osmundsen <bird-gccos2-spam@anduin.net>
+    - libc:
+        o Fixed bad panic format types in safesems.
+
+2005-08-21: knut st. osmundsen <bird-gccos2-spam@anduin.net>
+    - emxbind, emxomfld:
+        o Default stack size set to 1MB.
+          The old defaults were 8MB (emxbind) and 8KB (emxomfld).
+    - libc:
+        o Filled in the NULLs in sys_signame and sys_siglist.
+        o Added __libc_Back_gfProcessHandleHashBangScripts and
+          __libc_Back_gfProcessHandlePCBatchScripts for use in shells which
+          can handle such scripts more efficiently than libc.
+        o Fixed some bugs related to finding the interpreter in the spawn/exec backend.
+        o Merged the signal semaphore handling into the safe sems and
+          made signals use them instead.
+        o Tried to workaround the race conditions in __libc_Back_safesemEvSleep/Wakeup.
+          These might affect SysV sems.
+        o Corrected the declarations of _DLL_InitTerm.
+
+2005-08-20: Lorne Sunley <lsunley@mb.sympatico.  >
+    - libc:
+        o Added OBJ_FORK to the allocations in sysv_shm.
+
+2005-08-20: knut st. osmundsen <bird-gccos2-spam@anduin.net>
+    - libc:
+        o Define _EMX_SOURCE (__USE_EMX) along with _BSD_SOURCE and _SVID_SOURCE as
+          defaults in features.h.
+        o Protect the fork operations by the means of must complete so
+          signals won't interrupt us till we're finished. This might leave
+          unkillable processes around if fork goes highwire.
+        o Better exception logging during fork.
+        o Use MMX memcpy in fork (if supported).
+        o The C function __libc_Back_processFork() replaces the pure assembly __fork().
+        o Added _memcpy_amd.
+        o Fixed some logging statements in sharedpm.c.
+        o Log __fmutex_release_internal_must_complete.
+        o Corrected a few prototypes in process.h to use pid_t.
+
+2005-08-13: knut st. osmundsen <bird-gccos2-spam@anduin.net>
+    - libc:
+        o Added SH_COMPAT to share.h and emulate it as SH_DENYNO (just like watcom).
+          The SH_COMPAT shareing mode is not available to OS/2 processes, only DOS / os2krnl.
+
+2005-08-02: knut st. osmundsen <bird-gccos2-spam@anduin.net>
+    - libc:
+        o __libc_back_fsNativeFileModeSet(): The long set api is broken
+          in 14.103b & c (at least) so avoid it where it isn't strictly required.
+
+2005-07-24: knut st. osmundsen <bird-gccos2-spam@anduin.net>
+    - libos2:
+        o Added some missing INCL_DOSERRORS #defines (very odd ones).
+    - emximp:
+        o Fixed bad done string allocation.
+    - ld:
+        o Fixed a case of memory access after free.
+        o Switched back to alloca and adding 23 MB of stack.
+
+2005-07-21: knut st. osmundsen <bird-gccos2-spam@anduin.net>
+    - libc:
+        o unistd.h prototype of encrypt() shall return void not int.
+        o Fixed __USE_GNU tests in ftw.h and sys/dirent.h.
+
+2005-07-17: knut st. osmundsen <bird-gccos2-spam@anduin.net>
+    - libc:
+        o LIBC_ASSERT*() are for internal libc errors, LIBCLOG_ERROR*() are
+          for user related error. Big code adjustements.
+        o Fixed a few smaller issues.
+        o Started fixing exec() backend.
+        o Fixed some more mktime / localtime bugs.
+        o Fixed crash on simple LIBC_ASSERT() caused by NULL format string.
+        o Generate device numbers for devices and pipes too.
+        o Fixed mixup of Dev and Inode during filehandle inheritance.
+        o Fixed __dup and __dup2 bug in relation to the FD_CLOEXEC clearing.
+        o Fixed bug in codepage normalization during setlocale().
+        o Fixed bug in regex where the lock was overwritten after initialization.
+        o Switch the glibc locks to smutex to avoid leaking event semaphores.
+        o Added _smutex_try_request().
+        o Fixed __libc_back_fsResolve to always set fInUnixTree so the result can
+          be adjusted correctly on failure as well.
+    - version.smak:
+        o Changed version number back to 3.3.5 / 0.6 rc1.
+
+2005-07-11: knut st. osmundsen <bird-gccos2-spam@anduin.net>
+    - libos2:
+        o UniStrFromUcs added and UniStrToUcs to uconv.h.
+          Added UniStrFromUcs, UniStrToUcs, UniMalloc and UniFree to unicode.imp.
+
+2005-07-10: knut st. osmundsen <bird-gccos2-spam@anduin.net>
+    - libc:
+        o Replaced BSD regex with the new GLIBC implementation.
+        o Fixed two bad bugs in the handling of the list of free
+          SPM notification structures.
+        o Moved the codeset standardization up a bit so nl_langinfo
+          and setlocale reports the same codeset.
+
+2005-07-06: knut st. osmundsen <bird-gccos2-spam@anduin.net>
+    - libc:
+        o Changed utimes() to allow NULL pointer parameter.
+          Please note that BSD will crash in if you try it there.
+        o Renamed the BSD setmode to bsd_setmode and put back the
+          PC setmode.
+
+2005-07-05: knut st. osmundsen <bird-gccos2-spam@anduin.net>
+    - libc:
+        o Fixed spawn/fork + fork() + exec/spawn/fork in the child.
+        o Kill any known decentants to prevent them from being
+          adopted by our parent. (On UNIX processes begin made
+          orphants are adopted and killed by the init process.)
+        o Added signal handler types for POSIX, BSD and GNU conformance.
+        o Reap embryos when the waiter thread is querying spm about
+          the death certificate. This, together with a tiny fix
+          in __spawnve() cures the bad spm process leaks when spawning
+          non-libc processes seen with make when building libc.
+
+2005-07-04: knut st. osmundsen <bird-gccos2-spam@anduin.net>
+    - libc:
+        o Added the BSD optreset global to getopt.
+        o Changed PC setmode to _setmode. As it collides with a BSD 4.4. interface.
+        o Added the BSD 4.4. setmode/getmode functions from FreeBSD.
+        o Added getsid and getpgid, correcting the getpgrp implementation.
+        o Added/replaced setbuf, setbuffer and setlinebuf from BSD.
+
+2005-07-03: knut st. osmundsen <bird-gccos2-spam@anduin.net>
+    - libc:
+        o Collected the different panic routines into one single routine
+          in the backend, __libc_Back_panic[V](). The routine supports
+          very simple printf like message formatting. By default it wil
+          dump any available registers and attempt dumping the process
+          before killing it. This behaviour can be configured with the
+          env var.: LIBC_PANIC=[nodump][terse][quiet][breakpoint]
+
+2005-07-02: knut st. osmundsen <bird-gccos2-spam@anduin.net>
+    - libc:
+        o Added obstack.h and it's implementation from GLIBC.
+        o malloc and realloc must set errno to ENOMEM on failure.
+        o Fixed assertion during realloc(p, -256) to return failure
+          instead. Added a few more overflow checks.
+        o Added %m (GLIBC extension) to the printf familiy. %m means
+          priting strerror(errno), it takes no arguments.
+        o Fixed serveral bugs in the C/POSIX locale
+        o Implemented the LC_MESSAGES locale.
+        o Fixed mixup in fts.c port.
+        o Replaced the EMX ftw with the BSD one so we implement the SuS specs.
+        o Clear FD_CLOEXEC on the handle returned by dup, dup2 and fcntl(F_DUPFD,,).
+        o Fixed a buffer size validation bug in the backend for getcwd and
+          friends. Was requiring a byte to much.
+        o Updated some TCPIP headers with GLIBC __USE_MISC #includes. (more to go)
+        o sys/fcntl.h shall include sys/stat.h in XSI mode.
+        o Added stpncpy from GLIBC.
+        o Added sys/builtin.h to sys/smutex.h.
+        o Updated features.h and sys/gnu/cdefs.h with more recent versions from cvs.
+        o Ported from GLIBC 2.3.x CVS.
+        o Fixed some waitid() and waitpid() problems related to stopping and resuming children.
+        o Updated argz.h because of bustage caused by new cdefs.h (THROW).
+    - libcrypt:
+        o Created stub library.
+    - version.smak, libc.smak:
+        o Back to betas, beta6 now.
+
+2005-07-01: knut st. osmundsen <bird-gccos2-spam@anduin.net>
+    - libc:
+        o Made isinf[lf] return -1 for negative infinity like GLIBC does.
+        o Added prototypes for nan[lf] to math.h, gcc inlines these.
+        o Ported GLIBC argp and getopt (argp requires the GLIBC one).
+          This means no optreset anylonger.
+        o Some corrections / hacks in the weak_alias departement.
+        o Shopped missing math stuff from GLIBC.
+        o Added fpu_control.h, ieee754.h and endian.h from the GLIBC tradition.
+
+2005-06-30: knut st. osmundsen <bird-gccos2-spam@anduin.net>
+    - libc:
+        o Added fwide() (dummy until LIBC07).
+        o Renamed struct _FILE to struct __sFILE to match BSD.
+        o Added wait.h for GLIBC compatability, content is #include <sys/wait.h>.
+        o Added _D_EXACT_NAMLEN and _D_ALLOC_NAMLEN macros to sys/dirent.h to
+          make GLIBC code happy.
+        o Added REG_NOERROR to regex.h to make GLIBC code happy.
+        o The three default heap handles can be duplicates of one another, this
+          could cause deadlocks in certain cases usually involing tiled memory.
+        o Added asprintf() and vasprintf().
+        o Added get_current_dir_name() (GLIBC extension).
+        o Added the strdupa() and strndupa() GLIBC extensions. These are macros
+          use alloca() to allocate the memory for the string.
+        o Added the getdelim() and getline() GLIBC extensions.
+        o Added getlogin_r() (still just a fake).
+        o Added TEMP_FAILURE_RETRY() macro to unistd.h. This is yet another GLIBC hack.
+
+2005-06-29: knut st. osmundsen <bird-gccos2-spam@anduin.net>
+    - *:
+        o Fixed stack alignment, it must be 16 bytes not 4!
+        o Fixed bustage caused by the include cleanup.
+    - libc:
+        o Added ieeefp.h and functions from FreeBSD - this is
+          the SysV/386 FP control interface. (inline only)
+        o Added fgets_unlocked and gets_unlocked.
+
+2005-06-28: knut st. osmundsen <bird-gccos2-spam@anduin.net>
+    - *:
+        o Released v0.6 beta 5.
+        o Changed versions to v0.6 rc1.
+        o Created the libc06b5 forwarder dll.
+    - libc:
+        o Added _NSIG and making NSIG and _NSIG equal to SIGRTMAX + 1.
+        o Added memrawchr and strchrnul from glibc, enabling us to shop .S
+          files from glibc at the same time.
+        o On glibc lot's of limits.h stuff is included from direct.h because of
+          need for NAME_MAX, let's do something similar.
+        o Corrected MAXNAMLEN / d_name field length.
+
+2005-06-27: knut st. osmundsen <bird-gccos2-spam@anduin.net>
+    - emxomfld, ld:
+        o Generate .def-file for dlls without one. (This only makes sense for
+          emxomfld since ld doesn't implement __declspec(dllexport) yet, but
+          anyway.)
+    - emxomf, emxomfld:
+        o Kicked out all the old weak handling (from early 3.2.2 alphas).
+
+2005-06-26: knut st. osmundsen <bird-gccos2-spam@anduin.net>
+    - libc:
+        o Added [__]isinf[fl] which seems to have been mislaid during the
+          math source import.
+        o Rewrote the libcXXXX.dll install rule to not play with emxload since
+          emxload sticks around when first loaded.
+        o Made unsetenv() cause tzset reload just like putenv() and setenv().
+        o Changed putenv() behaviour for removal (no '=' in input) to be identical
+          to unsetenv(). This solves duplicate variable testcase.
+        o Changed filestreams opened for both reading and writing to switch
+          more willingly between read and write mode.
+        o Made sscan() return EOF on EOF.
+        o Made sscan() skip blanks in input for '%%'.
+        o Implemented the stdio_unlocked stuff with BSD and GLIBC extension.
+          TODO: Require a new locktype which support recursive usage! Currently
+                a hack using 8 free flag bits is used.
+        o Corrected realpath() behaviour to return the path up to the failure
+          point on error. _realrealpath() also does this now.
+          (This also saves us a temp buffer and a copy of the result.)
+        o Fixed a bug in the handling of ".." in the path resolver.
+        o Extended that path resolver to check the directoryness of the input
+          according to flags and any trailing slashes.
+        o Change the path resolver to be very strict about UNC - UNC have exactly
+          two slashes at the start of the path.
+
+2005-06-25: knut st. osmundsen <bird-gccos2-spam@anduin.net>
+    - libc:
+        o Fixed SIGINT and similar issues with fork().
+          TODO: LIBC signals depending on 16-bit OS/2 signals will
+                still cause trouble, this needs fixing.
+        o Extended the fmutex error message.
+        o Fixed regression in the fmutex must completion code (bad fs handling).
+
+2005-06-23: knut st. osmundsen <bird-gccos2-spam@anduin.net>
+    - libc:
+        o Fixed some more incorrectness of the 'C' locale, it only
+          defines the first 128 chars.
+        o Build hack for math.h.
+        o Updated sys/stat.h, sys/resource.h and sys/_types.h to
+          FreeBSD 5.3 level.
+        o btowc(): WEOF is 32-bit, wchar_t is 16.
+        o *printf(): wide char support.
+        o sysctl(): Changed the boottime alogrithm.
+        o strxfrm(): Corrected the return values.
+        o __ftime(): Corrected regression causing the time to be 35 years wrong.
+        o strftime(): Added C99 %F.
+        o strptime(): Fixed a few parsing and calculation bugs.
+
+2005-06-19: knut st. osmundsen <bird-gccos2-spam@anduin.net>
+    - libc:
+        o File resize optimization: The JFS, HPFS and probably NET
+          will never return space which isn't zeroed when expanding
+          a file. Associate a file system information object with the
+          filehandles to keep track of such features. This also fixes
+          the fsStatFH() implementation trouble.
+          This attribute doesn't apply to CDFS. While RAMFS fails
+          the test, it zeros at open but not at setfilesize.
+        o Fixed invalid inode and dev numbers for new files, was passing
+          the wrong path around.
+
+2005-06-13: knut st. osmundsen <bird-gccos2-spam@anduin.net>
+    - libc:
+        o Auto init fmutexes.
+        o Fixed potential deadlock the first time a must-complete
+          fmutex was entered.
+        o Replaced mktemp and mkstemp with BSD versions. Also adding
+          mkstemps, mkdtemp, arc4random, arc4random_addrandom and
+          arc4random_stir.
+        o Limited the namespace pollution caused by machine/param.h
+          (included by sys/param.h which is used by lot's of tcpip headers).
+          Define _BSD_NAMESPACE_POLLUTION to get it all.
+        o Fixed bug in getitimer/setitmer, it didn't zero the old value struct
+          if the timer wasn't running.
+        o Fixed a bug in __ftime(), the time was jolting around.
+
+2005-06-12: knut st. osmundsen <bird-gccos2-spam@anduin.net>
+    - libc:
+        o Changed the LIBC_PATHREADWRITERS to a generic LIBC_HOOK_DLLS.
+          See src/emx/src/lib/sys/hooks.c for details.
+
+2005-06-11: knut st. osmundsen <bird-gccos2-spam@anduin.net>
+    - libc:
+        o The smallcnv stuff is gone, waste of space since we're not really into
+          static linking. Should've done this when switching to gdtoa.
+        o Ported the msun and some other math bits from current FreeBSD libc.
+          This mostly replaces the EMX math, except for some double long variants
+          and some EMX specific ones. This is a risky change, but it's needed
+          if we're gonna catch up on the C99 bits and make libstdc++ happy.
+          There are some new headers, complex.h and fenv.h being the importan ones.
+          float.h have gotten some updates while math.h is totally replaced.
+          More than 100 standard functions were added!
+          NOTE: msun is using MATH_ERREXCEPT (math_errhandling) and not
+                MATH_ERRNO for error reporting.
+          I really hope this is not gonna uncover more OS/2 387 mess.
+        o Handle .cmd, .bat, .btm and hash-bang script files if DosExecPgm()
+          fails. (I'm a little bit uncertain about argv[0], but it appears to work.)
+
+2005-06-05: knut st. osmundsen <bird-gccos2-spam@anduin.net>
+    - libc:
+        o the setitimer backend was making incorrect assumptions about the
+          HTIMER range - NULLHANDLE is valid for HTIMER. Changed it to use ~0U
+          as invalid handle. (untested)
+        o Default TCPIP mode is __USB_LIBC_TCPIP. When either TCPV40HDRS or TCPV41HDRS
+          are defined we are in strict mode and __USB_LIBC_TCPIP will not be defined.
+    - libomflib, emxomfar:
+        o Allow multiple modules by the same basename. This is not in tradition with
+          other librarians, but it solves incompatible behaviour between emxomfar and ar.
+    - ld:
+        o Avoid using alloca since we might easily run out of stack for big objects
+          with debuginfo.
+    - emxomf:
+        o Added support for new EMX a.out stab N_EXP (0x6c). This encodes export
+          definitions. (gcc can do __declspec(dllexport) now.)
+          TODO: ld needs updating, probably this is the right time to drop the
+                old ld and fixup the binutils port!
+
+2005-05-08: knut st. osmundsen <bird-gccos2-spam@anduin.net>
+    - libc:
+        o Added _getenv_[int|long|longlong]. Using this for LIBC_THREAD_MIN_STACK_SIZE.
+        o Ported the BSD SysV Semaphore module.
+        o Added a signal notification callback to the thread structure.
+        o Changed tcpip term callback to more generic exitlist callback (SPM).
+        o Ported the BSD SysV Shared Memory module.
+
+2005-05-05: knut st. osmundsen <bird-gccos2-spam@anduin.net>
+    - libc:
+        o Added fts.h and ported the BSD implementation.
+          It's not 100% correct since we're lacking fchdir and cannot open
+          directories - will update it when this is in place.
+        o Disabled the UF_ and SF_ defines in sys/stat.h since we don't have st_flags.
+        o Added mkfifo (stub).
+        o Added lutimes and futimes, replacing __utimes.
+
+2005-05-01: knut st. osmundsen <bird-gccos2-spam@anduin.net>
+    - libc:
+        o Fixed incorrect d_type returned by readdir and readdir_r.
+        o Changed chdir() to unix style, added _chdir_os2() as a backwards compatible
+          api. _chdir2() and chdir() are operating identically now.
+        o Fixed several incorrect/incomplete path resolve cases. Some causing
+          invalid ino values.
+        o Unlock the libc DLL before installing it (cp, make or someone might be using it).
+        o Unix root rewrite rule ends it's pszTo with a slash, this caused
+          two slashes and thus UNC trouble.
+        o Quick rewrite of access() (also affects eaccess()) to work in chroot environment.
+        o Added O_BINARY to all opens in bsd/db.
+
+2005-04-30: knut st. osmundsen <bird-gccos2-spam@anduin.net>
+    - libmoddef:
+        o Allow empty definition strings. (weakld failed on python _curses_m)
+    - weakld:
+        o Fixed incorrect .def-file parse error message.
+    - sys/param.h:
+        o Added MAXBSIZE, BKVASIZE and BKVAMASK which are used by some BSD tools.
+    - libc:
+        o Added fchmod and reimplemented chmod and lchmod. Still missing FS level
+          unix attribute handling, but this is a start.
+
+2005-04-25: knut st. osmundsen <bird-gccos2-spam@anduin.net>
+    - libc:
+        o Added the sysctl interface from BSD. Not all values are
+          supported, nor are we compatible with tcpip41 sysctl yet.
+
+2005-04-24: knut st. osmundsen <bird-gccos2-spam@anduin.net>
+    - libc:
+        o Fixed bug in getfsstate(). (df from coreutils works now!)
+        o Implemented process priority management. Added nice(), setpriority()
+          and getpriority() in the process.
+        o Added process enumeration and access function to sharedpm.
+
+2005-04-23: knut st. osmundsen <bird-gccos2-spam@anduin.net>
+    - emxomf:
+        o Refined the 'G' hack fixing globals in the text segment.
+    - libc:
+        o Added cs:eip to the abnormal termination message. (signals.c)
+        o Default stack size 512KB when caller specifies 0. (beginthr.c)
+        o Use the env.var. LIBC_THREAD_MIN_STACK_SIZE value as a byte count
+          specifying the minimum stack size. When not specified minium size
+          defaults to 4096. (beginthr.c)
+        o Added the libsocket and libsyslog libraries to the libc IMPORT library.
+          There are now two sets of libc_dll.a/lib libraries, one for tcpipv4 and
+          one for tcpipv41+ (default).
+        o Added nanosleep() and changed usleep() and sleep() to use it.
+        o Added wmemcpy(), wmemset(), wmemcmp(), wmemchr() and wmemmove(). (untested)
+        o Added SUN/HP/RTLinux api gethrtime() as a wrapper around the DosTmr* apis.
+        o Rewrote atexit() fixing problem with the callbacks calling exit() recursivly
+          and adding on_exit().
+        o Added stdio_ext.h and implemented __fpending() and __fbufsize().
+          (Just to make coreutils easier to port.)
+
+2005-03-23: knut st. osmundsen <bird-gccos2-spam@anduin.net>
+    - src/lib/sys/__spawnve.c:
+        o Fixed double free of pFS (should've been pSig).
+          Thanks for froloff.
+
+2005-03-19: knut st. osmundsen <bird-gccos2-spam@anduin.net>
+    - 386/builtin.h:
+        o Fixed serveral bugs in the atomic inc/dec functions.
+          Added a testcase for these.
+    - libc:
+        o Fixed various typos in the socket per process counting. Thanks to
+          nickk for point these out.
+
+2005-03-13: knut st. osmundsen <bird-gccos2-spam@anduin.net>
+    - version.smak:
+        o 6b4 -> 6b5.
+
+    - libc:
+        o Implemented socket duplication.
+        o Fixed various socket close & fork bugs.
+        o Applied parts of tcpipver patches from Lorne and Froloff.
+        o Fixed various UNC trouble reported by David.
+        o Fixed open problem in DosEx.
+        o Fixed incorrect pool allocation in DosEx.
+        o Fixed missing free pool item in DoxEx - *big* leak.
+        o Fixed TID/PID mixup when calling DosVerifyPidTid() from fmutex wait loop.
+        o Applied patch from Nickk for broken settimeofday().
+        o Moved iconv into LIBC.
+        o Ported GLIBC intl and made it a part of LIBC.
+        o Implemented -Zargs-wild and -Zargs-resp crt0 variations.
+        o Added support for single quoted arguments. (pray this doesn't screw up...)
+        o Replaced the __atod implementation with the NETLIB gdtoa implementation
+          used by BSD. (The old routine kept hitting assertions.)
+        o Created libc06a4 forwarder dll.
+
+    - libiconv, libdl, libm:
+        o Made these empty stub libraries.
+
+    - emxomf:
+        o Fixed getopt(,,"l::") problem. BSD getopt doesn't pass FLAG_PERMUTE for getopt and
+          thus it would consume the next argument unless it was an option. Using
+          getopt_long(,,"l::", NULL, NULL) solves the problem.
+
+    - testcases:
+        o Testcases for various new problems/code.
+
+2005-02-01: knut st. osmundsen <bird-gccos2-spam@anduin.net>
+    - libc:
+        o Fixed bogus bubble sort in setlocale/LC_COLLATE.
+
+2005-01-31: knut st. osmundsen <bird-gccos2-spam@anduin.net>
+    - libc:
+        o Applied readdir_r() errno fix from Lorne.
+        o Fixed lstat() backend on request from Lorne.
+
+2005-01-30: knut st. osmundsen <bird-gccos2-spam@anduin.net>
+    - libc:
+        o Applies setlocale patch from Lorne which fixes two bugs in LC_COLLATE.
+
+2005-01-28: knut st. osmundsen <bird-gccos2-spam@anduin.net>
+    - libc:
+        o Applied setlocale patch from Lorne.
+        o Faked the C99 lconv additions by copying the local ones.
+
+2005-01-16: knut st. osmundsen <bird-gccos2-spam@anduin.net>
+    - libos2:
+        o Added SafeDosStartSession from Dmitry Froloff.
+    - libc:
+        o Fixed year problem in settimeofday.
+        o Check if fxsave/fxrstor is supported before using them in fork().
+          ASSUMES cpuid eax=1 works on all targets.
+        o Implemented nl_langinfo(CODESET).
+        o Added bunch a of ASCII codeset name conversions.
+        o Fixed bug in socket inherit over exec/spawn. Thanks to Froloff.
+        o Forgot to take the signal semaphore when receiving a signal
+          from the 16bit handler. Thanks to Froloff.
+        o rmdir errno fix from Lorne.
+        o rmdir shall fail on symlink.
+        o rmdir shall return ENOTDIR if the path isn't a directory (but exists).
+        o Fixed setlocale(LC_ALL/LC_MONETARY, "C").
+        o Changed the process reaper to use internal signal api to skip some overhead.
+        o Fixed a return path from signal raise where the signal sem wasn't
+          released. (The out of queue node hang.)
+    - libsocket:
+        o os2_select: Fixed a couple of filehandle conversion bugs. Thanks to Froloff.
+        o soclose shouldn't return EBADF but ENOSOCK according to the specs.
+    - libsocket, libc:
+        o Return ENOSOCK instead of ENOSYS when attempting socket operation on filehandle.
+
+
+2005-01-??: knut st. osmundsen <bird-gccos2-spam@anduin.net>
+    - libc:
+        o Fixed problem with fork'ed children beliving they were
+          still forking after fork() returned. (DLL load issue)
+        o Fixed signal queue node leak. Thanks to Lorne.
+
+2004-12-20: knut st. osmundsen <bird-gccos2-spam@anduin.net>
+    - libc:
+        o Added inode and dev calculation for fstat and stat.
+          TODO: save unix EAs. opendir d_fileno?
+        o Ported all string/w* functions from FreeBSD except wcsxfrm.c.
+
+2004-12-12: knut st. osmundsen <bird-gccos2-spam@anduin.net>
+    - os2emx.h:
+        o Corrected define of NP_NBLK. (thanks to froloff)
+    - __mcount:
+        o Export stub in all builds but the profiling build.
+    - libdl:
+        o Removed and stubbed it (install). It's all in LIBC now.
+          TODO: make libm and libdl stubbing in LIBC!
+
+2004-12-09: knut st. osmundsen <bird-gccos2-spam@anduin.net>
+    - waitpid(), waitid(), wait(), wait4(), wait3(),
+      __libc_Back_processWait():
+        o Fixed missing WNOHANG handling.
+          Created waitpid-1.c testcase in testcase/misc for this problem.
+        o Clearified error codes ECHILD and EINVAL, use the waitpid() specs.
+
+    - ChangeLog.Libc:
+        o Created this file.
+

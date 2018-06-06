@@ -1,0 +1,2 @@
+TARGET=advanced
+include common.gmk

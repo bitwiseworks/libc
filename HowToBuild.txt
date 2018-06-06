@@ -1,0 +1,50 @@
+$Id: HowToBuild.txt 2423 2005-10-17 19:23:45Z bird $
+
+Tree Preparation
+-----------------
+
+1. Check out the tree / Unpack the source and tools zip into an empty tree
+   It is possible to use the netlabs CVS for src/emx.
+2. Prepare the tools:
+    a) From tools/ directory and do:
+        unzip packages/*.zip
+    b) Copy / unzip the gcc installation to tools/x86.os2/gcc/.
+    c) Rename tools/x86.os2/gcc/usr to tools/x86.os2/gcc/staged.
+    d) Execute tools/x86.os2/gcc/staged/lib/MakeOmfLibs.cmd.
+3. Setup the environment: tools/env.cmd
+
+
+
+Building
+--------
+
+Make sure you have setup up the environment, see 3. above.
+
+Use 'make' from the root directory to build things. The default target
+is called 'quick' and will to a quick build of everything assuming that
+gcc and libs level is pretty much the same as the one you're building.
+
+When doing this kind of build, we install the subcomponent as they are
+built into 'obj/OS2/DEBUG/builtunix' and uses them for the building the
+rest. The builtunix directory is at the head of all paths setup by the
+env.cmd script.
+
+When everything has been built, it is installed into
+bin/OS2/DEBUG/3.3.5-beta5/ (or whatever the release is set to).
+
+
+Other common targets are:
+    'double-quick'              - used for releases. do two cycles of 'quick'.
+    'emx'                       - builds emx
+    'emx-quick-libs'            - libraries
+    'emx-quick-libs-install'    - installs into builtunix
+    'emx-quick-rest'            - toolchain
+    'emx-quick-rest-install'    - installs into builtunix
+    'binutils-quick'            - builds binutils
+    'binutils-quick-installstage' - installs into builtunix
+    'gcc-quick'                 - builds gcc
+    'gcc-quick-installstage'    - installs into builtunix
+    'gcc'                       - bootstraps gcc (might be broken)
+
+See Makefile for full reference on these and other targets.
+

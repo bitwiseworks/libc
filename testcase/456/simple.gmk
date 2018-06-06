@@ -1,0 +1,2 @@
+TARGET=simple
+include common.gmk

@@ -1,0 +1,23 @@
+;
+; tcp32dll.imp
+;
+dn_comp                 tcp32dll  32 5
+dn_expand               tcp32dll  31 5
+dn_skipname             tcp32dll  33 2
+endhostent              tcp32dll  29 0
+endnetent               tcp32dll  16 0
+endprotoent             tcp32dll  19 0
+endservent              tcp32dll  26 0
+gethostent              tcp32dll  30 0
+getnetent               tcp32dll  17 0
+getprotoent             tcp32dll  20 0
+getservent              tcp32dll  27 0
+putlong                 tcp32dll  38 2
+putshort                tcp32dll  37 2
+res_init                tcp32dll  39 0
+res_mkquery             tcp32dll  40 9
+res_send                tcp32dll  41 4
+sethostent              tcp32dll  28 1
+setnetent               tcp32dll  15 1
+setprotoent             tcp32dll  18 1
+setservent              tcp32dll  25 1

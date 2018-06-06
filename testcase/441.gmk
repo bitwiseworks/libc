@@ -1,0 +1,25 @@
+
+#CFLAGS = -Zomf
+CFLAGS =
+
+# Make only understands escapes
+EXEOBJS = 441main.o 441-1.o
+	
+# The escapes here doesn't work in cmd.exe
+SHELL = sh	
+
+.SUFFIXES: .c .o .obj
+.c.o:
+	gcc -c $(CFLAGS) -o "$(@)" "$<"
+
+
+check all: 441.exe
+	
+441.exe: $(EXEOBJS) 441.gmk
+	gcc -Zmap $(CFLAGS) -o $@ $(EXEOBJS)
+	
+install:	
+	
+clean distclean:
+	rm -f *441*.obj *441*.o *441*.o *441*.map *441*.s *441*.ii
+	

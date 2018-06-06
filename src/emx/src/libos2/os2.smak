@@ -1,0 +1,137 @@
+# $Id: os2.smak 3834 2014-03-15 21:12:04Z bird $
+
+.MODULE := libos2
+.MDESC  := OS/2 import library (similar to os2386.lib)
+.MDEP   := emxomf emximp
+.INSDIR := lib/
+
+.TARGET := libos2.a
+.TKIND	:= aout
+.TSRC.386 := $(wildcard src/libos2/*.s)
+.TSRC	:= $(.TSRC.$(CPU)) $(wildcard src/libos2/*.c) $(wildcard src/libos2/safe/*.c)
+.TCF	:= -Wno-unused -s -DNO_INCL_SAFE_HIMEM_WRAPPERS
+.IMPS	:= $(wildcard src/libos2/*.imp)
+.TKEEP	:= 1
+include mkimplib.smak
+
+.TARGET := libos2_p.a
+.TKIND	:= aout prof
+.IMPS	:= $(wildcard src/libos2/*.imp)
+.TCF	:= -Wno-unused
+include mkimplib.smak
+
+.TARGET := libos2_unicode_lazy.a
+.TKIND	:= aout lazy
+.TSRC	:=
+.TCF	:= -Wno-unused -s
+.IMPS	:= src/libos2/unicode.imp
+include mkimplib.smak
+
+.TARGET := libos2_pmwin_lazy.a
+.TKIND	:= aout lazy
+.TSRC	:=
+.TCF	:= -Wno-unused -s
+.IMPS	:= src/libos2/win.imp
+include mkimplib.smak
+
+.TARGET := libos2_pmwp_lazy.a
+.TKIND	:= aout lazy
+.TSRC	:=
+.TCF	:= -Wno-unused -s
+.IMPS	:= src/libos2/wp.imp
+include mkimplib.smak
+
+.TARGET := libos2_pmspl_lazy.a
+.TKIND	:= aout lazy
+.TSRC	:=
+.TCF	:= -Wno-unused -s
+.IMPS	:= src/libos2/spl.imp
+include mkimplib.smak
+
+.TARGET := libos2_som_lazy.a
+.TKIND	:= aout lazy
+.TSRC	:=
+.TCF	:= -Wno-unused -s
+.IMPS	:= src/libos2/som.imp
+include mkimplib.smak
+
+.TARGET := libos2_pmshapi_lazy.a
+.TKIND	:= aout lazy
+.TSRC	:=
+.TCF	:= -Wno-unused -s
+.IMPS	:= src/libos2/shl.imp
+include mkimplib.smak
+
+.TARGET := libos2_rexx_lazy.a
+.TKIND	:= aout lazy
+.TSRC	:=
+.TCF	:= -Wno-unused -s
+.IMPS	:= src/libos2/rexx.imp
+include mkimplib.smak
+
+.TARGET := libos2_rexxapi_lazy.a
+.TKIND	:= aout lazy
+.TSRC	:=
+.TCF	:= -Wno-unused -s
+.IMPS	:= src/libos2/rexxapi.imp
+include mkimplib.smak
+
+.TARGET := libos2_pmpic_lazy.a
+.TKIND	:= aout lazy
+.TSRC	:=
+.TCF	:= -Wno-unused -s
+.IMPS	:= src/libos2/pic.imp
+include mkimplib.smak
+
+.TARGET := libos2_helpmgr_lazy.a
+.TKIND	:= aout lazy
+.TSRC	:=
+.TCF	:= -Wno-unused -s
+.IMPS	:= src/libos2/help.imp
+include mkimplib.smak
+
+.TARGET := libos2_pmgpi_lazy.a
+.TKIND	:= aout lazy
+.TSRC	:=
+.TCF	:= -Wno-unused -s
+.IMPS	:= src/libos2/gpi.imp
+include mkimplib.smak
+
+.TARGET := libos2_pmdrag_lazy.a
+.TKIND	:= aout lazy
+.TSRC	:=
+.TCF	:= -Wno-unused -s
+.IMPS	:= src/libos2/drag.imp
+include mkimplib.smak
+
+.TARGET := libos2_pmctls_lazy.a
+.TKIND	:= aout lazy
+.TSRC	:=
+.TCF	:= -Wno-unused -s
+.IMPS	:= src/libos2/ctls.imp
+include mkimplib.smak
+
+.TARGET := libos2_pm_lazy.a
+.TKIND	:= aout lazy
+.TSRC	:=
+.TCF	:= -Wno-unused -s
+.IMPS	:= src/libos2/win.imp  src/libos2/wp.imp   src/libos2/spl.imp src/libos2/shl.imp \
+           src/libos2/pic.imp  src/libos2/help.imp src/libos2/gpi.imp src/libos2/drag.imp \
+		   src/libos2/ctls.imp
+include mkimplib.smak
+
+.TARGET := libos2_dos_lazy.a
+.TKIND	:= aout lazy
+.TSRC	:=
+.TCF	:= -Wno-unused -s
+.IMPS	:= src/libos2/dos.imp src/libos2/ses.imp src/libos2/que.imp src/libos2/nls.imp src/libos2/msg.imp
+include mkimplib.smak
+
+.TARGET := libos2_lazy.a
+.TKIND	:= aout lazy
+.TSRC	:=
+.TCF	:= -Wno-unused -s
+.IMPS	:= $(filter-out %-data.imp,$(wildcard src/libos2/*.imp))
+include mkimplib.smak
+
+

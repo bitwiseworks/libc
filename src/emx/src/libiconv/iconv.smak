@@ -1,0 +1,26 @@
+# This is the top-level submakefile for building EMX C runtime library
+include comend.smak
+
+.MODULE	:= libiconv
+.MDESC	:= Stub iconv library (move into libc)
+
+.TARGET	:= libiconv_p.a
+.TKIND	:= aout prof
+.TSRC	:= $(wildcard src/libiconv/*.c)
+.INSDIR	= lib/
+include mklib.smak
+
+.TARGET	:= libiconv.a
+.TKIND	:= aout
+.TSRC	:= $(wildcard src/libiconv/*.c)
+.INSDIR	= lib/
+include mklib.smak
+
+.TARGET	:= libiconv_l.a
+.TKIND	:= aout log
+.TSRC	:= $(wildcard src/libiconv/*.c)
+.INSDIR	= lib/
+include mklib.smak
+
+# Forget temporary variables
+include comend.smak

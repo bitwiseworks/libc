@@ -1,0 +1,22 @@
+Features, caveats and tricks
+----------------------------
+
+ _Optlink
+ --------
+
+    The _Optlink implementation differs from VACPP implementation in the
+    following ways:
+
+    o _Optlink is not enabled unless you enable optimization (-O).
+
+    o The floating-point parameters are always passed on stack, never in
+      FPU registers.
+
+    Use _Optlink for VACPP compatibility only. If you want performance,
+    use the __attribute__((regparm=x)), where x is the number of parameters
+    to be passed in registers (_Optlink uses three). The 'regparm' calling
+    convention is much more optimal than _Optlink: it does not allocate
+    stack for parameters passed in registers (and does not store registers
+    in that location right at the function entry), does not have the strange
+    limit of 12 arguments ('eyecatcher bitfields') considered for conformance
+    and other benefits.

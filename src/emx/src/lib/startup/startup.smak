@@ -1,0 +1,96 @@
+libc.TSRC += $(filter-out %gmon.c,$(wildcard src/lib/startup/*.c)) \
+             src/lib/startup/386/mcountstub.s
+
+# Build startup object files separately (not included in libraries)
+.MODULE :=
+.TKIND	:= aout
+.TSRC.386 := $(addprefix src/lib/startup/386/,crt0.s dll0.s)
+.TSRC	:= $(.TSRC.$(CPU))
+.INSDIR	:= lib/
+include common.smak
+.OBJS += $(addprefix $.omf/src/lib/startup/386/,crt0.obj dll0.obj)
+
+# define what to do 	
+define def_startup
+$$.aout/src/lib/startup/386/crt0$(i).o: src/lib/startup/386/crt0.s
+	$$(call DO.COMPILE.s, $(subst wild, -DARGS_WILD, $(subst resp, -DARGS_RESP, $(subst noux, -DNOUNIX,$(subst nofork, -DNOFORK,$(subst hi, -DHIGHMEM, $i))))))
+
+$$.omf/src/lib/startup/386/crt0$(i).obj: $$.aout/src/lib/startup/386/crt0$(i).o
+	$$(call DO.EMXOMF,-m__text)
+$(eval .OBJS += $.aout/src/lib/startup/386/crt0$(i).o \
+				 $.omf/src/lib/startup/386/crt0$(i).obj)
+	
+ifeq ($(subst resp,,$(subst wild,,$(i))),$(i))
+$$.aout/src/lib/startup/386/dll0$(i).o: src/lib/startup/386/dll0.s
+	$$(call DO.COMPILE.s, $(subst wild, -DARGS_WILD, $(subst resp, -DARGS_RESP, $(subst noux, -DNOUNIX,$(subst nofork, -DNOFORK,$(subst hi, -DHIGHMEM, $i))))))
+	
+$$.omf/src/lib/startup/386/dll0$(i).obj: $$.aout/src/lib/startup/386/dll0$(i).o
+	$$(call DO.EMXOMF,-l__text)
+$$(eval .OBJS += $.aout/src/lib/startup/386/dll0$(i).o \
+		          $.omf/src/lib/startup/386/dll0$(i).obj)
+endif	
+endef
+
+# generate
+$(foreach i,\
+hi \
+hinofork \
+hinoforknoux \
+hinoforknouxwild \
+hinoforknouxwildresp \
+hinoforknouxresp \
+hinoforkwild \
+hinoforkwildresp \
+hinoforkresp \
+hinoux \
+hinouxwild \
+hinouxwildresp \
+hinouxresp \
+hiwild \
+hiwildresp \
+hiresp \
+\
+nofork \
+noforknoux \
+noforknouxwild \
+noforknouxwildresp \
+noforknouxresp \
+noforkwild \
+noforkwildresp \
+noforkresp \
+\
+noux \
+nouxwild \
+nouxwildresp \
+nouxresp \
+\
+wild \
+wildresp \
+\
+resp \
+,$(eval $(def_startup)))
+
+
+.DIRS := $(sort $(dir $(.OBJS)))
+TARGDIRS += $(.DIRS)
+INS.FILES += $(addprefix $(INS)lib/,$(notdir $(.OBJS)))
+$(addprefix $(INS)lib/,$(notdir $(.OBJS))): $(.OBJS)
+	$(call CP,$^,$(dir $@))
+
+libc: emxomf ld $(.DIRS) $(.OBJS)
+startup: $(.DIRS) $(.OBJS)
+
+# This rule doesn't work if the aout/src/lib/startup/ directory does not
+# exist when make is started, and is ignored because of this (shit!)
+#$.omf/src/lib/startup/%.obj: $.aout/src/lib/startup/%.o
+#	$(call DO.EMXOMF,-m__text)
+
+# Additional dependencies to help stupid make.
+$.omf/src/lib/startup/386/dll0.obj: $.aout/src/lib/startup/386/dll0.o
+	$(call DO.EMXOMF,-l__text)
+$.omf/src/lib/startup/386/crt0.obj: $.aout/src/lib/startup/386/crt0.o
+	$(call DO.EMXOMF,-m__text)
+$.omf/src/lib/startup/386/res0.obj: $.aout/src/lib/startup/386/res0.o
+	$(call DO.EMXOMF,-m__text)
+
+include comend.smak

@@ -1,0 +1,27 @@
+.MODULE := emxbind
+.MDESC  := Build a OS/2 LX executable/dll from linked a.out module
+.MDEP	:= moddef@omf
+.INSDIR := bin/
+
+.TARGET := emxbind.exe
+.TKIND	:= $(TOOLFMT)
+.TSRC   := $(wildcard src/emxbind/*.c)
+# -fno-inline because of a bug in 3.2.2 optimizer :-(
+.TCF	:= $(CFLAGS.DEF.VERSION) -fno-inline -D_BSD_NAMESPACE_POLLUTION
+.TDEP	:= @O@libmoddef$A
+.TKEEP	:= 1
+include mkexe.smak
+
+.TARG := $(TOOLFMT)/os2stub.bin
+
+emxbind: $.$(.TARG)
+
+$.$(.TARG): src/emxbind/os2stub.bin
+	$(call CP,$< $@)
+
+INS.FILES += $(INS)$(.INSDIR)os2stub.bin
+
+$(INS)$(.INSDIR)os2stub.bin: $.$(.TARG)
+	$(call CP,$^,$@)
+
+include comend.smak

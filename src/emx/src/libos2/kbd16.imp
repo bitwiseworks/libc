@@ -1,0 +1,23 @@
+;
+; kbd16.imp
+;
+Kbd16CharIn                     kbdcalls   4 F
+Kbd16Close                      kbdcalls  17 F
+Kbd16DeRegister                 kbdcalls  20 F
+Kbd16FlushBuffer                kbdcalls  13 F
+Kbd16FreeFocus                  kbdcalls  18 F
+Kbd16GetCp                      kbdcalls   3 F
+Kbd16GetFocus                   kbdcalls  12 F
+Kbd16GetHWID                    kbdcalls  24 F
+Kbd16GetStatus                  kbdcalls  10 F
+Kbd16Open                       kbdcalls  23 F
+Kbd16Peek                       kbdcalls  22 F
+Kbd16Register                   kbdcalls   8 F
+Kbd16SetCp                      kbdcalls   5 F
+Kbd16SetCustXt                  kbdcalls   1 F
+Kbd16SetFgnd                    kbdcalls  21 F
+Kbd16SetHWID                    kbdcalls  25 F
+Kbd16SetStatus                  kbdcalls  11 F
+Kbd16StringIn                   kbdcalls   9 F
+Kbd16Synch                      kbdcalls   7 F
+Kbd16Xlate                      kbdcalls  14 F

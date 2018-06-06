@@ -1,0 +1,64 @@
+# $Id: duplicate1.gmk 1332 2004-04-04 17:55:18Z bird $
+## @file
+#
+# Testcase for emxbind problem with differenting symbols by case.
+#
+# Copyright (c) 2003 Knut st. osmundsen <bird-srcspam@anduin.net>
+#
+# All Rights Reserved
+#
+#
+
+TESTCASE= duplicate1
+#ifdef GCC_OMF
+#CFLAGS  = -Zomf
+#O		= .obj
+#A	    = .lib
+#CC		= gcc
+#SUFF	= -omf
+#else
+CFLAGS  = -Zaout
+O		= .o
+A	    = .a
+CC		= gcc
+SUFF	=
+#endif
+
+EXEOBJS = $(TESTCASE)$O
+DEFS	= $(TESTCASE).def
+	
+		
+all: $(TESTCASE)$(SUFF).exe
+
+check: all
+	$(TESTCASE)$(SUFF).exe	
+	
+install:	
+	
+clean distclean:
+	rm -f *$(TESTCASE)[-.]*obj *$(TESTCASE)[-.]*o \
+	      *$(TESTCASE)[-.]*lib *$(TESTCASE)[-.]*a \
+		  *$(TESTCASE)[-.]*map $(TESTCASE)[-.]*exe \
+		  stdout-ok stdout stderr stderr-ok
+
+
+.SUFFIXES:
+.SUFFIXES: .c .cpp .asm .s .o .obj
+.c$O:
+	$(CC) -c $(CFLAGS) -o "$(@)" "$<"
+	
+.cpp$O:
+	$(CC) -c $(CFLAGS) -o "$(@)" "$<"
+
+.asm$O:
+	../tools/x86.os2/masm/v6.0/binp/ml.exe -c /Zi $<
+	
+.s$O:
+	$(CC) -c $(CFLAGS) -o "$(@)" "$<"
+	
+				
+$(TESTCASE)$(SUFF).exe: $(EXEOBJS) $(DEFS) $(TESTCASE).gmk
+	if $(CC) -Zmap $(CFLAGS) -o "$@" $(EXEOBJS) $(DEFS); then true; \
+	else	rm -f $@; false; \
+	fi
+	

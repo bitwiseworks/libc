@@ -1,0 +1,118 @@
+# The common submakefile used for building all kinds of targets.
+
+ifdef .MODULE
+# If this is the first target in this module, add it to global variables
+ifeq ($(findstring $(.MODULE),$(MODULES)),)
+.PHONY: $(.MODULE)
+MODULES += $(.MODULE)
+ifdef .MDESC
+DO.HELP.MODULES += $(call ECHO,    $(.MODULE) - $(.MDESC))$(NL)
+.MDESC :=
+endif # def .MDESC
+ifdef .MDEP
+$(.MODULE): $(.MDEP)
+.MDEP :=
+endif # def .MDEP
+endif # eq ($(findstring $(.MODULE),$(MODULES)),)
+endif # def .MODULE
+
+# Canonicalize target kind to the form objectformat-threadness{-profiling}
+ifneq ($(findstring aout,$(.TKIND)),)
+.tmp := aout
+else
+.tmp := omf
+endif # neq ($(findstring aout,$(.TKIND)),)
+ifneq ($(findstring prof,$(.TKIND)),)
+.tmp += prof
+endif # neq ($(findstring prof,$(.TKIND)),)
+ifneq ($(findstring log,$(.TKIND)),)
+.tmp += log
+endif # neq ($(findstring log,$(.TKIND)),)
+ifneq ($(findstring lazy,$(.TKIND)),)
+.tmp += lazy
+endif # neq ($(findstring log,$(.TKIND)),)
+.TKIND := $(.tmp)
+ifdef .TKVAR
+.TKIND.DIR := $(subst $(SPACE),-,$(.TKIND))/$(.TKVAR)/
+else
+.TKIND.DIR := $(subst $(SPACE),-,$(.TKIND))/
+endif
+.DIRS :=
+
+ifdef .TARGET
+
+# .TARG is same as .TARGET except that it has a st/ or mt/ prefix
+.TARG := $(.TKIND.DIR)$(.TARGET)
+.DIRS += $.$(.TKIND.DIR)
+
+ifdef .INSDIR
+ifndef .NOINST
+INS.FILES += $(INS)$(.INSDIR)$(.TARGET)
+$(INS)$(.INSDIR)$(.TARGET): $.$(.TARG)
+	$(call CP,$<,$@)
+endif	
+endif # def .INSDIR
+
+# We know how to create dependency files for .c and .cpp files
+.tmp := $(strip $(filter %.c,$(.TSRC)) $(filter %.cpp,$(.TSRC)))
+ifdef .tmp
+# Read the dependency file
+-include $.$(.TKIND.DIR)dep-$(.TARGET).smak
+
+TARGDEPEND += $.$(.TKIND.DIR)dep-$(.TARGET).smak
+
+ifdef BUILD_DEPS
+# How to build the dependency file
+$.$(.TKIND.DIR)dep-$(.TARGET).smak: $(.tmp)
+	$(DO.DEPS)
+endif # BUILD_DEPS
+endif # def .tmp
+
+endif # def .TARGET
+
+# If module has any source files, find respective object file names
+# and directories where they will be built
+ifdef .TSRC
+
+.OBJS := $(addprefix $.,$(call OBJFILE,$(.TSRC)))
+.DIRS += $(sort $(dir $(.OBJS)))
+
+# Remove the names of files for which we already generated build rules
+# so that we won't generate same rule twice. In general this is not very
+# correct since two targets may want a object file compiled with different
+# options (e.g. .TCF) but we assume that the developer knows what's doing.
+ifndef BUILD.RULES
+# We need BUILD.RULES to be a expand-value-on-assignment type variable,
+# rather than expand-value-on-reference.
+BUILD.RULES :=
+endif
+.TSRC := $(filter-out $(BUILD.RULES),$(join $(addsuffix :,$(.OBJS)),$(.TSRC)))
+BUILD.RULES += $(.TSRC)
+.TSRC := $(filter-out $(.OBJS),$(subst :, ,$(.TSRC)))
+
+# Generate compilation rules for C files
+$(foreach x,$(filter %.c,$(.TSRC)), $(eval $(call def_compile_c,$(x))))
+
+# Generate compilation rules for S files
+$(foreach x,$(filter %.s %.S,$(.TSRC)), $(eval $(call def_compile_S,$(x))))
+
+# Generate compilation rules for asm files
+$(foreach x,$(filter %.asm,$(.TSRC)), $(eval $(call def_compile_asm,$(x))))
+
+endif # def .TSRC
+
+# Add target directories to module dependencies and to overall list of dirs
+ifneq ($(.DIRS),)
+TARGDIRS += $(.DIRS)
+ifdef .MODULE
+$(.MODULE): $(.DIRS)
+endif # def .MODULE
+endif # neq ($(.DIRS),)
+
+# Add the target to the list of module dependencies
+ifdef .TARGET
+$(.MODULE): $.$(.TARG)
+endif # def .TARGET
+
+# Replace the special sequence in .TDEP @O@ with $.$(.TKIND.DIR)
+.DEPS := $(subst @O@,$.$(.TKIND.DIR),$(.TDEP))

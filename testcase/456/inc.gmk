@@ -1,0 +1,2 @@
+TARGET=inc
+include common.gmk

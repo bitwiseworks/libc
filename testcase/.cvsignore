@@ -1,0 +1,5 @@
+*.map
+*.obj
+*.o
+*.exe
+*.lst

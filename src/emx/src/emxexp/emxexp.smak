@@ -1,0 +1,12 @@
+.MODULE := emxexp
+.MDESC  := Generate a list of DLL export entries
+.MDEP	:= omflib@omf
+.INSDIR := bin/
+
+.TARGET := emxexp.exe
+.TKIND	:= $(TOOLFMT)
+.TSRC   := $(wildcard src/emxexp/*.c)
+.TCF	:= $(CFLAGS.DEF.VERSION)
+.TDEP   := @O@libomflib$A
+.TLDF	:= -liberty
+include mkexe.smak

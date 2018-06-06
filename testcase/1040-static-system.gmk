@@ -1,0 +1,63 @@
+# $Id: 1040-static-system.gmk 1421 2004-05-02 03:11:54Z bird $
+## @file
+#
+# Testcase for static optimization bug found during execution of #1040.
+#
+# Copyright (c) 2004 knut st. osmundsen <bird-srcspam@anduin.net>
+#
+# All Rights Reserved
+#
+#
+
+TESTCASE= 1040-static-system
+ifdef GCC_OMF
+CFLAGS  = -Zomf -O3
+O		= .obj
+A	    = .lib
+CC		= gcc
+SUFF	= -omf
+else
+CFLAGS  = -Zaout -O3
+O		= .o
+A	    = .a
+CC		= gcc
+SUFF	=
+endif
+
+EXEOBJS = $(TESTCASE)$O \
+$(TESTCASE)-2$O \
+$(TESTCASE)-3$O \
+$(TESTCASE)-4$O \
+$(TESTCASE)-5$O \
+$(TESTCASE)-6$O 
+	
+		
+all: $(TESTCASE)$(SUFF).exe
+
+check: all
+	$(TESTCASE)$(SUFF).exe
+	
+install:	
+	
+clean distclean:
+	rm -f *$(TESTCASE)[-.]*obj *$(TESTCASE)[-.]*o \
+	      *$(TESTCASE)[-.]*lib *$(TESTCASE)[-.]*a \
+		  *$(TESTCASE)[-.]*map $(TESTCASE)[-.]*exe \
+
+
+.SUFFIXES:
+.SUFFIXES: .c .cpp .asm .s .o .obj
+.c$O:
+	$(CC) -c $(CFLAGS) -o "$(@)" "$<"
+	
+.cpp$O:
+	$(CC) -c $(CFLAGS) -o "$(@)" "$<"
+
+.s$O:
+	$(CC) -c $(CFLAGS) -o "$(@)" "$<"
+	
+				
+$(TESTCASE)$(SUFF).exe: $(EXEOBJS) $(TESTCASE).gmk
+	if $(CC) -Zmap $(CFLAGS) -o "$@" $(EXEOBJS); then true; \
+	else	rm -f $@; false; \
+	fi

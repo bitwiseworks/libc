@@ -1,0 +1,38 @@
+; $Id: innidmdll.def 562 2003-08-10 02:04:52Z bird $
+;
+; Innotek IDM DLL - demangler DLL for the linker.
+;
+; Copyright (c) 2003 InnoTek Systemberatung GmbH
+; Author: knut st. osmundsen <bird-srcspam@anduin.net>
+;
+;
+; This program is free software; you can redistribute it and/or modify
+; it under the terms of the GNU General Public License as published by
+; the Free Software Foundation; either version 2 of the License, or
+; (at your option) any later version.
+;
+; This program is distributed in the hope that it will be useful,
+; but WITHOUT ANY WARRANTY; without even the implied warranty of
+; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+; GNU General Public License for more details.
+;
+; You should have received a copy of the GNU General Public License
+; along with This program; if not, write to the Free Software
+; Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+;
+;
+
+LIBRARY INNIDM INITINSTANCE TERMINSTANCE
+DATA MULTIPLE NONSHARED
+
+EXPORTS
+;unsigned long _System InitDemangleID32(char * psInitParms);
+    InitDemangleID32    @1 RESIDENTNAME
+;unsigned long _System DemangleID32(char * psMangledName, char * pszPrototype, unsigned long BufferLen);
+    DemangleID32        @2 RESIDENTNAME
+
+;unsigned short pascal far INITDEMANGLEID(char far * psInitParms);
+    INITDEMANGLEID      @3 RESIDENTNAME
+;unsigned short pascal far DEMANGLEID(char far * psMangledName, char far * pszPrototype, unsigned long BufferLen);
+    DEMANGLEID          @4 RESIDENTNAME
+

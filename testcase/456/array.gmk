@@ -1,0 +1,2 @@
+TARGET=array
+include common.gmk

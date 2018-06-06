@@ -1,0 +1,402 @@
+# Central makefile for building the OS2/GCC C runtime
+#
+# InnoTek Systemberatung GmbH
+#
+# Copyright (c) 1994-1995 by Eberhard Mattes
+# Copyright (c) 2003 InnoTek Systemberatung GmbH
+#
+# Author: Andrew Zabolotny <zap@cobra.ru>
+# $Id: Makefile.gmk 3842 2014-03-16 19:46:21Z bird $
+#
+# All Rights Reserved
+#
+# Requires GNU Make.
+# In fact, this build system could be entitled "GNU Make Unleashed"
+#
+# For a brief description of how build system works please read build.txt
+#
+# Bootstrapping sequence using EMX gcc compiler:
+#
+# 1. Backup include/ctype.h and rename include/ctype.h-bootstrap to
+#    include/ctype.h
+# 2. Run 'make os2', put the resulting library os2.a to emx/lib as _os2.a,
+#    and convert it to .lib with emxomf: 'emxomf _os2.a'
+# 3. Now compile everything you wish this way: 'make LIBS=-l_os2'
+#
+
+# Build type control variables. You can set them right from command line,
+# e.g "make MODE=dbg"
+
+# Build mode: opt (optimization), dbg (debug)
+MODE = dbg
+# Base output directory
+OUT = out/
+# Base installation directory
+INS = out/$(MODE)/install/
+# CPU type (pretend we are portable ;-)
+CPU = 386
+# Name of this makefile
+ifndef MAKEFILE
+MAKEFILE = Makefile.gmk
+endif
+
+# Actual output directory (referenced with $.)
+. = $(OUT)$(MODE)/
+
+# overrides from the environment.
+ifdef PATH_OBJ
+ifndef PATH_OBJD
+PATH_OBJD := $(shell echo $(PATH_OBJ)|sed 's/^[a-zA-Z]://')
+endif
+OUT = $(PATH_OBJD)/emx/
+INS = $(PATH_OBJD)/builtunix/usr/
+.   = $(OUT)
+endif
+
+ifdef BUILD_MODE
+ifeq ($(BUILD_MODE),RELEASE)
+MODE = opt
+endif
+endif
+
+# Check if MODE has a valid value
+ifneq ($(filter-out /opt/ /dbg/ /prf/,/$(MODE)/),)
+$(error MODE should have one of the following values: opt, dbg, prf)
+endif
+
+# The object file format to use for tools (emxomf, ld and friends)
+TOOLFMT.dbg = omf
+TOOLFMT.opt = omf
+TOOLFMT.prf = omf
+TOOLFMT = $(TOOLFMT.$(MODE))
+
+# Use ash.exe which is quite fast (comparable to cmd.exe) but has more features
+SHELL := ash.exe
+
+# Source base directory.
+srcdir := $(shell pwd)
+
+# File name extensions
+# Executable files -- xxx$E
+E = .exe
+# DLL files --- xxx$D
+D = .dll
+# Library files --- xxx$A
+A = .$(if $(findstring omf,$(.TKIND)),lib,a)
+
+# Use the tool we built.
+GETTOOL ?= $.$(TOOLFMT)/$1$E
+# Use the tool we built if present
+GETTOOL2 ?= `test -f '$.$(TOOLFMT)/$1$E' && echo '$.$(TOOLFMT)/'`$1$E
+
+# The C compiler
+CC = gcc -c -Zmt -fmessage-length=0
+# The C compiler flags
+ifndef NO_LOCAL_HEADERS
+CFLAGS.INC  += -Iinclude
+endif
+CFLAGS.INC  += -Isrc/include
+CFLAGS.INC  += -Isrc/lib/bsd/include
+CFLAGS      = -Wall -Wundef -Wmissing-prototypes -mstack-arg-probe $(CFLAGS.INC) $(CFLAGS.$(MODE)) $(CFLAGS.KIND)
+# The additional C compiler flags for different build modes
+CFLAGS.opt  = -g -O3 -mcpu=pentium -mpreferred-stack-boundary=4 -malign-strings=2 -falign-loops=2 -falign-jumps=2 -falign-functions=3
+CFLAGS.dbg  = -g -DDEBUG
+CFLAGS.prf  = $(CFLAGS.opt) -pg
+CFLAGS.aout = -Zaout
+CFLAGS.omf  = -Zomf
+CFLAGS.prof = -pg
+CFLAGS.log  = -DDEBUG_LOGGING -D__LIBC_STRICT
+# The object files are put in subdirectory objectformat-targetkind,
+# we decompose object file name back and pick appropiate $CFLAGS
+CFLAGS.KIND = $(foreach x,$(subst -, ,$(firstword $(subst /, ,$(subst $.,,$@)))),$(CFLAGS.$x))
+# How to compile a .c file
+DO.COMPILE.c = $(CC) -std=gnu99 $(strip $(CFLAGS) $1) -o $@ $(srcdir)/$< -I$(dir $<)
+# '-std=gnu99' doesn't work with '-x assembler-with-cpp', therefor no $(call DO.COMPILE.c).
+DO.COMPILE.s = $(CC) -x assembler-with-cpp $(strip $(CFLAGS) $1) -o $@ $(srcdir)/$< -I$(dir $<)
+
+# The linker
+LD = gcc
+# Linker flags
+LDFLAGS     = $(LDFLAGS.$(MODE)) $(LDFLAGS.KIND) -Zmap -Zstack 1024 -Zhigh-mem $(LIBS)
+LDFLAGS.DLL = $(LDFLAGS) -Zdll -Zfork
+# Linker flags for different build modes
+LDFLAGS.opt = -g -Zcrtdll=c_dll
+LDFLAGS.prf = -g -Zcrtdll=c_dll -lkProfile -LG:/kTaskMgr/Tree/lib/debug
+LDFLAGS.dbg = -g
+LDFLAGS.aout = -Zaout
+ifeq ($(EMXOMFLD_TYPE),wlink)
+LDFLAGS.omf = -Zomf
+else
+LDFLAGS.omf = -Zomf -Zlinker /PM:VIO -Zlinker /LINENUMBERS
+endif
+LDFLAGS.prof = -pg
+# Linker flags for different kinds of target
+LDFLAGS.KIND = $(foreach x,$(subst -, ,$(firstword $(subst /, ,$(subst $.,,$@)))),$(LDFLAGS.$x))
+# How to link a .exe file
+DO.LINK.exe = $(LD) $(strip $(LDFLAGS) $(filter-out -l%,$1)) -o $@ $(^O) $(^DEF) $(^LIB) $(filter -l%,$1)
+# How to link a .dll file
+DO.LINK.dll = $(LD) $(strip $(LDFLAGS.DLL) $(filter-out -l%,$1)) -o $@ $(^O) $(^DEF) $(^LIB) $(filter -l%,$1)
+
+# Pack executables and DLLs right after they are linked
+# bird: I don't care about space, only performance. So, we will only use
+#       lxlite for stripping and sector aligning.
+#		<rant> My explanation is that anything which is used frequently
+#		enough will be in one of the caches, so unpacking the datasegment
+#		for each new process is a waste of time. The code segment is
+#		shared, data segment is not shared, but must be reloaded page by page
+#		from the executable in new processes.
+#       For further optimzations, we align pages on 4kb boundaries since this
+#		is the JFS block size and thus should be most the efficient unit to read. </rant>
+# URG! we must not do this for ldstub.bin!
+ifeq ($(MODE),opt)
+LXLITE.FLAGS = /F+ /AP:4096 /MRN /MLN /MF1
+DO.LINK.exe += $(if $(findstring .exe,$@), $(NL)cp $@ $(basename $@).dbg $(NL)lxlite /X /AS $(subst /,\\,$@))
+DO.LINK.dll += $(NL)cp $@ $(basename $@).dbg $(NL)lxlite $(LXLITE.FLAGS) $(subst /,\\,$@)
+endif
+
+# emxbind tool
+EMXBIND = $(call GETTOOL2,emxbind)
+# emxbind flags
+EMXBINDFLAGS = -bq $(EMXBINDFLAGS.$(MODE))
+EMXBINDFLAGS.opt = -s
+EMXBINDFLAGS.prf =
+EMXBINDFLAGS.dbg =
+# Flags for emxbind
+DO.EMXBIND = $(EMXBIND) $(EMXBINDFLAGS) -o $@ $1
+
+# The macro assembler
+ifdef PATH_TOP
+ASM = $(PATH_TOP)/tools/x86.os2/masm/v6.0/binp/ml.exe -c
+else
+ASM = ml -c
+endif
+ASMFLAGS = -Cp -W3 -WX -VM -nologo
+# How to compile an .asm file
+DO.COMPILE.asm = $(ASM) $(ASMFLAGS) $1 -Fo$@ $<
+
+# The tool to create an archive
+AR = $(if $(findstring .lib,$@), $(call GETTOOL2,emxomfar),ar)
+ARFLAGS = crs
+DO.LIBRARY = $(call RM_SHELL,$@); $(AR) $(ARFLAGS)$1 $@ $(^O)
+
+# The tool to extract exports from object files and archives,
+# removing unused stuff (like empty lines and comments)
+# and sorting alphabetically (looks nicer).
+EMXEXP = $(call GETTOOL2,emxexp)
+EMXEXPFLAGS = -u
+DO.EMXEXP = $(EMXEXP) $(strip $(EMXEXPFLAGS) $1) | sed -e "/^$$/d" -e "/^ *;/d" | sort -d >>$2
+
+# The tool to create import libraries
+IMPLIB = $(call GETTOOL2,emximp)
+IMPLIBFLAGS.prof = -m
+IMPLIBFLAGS.lazy = -l
+IMPLIBFLAGS.KIND = $(foreach x,$(subst -, ,$(firstword $(subst /, ,$(subst $.,,$@)))),$(IMPLIBFLAGS.$x))
+DO.IMPLIB = $(IMPLIB) -o $@ $(strip $1 $(IMPLIBFLAGS.KIND)) $(^IC)\
+  $(if $(^ID),\
+  $(NL)$(IMPLIB) -o $@.data$(suffix $@) $(strip $1) $(^ID)\
+  $(NL)$(call RMDIR,$@.tmpdir)\
+  $(NL)$(call MKDIR,$@.tmpdir)\
+  $(NL)cd $@.tmpdir && $(AR) x ../$(notdir $@.data$(suffix $@))\
+  $(NL)$(call RM,$@.tmpdir/*.log*)\
+  $(NL)$(AR) rs $@ $@.tmpdir/* )\
+  $(if $(^O)$(^LIB),$(NL)$(AR) rs $@ $(^O) $(^LIB))
+
+# How to create dependencies
+MAKEDEP = makedep
+MAKEDEPFLAGS = $(CFLAGS.INC)
+DO.DEPS = $(MAKEDEP) $(MAKEDEPFLAGS) \
+  -I$(subst $(SPACE), -I,$(sort $(dir $^))) -I$. -p$(@D)/ -c -S -f$@ $^
+
+# How to convert an a.out file to the OMF format
+#   Emxomf depends on two libs, we have to detect wethere or not emxomf is built
+#   or not. Unfortunately make isn't up to the job of figuring this out, so we
+#	must use the shell.
+EMXOMF = $(call GETTOOL2,emxomf)
+DO.EMXOMF = $(EMXOMF) $(strip $1 -o) $@ $(if $<,$<, $(subst /omf-prof/,/aout-prof/,$(subst /omf-log/,/aout-log/,$(subst /omf/,/aout/,$(@:.obj=.o)))) )
+
+# How to copy some file to installation directory
+# In optimize mode we have to strip the libraries after copying
+INSTALL=$(call CP,$1,$2)
+ifeq ($(MODE),opt)
+INSTALL += $(if $(filter-out %.a,$2),$(NL)strip --strip-debug $2)
+INSTALL += $(if $(filter-out %.lib,$2),$(NL)emxomf -s $2)
+endif
+
+# How to filter just the object files from $^
+^O = $(filter %.o,$^)
+# Just the .imp files from $^ excluing -data.imp files.
+^IC = $(filter-out %-data.imp,$(filter %.imp,$^))
+# Just the -data.imp files from $^
+^ID = $(filter %-data.imp,$^)
+# How to filter just the .def files from $^
+^DEF = $(filter %.def,$^)
+# How to filter the libraries from $^
+^LIB = $(strip $(filter %.a,$^) $(filter %.lib,$^))
+
+# A newline
+define NL
+
+
+endef
+# Opening and closing brackets (for use inside variable expansions)
+OB := (
+CB := )
+COMMA := ,
+SPACE := $(EMPTY) $(EMPTY)
+# Text output separator (cannot begin with '-', echo thinks its a switch)
+SEP := ==========================================================================
+
+# How to remove one or more files without questions
+ifdef KMK_VERSION
+RM = kmk_builtin_rm -f $1
+else
+RM = rm -f $1
+endif
+RM_SHELL = rm -f $1
+# How to remove one or more directories without questions
+RMDIR = rm -rf $1
+# How to copy several files to a directory
+ifdef KMK_VERSION
+CP = kmk_builtin_cp $1 $2
+else
+CP = cp $1 $2
+endif
+# Miscelaneous tools
+ifdef KMK_VERSION
+MKDIR = kmk_builtin_mkdir -p $1
+else
+MKDIR = mkdir.exe -p $1
+endif
+# How to update a file only if it has been changed
+UPDATE = (cmp -s $1 $2 || mv -f $1 $2) && rm -f $1
+# How to touch a file
+TOUCH = touch $1
+# Re-build the original string including the ',' between args. Also escape
+# dollars since otherwise ash would expand them.
+ECHOIZE = $(subst $$,\$$,$1$(strip $(subst $(SPACE)$(COMMA),$(COMMA),$(foreach x,2 3 4 5 6 7 8 9,$(if $($x),$(COMMA) $($x))))))
+# How to output a text string (with appended newline)
+ifdef KMK_VERSION
+ECHO = kmk_builtin_echo "$(call ECHOIZE,$1,$2,$3,$4,$5,$6,$7,$8,$9)"
+else
+ECHO = echo "$(call ECHOIZE,$1,$2,$3,$4,$5,$6,$7,$8,$9)"
+endif
+# Same but append the text to a file (given with first argument)
+FECHO = echo "$(call ECHOIZE,$2,$3,$4,$5,$6,$7,$8,$9)" >> "$1"
+# How to replace the source file extension with a .o extension
+OBJEXT = $(patsubst %.S,%.o,$(patsubst %.s,%.o,$(patsubst %.asm,%.o,$(patsubst %.c,%.o,$1))))
+# Compute object file path given source file path (except the $. prefix)
+OBJFILE = $(addprefix $(.TKIND.DIR),$(call OBJEXT,$1))
+
+#------------ Variables appended by submakefiles ------------
+# The list of available modules
+MODULES :=
+# The help text for module list
+DO.HELP.MODULES :=
+# The help about public makefile variables
+DO.HELP.VARS := $(call ECHO,    MODE={dbg|opt|prf} - choose between debug, optimized and profiled build modes.)$(NL)
+DO.HELP.VARS += $(call ECHO,    OBJF={omf|aout} - build object files in omf or a.out format.)$(NL)
+# The list of work directories needeed for building all targets
+TARGDIRS :=
+# Build rules (_@_ replaced by name of generated makefile)
+RULES :=
+# The list of dependency files
+TARGDEPEND :=
+# The list of installed files
+INS.FILES :=
+
+.PHONY: default help all libs tools clean install install cleandep \
+  cleandepend dep depend depdone
+.SUFFIXES:
+.SUFFIXES: .c .cpp .asm .s .S .o .exe .dll .a .lib .obj
+
+# Default target
+default: help
+
+#------------ Submakefiles ------------
+ifndef SUBMAK
+SUBMAK := version.smak $(wildcard src/*/*.smak) include/include.smak $(wildcard bsd/*/*.smak) $(wildcard gnu/*/*.smak)
+endif
+
+# include template rules
+include templates.smak
+
+# Include all submakefiles
+-include $(SUBMAK)
+
+ifdef OFFICIAL_BIRD_VERSION
+ifneq ($(filter-out eniac delirium os2bld, $(HOSTNAME)),)
+$(error yea, nice try! Now go be ashamed of yourself!)
+endif
+endif
+
+# Sort and remove duplicate directories
+TARGDIRS := $(sort $(TARGDIRS))
+# Find out which directories are needed for installation
+INSDIRS := $(sort $(dir $(INS.FILES)))
+
+#------------ Global targets ------------
+help:
+	@$(call ECHO,$(SEP))
+	@$(call ECHO,Welcome to $(PACKAGE) version $(VERSION) build system!)
+	@$(call ECHO,$(COPYRIGHT))
+	@$(call ECHO,To build something, type 'make {target} {vars}', where {target} is one of:)
+	@$(call ECHO,    all - build all available modules)
+	@$(call ECHO,    {module-name} - build just a particular module)
+	@$(call ECHO,    tools - build just the tools)
+	@$(call ECHO,    libs - build all libraries)
+	@$(call ECHO,    clean - remove all generated files (remove all built files))
+	@$(call ECHO,    install - generate a installation tree in $(INS))
+	@$(call ECHO,    dep - generate dependency files for all changed targets)
+	@$(call ECHO,    cleandep - remove all dependency file)
+	@$(call ECHO,$(SEP))
+	@$(call ECHO,There are a number of variables than can be set in the make)
+	@$(call ECHO,command line to control various aspects of compilation:)
+	@$(DO.HELP.VARS)
+	@$(call ECHO,$(SEP))
+	@$(call ECHO,The following modules are included in this package:)
+	@$(DO.HELP.MODULES)
+	@$(call ECHO,$(SEP))
+
+all: $(MODULES)
+
+clean:
+	$(call RMDIR,$(OUT))
+
+cleandep cleandepend:
+	$(call RM,$(TARGDEPEND))
+
+dep depend:
+	@$(MAKE) -f $(MAKEFILE) --no-print-directory BUILD_DEPS=1 depdone
+
+depdone:
+	@$(call ECHO,Dependency files succesfully updated)
+
+install: all $(INSDIRS) $(INS.FILES)
+
+$. $(INSDIRS) $(TARGDIRS):
+	$(call MKDIR,$@)
+
+# bird: add rule for forcibly re-generating the rules.
+rules:
+	@$(call ECHO,smak don't generate rules anylonger!)
+
+# The general a.out -> OMF conversion rules for object files
+$.omf/%.obj:
+	$(call DO.EMXOMF)
+$.omf-log/%.obj:
+	$(call DO.EMXOMF)
+$.omf-prof/%.obj:
+	$(call DO.EMXOMF)
+
+# The general a.out -> OMF conversion rule for libraries
+$.omf%.lib:
+	$(call MKDIR, $(dir $@))
+	$(call DO.EMXOMF)
+
+#
+# Checkout rule
+#
+checkout update up:
+	cvs -q update -d -P 2>&1 | tee up.log
+
+

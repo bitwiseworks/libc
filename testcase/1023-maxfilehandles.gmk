@@ -1,0 +1,61 @@
+# $Id: 1023-maxfilehandles.gmk 1371 2004-04-14 23:13:55Z bird $
+## @file
+#
+# Testcase for bug #1023 autoincrement of file handles.
+#
+# InnoTek Systemberatung GmbH confidential
+#
+# Copyright (c) 2003 InnoTek Systemberatung GmbH
+# Author: knut st. osmundsen <bird-srcspam@anduin.net>
+#
+# All Rights Reserved
+#
+#
+
+TESTCASE= 1023-maxfilehandles
+ifdef GCC_OMF
+CFLAGS  = -Zomf -O2
+O		= .obj
+A	    = .lib
+CC		= gcc
+SUFF	= -omf
+else
+CFLAGS  = -Zaout -O2
+O		= .o
+A	    = .a
+CC		= gcc
+SUFF	=
+endif
+
+EXEOBJS = $(TESTCASE)$O
+	
+		
+all: $(TESTCASE)$(SUFF).exe
+
+check: all
+	$(TESTCASE)$(SUFF).exe
+	
+install:	
+	
+clean distclean:
+	rm -f *$(TESTCASE)[-.]*obj *$(TESTCASE)[-.]*o \
+	      *$(TESTCASE)[-.]*lib *$(TESTCASE)[-.]*a \
+		  *$(TESTCASE)[-.]*map $(TESTCASE)[-.]*exe \
+
+
+.SUFFIXES:
+.SUFFIXES: .c .cpp .asm .s .o .obj
+.c$O:
+	$(CC) -c $(CFLAGS) -o "$(@)" "$<"
+	
+.cpp$O:
+	$(CC) -c $(CFLAGS) -o "$(@)" "$<"
+
+.s$O:
+	$(CC) -c $(CFLAGS) -o "$(@)" "$<"
+	
+				
+$(TESTCASE)$(SUFF).exe: $(EXEOBJS) $(TESTCASE).gmk
+	if $(CC) -Zmap $(CFLAGS) -o "$@" $(EXEOBJS); then true; \
+	else	rm -f $@; false; \
+	fi

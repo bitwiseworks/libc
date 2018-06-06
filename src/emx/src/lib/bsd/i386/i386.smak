@@ -1,0 +1,1 @@
+libc.TSRC.386 += $(wildcard src/lib/bsd/i386/*/*.c) $(wildcard src/lib/bsd/i386/*/*.S)

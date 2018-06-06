@@ -1,0 +1,11 @@
+# Hack for building less.
+
+MAKEFILE := toolonly.gmk
+GENRULES  = $.genrules-toolonly.smak
+SUBMAK   := version.smak $(filter-out src/regexp/%, \
+	$(filter-out src/lib%, $(wildcard src/*/*.smak))) \
+	$(wildcard src/libmoddef/*.smak) \
+	$(wildcard src/libomflib/*.smak) \
+
+NO_LOCAL_HEADERS=1
+include Makefile.gmk

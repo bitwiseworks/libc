@@ -1,0 +1,9 @@
+.MODULE := emxstack
+.MDESC  := Change stack allocation in a executable
+.INSDIR := bin/
+
+.TARGET := emxstack.exe
+.TKIND	:= $(TOOLFMT)
+.TSRC   := $(wildcard src/emxstack/*.c)
+.TCF	:= $(CFLAGS.DEF.VERSION)
+include mkexe.smak

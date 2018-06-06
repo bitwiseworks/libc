@@ -1,0 +1,39 @@
+
+TESTCASE=475
+CFLAGS  = -Zomf
+O		= .obj
+A	    = .lib
+CC		= gcc
+AR		= emxomfar rc
+
+LIBOBJS = $(TESTCASE)-lib$(O)
+EXEOBJS = $(TESTCASE)main$(O)
+	
+
+	
+check all: $(TESTCASE).exe
+	
+install:	
+	
+clean distclean:
+	rm -f *$(TESTCASE)*.obj *$(TESTCASE)*.o \
+	      *$(TESTCASE)*.lib *$(TESTCASE)*.a \
+		  *$(TESTCASE)*.map $(TESTCASE)*.exe
+
+
+.SUFFIXES:
+.SUFFIXES: .s .c .o .obj
+.c$(O):
+	gcc -c $(CFLAGS) -o "$(@)" "$<"
+
+.s$(O):
+	gcc -c $(CFLAGS) -o "$(@)" "$<"
+	
+$(TESTCASE)lib$(A): $(LIBOBJS) $(TESTCASE).gmk
+	rm -f $@
+	emxomfar rc $@ $(LIBOBJS)
+
+$(TESTCASE).exe: $(EXEOBJS) $(TESTCASE)lib$(A) $(TESTCASE).gmk
+	if gcc -Zmap $(CFLAGS) -o "$@" $(EXEOBJS) $(TESTCASE)lib$(A); then true; \
+	else	rm -f $@; false; \
+	fi

@@ -1,0 +1,7 @@
+;
+; nls.imp
+;
+DosMapCase              nls        7 3
+DosQueryCollate         nls        8 4
+DosQueryCtryInfo        nls        5 4
+DosQueryDBCSEnv         nls        6 3

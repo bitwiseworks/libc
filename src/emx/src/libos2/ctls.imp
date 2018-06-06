@@ -1,0 +1,18 @@
+;
+; ctls.imp
+;
+WinDefFileDlgProc               pmctls  5 4
+WinDefFontDlgProc               pmctls  3 4
+WinFileDlg                      pmctls  4 3
+WinFontDlg                      pmctls  2 3
+WinFreeFileDlgList              pmctls  6 1
+WinRegisterCircularSlider       pmctls 24 ?
+
+; Private API and globals.
+DaxOpenSave                     pmctls 295 ?
+WinDefColorDlgProc              pmctls 293 4
+WinDefFindDlgProc               pmctls 297 4
+WinDefPrintDlgProc              pmctls 301 4
+WinDefReplaceDlgProc            pmctls 299 4
+PaxChooseFont                   pmctls 292 ?
+

@@ -1,0 +1,6 @@
+libc.TSRC += $(wildcard src/lib/lgpl/sysdeps/os2/*.c) \
+	$(wildcard src/lib/lgpl/sysdeps/i386/*.S) \
+	$(wildcard src/lib/lgpl/sysdeps/i386/fpu/*.S) \
+	$(wildcard src/lib/lgpl/sysdeps/i386/fpu/*.c) \
+	$(wildcard src/lib/lgpl/sysdeps/generic/*.c) \
+	$(wildcard src/lib/lgpl/sysdeps/ieee754/ldbl-96/*.c)

@@ -1,0 +1,3 @@
+TARGET=dbgpack
+TARGET2=dbgpack_2
+include common.gmk

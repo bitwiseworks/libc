@@ -1,0 +1,21 @@
+include comend.smak
+
+.MODULE	:= libm
+.MDESC	:= Stub math library (move into libc)
+.MDEP   := emxomf
+
+.TARGET	:= libm_p.a
+.TKIND	:= aout prof
+.TSRC	:= $(wildcard src/libm/*.c)
+.INSDIR	= lib/
+.TKEEP	:= 1
+include mklib.smak
+include mkomflib.smak
+
+.TARGET	:= libm.a
+.TKIND	:= aout
+include mklib.smak
+include mkomflib.smak
+
+# Forget temporary variables
+include comend.smak

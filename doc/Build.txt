@@ -1,0 +1,79 @@
+$Id: Build.txt 1356 2004-04-11 16:26:43Z bird $
+
+
+1.0 Setting up the buildenvironment
+-----------------------------------
+
+The build environment is selfcontained with the exception of EMX. However,
+some of the components changes rather often because of LIBC updates so these
+components are kept in .zips which have to be unzipped in the /tools
+directory. Go to tools/ and do unzip -o packages/*.zip.
+
+The GCC is by default taken from tools/x86.os2/gcc/staged and you must put
+the latest build there for it to work. Installing the compiler to that
+directory is perhaps the best idea:
+    GCC-3.2.2-beta4.exe /unattended /directory=tools/x86.os2/gcc/staged
+
+The build environment is loaded into the current shell (4os2 or cmd) by
+invoking tools\env.cmd. This rexx script takes two options:
+    -disable-staged-gcc / -enable-staged-gcc:
+        Use the staged gcc or the gcc322 BuildEnv. For the latter you'll
+        have to put configure gcc322 using tools\buildenv.cmd if you haven't
+        already done so globally for another project.
+
+    -install / -uninstall:
+        Install or uninstall the GCC buildenvironment. Installing it is
+        naturally default. (Not sure how well -uninstall works actually.)
+
+The rexx script takes one optional argument:
+    RELEASE / DEBUG:
+        Specifies the build mode/type which is to be default for the
+        environment. Default is (of course) DEBUG.
+
+
+
+2.0 Building
+------------
+
+The default for all is a simple build of all the components, no compiler
+bootstrapping. However we do a little LIBC bootstrapping underways, i.e.
+LIBC is build first and installed to a temporary location which figures
+before the GCC one in all the PATHs. Thus the LIBC we build will be used
+to build the rest. This will happen for the other libraries, tools,
+binutils and gcc as we go along.
+
+This build type is called 'quick'.
+
+
+There is another build type, which is used for the release builds, which
+is called double-quick. It performs the 'quick' build twice thus ensuring
+that even everything is built with the same level of tools that we deliver.
+
+Both 'quick' and 'double-quick' will log to obj/OS2/$(BUILD_MODE)/???.log,
+and will when all is built install it into bin/OS2/$(BUILD_MODE)/<reltag>.
+
+
+2.1 Building parts
+------------------
+
+Individual components can be built, like for instance LIBC/EMX can be built
+from the src/emx directory. See help screen when invoking make there and the
+MoBuS documentation in src/emx/build.txt
+
+Binutils and GCC are normal GNU build system stuff, which mean they require
+their Configure scripts to be run. This normally should be done by the root
+Makefile to get it right. There are special gcc-configure, binutils-configure
+rules for this. The object directories are in obj/OS2/$(BUILD_MODE)/gcc or
+binutils.
+TODO: Add emx-shell, gcc-shell and binutils-shell rules which will take you
+to the right place.
+
+
+3.0 Packing
+-----------
+
+There is a 'packing' rule. Just invoke this and packing will take place. To
+pack up the sources invoke the 'packing-src' rule. The 'installer' will only
+do the installer creation.
+
+

@@ -1,0 +1,5 @@
+libc.TSRC += $(wildcard src/lib/bsd/db/btree/*.c)
+libc.TSRC += $(wildcard src/lib/bsd/db/db/*.c)
+libc.TSRC += $(wildcard src/lib/bsd/db/hash/*.c)
+libc.TSRC += $(wildcard src/lib/bsd/db/mpool/*.c)
+libc.TSRC += $(wildcard src/lib/bsd/db/recno/*.c)

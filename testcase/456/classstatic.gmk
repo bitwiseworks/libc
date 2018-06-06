@@ -1,0 +1,3 @@
+TARGET=classstatic
+TARGET_SRCEXT=cpp
+include common.gmk

@@ -1,0 +1,59 @@
+# $Id: 572.gmk 602 2003-08-16 00:56:31Z bird $
+## @file
+#
+# _Optlink declaration and definition testcases.
+#
+# InnoTek Systemberatung GmbH confidential
+#
+# Copyright (c) 2003 InnoTek Systemberatung GmbH
+# Author: knut st. osmundsen <bird-srcspam@anduin.net>
+#
+# All Rights Reserved
+#
+#
+
+TESTCASE=572
+ifdef GCC_OMF
+CFLAGS  = -Zomf
+O		= .obj
+A	    = .lib
+else
+CFLAGS  = -Zaout
+O		= .o
+A	    = .a
+endif
+CC		= gcc
+
+EXEOBJS = $(TESTCASE)main$O $(TESTCASE)c$O $(TESTCASE)asm$O
+	
+		
+all: $(TESTCASE).exe
+
+check: all
+	$(TESTCASE).exe
+	
+install:	
+	
+clean distclean:
+	rm -f *$(TESTCASE)*.obj *$(TESTCASE)*.o \
+	      *$(TESTCASE)*.lib *$(TESTCASE)*.a \
+		  *$(TESTCASE)*.map $(TESTCASE)*.exe
+
+
+.SUFFIXES:
+.SUFFIXES: .c .cpp .s .o .obj
+.c$O:
+	$(CC) -c $(CFLAGS) -o "$(@)" "$<"
+	
+.cpp$O:
+	$(CC) -c $(CFLAGS) -o "$(@)" "$<"
+
+.s$O:
+	$(CC) -c $(CFLAGS) -o "$(@)" "$<"
+	
+				
+$(TESTCASE).exe: $(EXEOBJS) $(TESTCASE).gmk
+	if $(CC) -Zmap $(CFLAGS) -o "$@" $(EXEOBJS) -lstdc++; then true; \
+	else	rm -f $@; false; \
+	fi
+	

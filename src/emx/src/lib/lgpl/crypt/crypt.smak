@@ -1,0 +1,17 @@
+libc.TSRC += $(addprefix src/lib/lgpl/crypt/,crypt-entry.c md5-crypt.c md5.c crypt.c crypt_util.c)
+
+include comend.smak
+.MODULE	:= libcrypt
+.MDESC	:= Stub crypt library (the actual code is in libc)
+
+.TARGET	:= libcrypt.a
+.TKIND	:= aout
+.TSRC	:= # stub
+.INSDIR	= lib/
+.TKEEP	:= 1
+include mklib.smak
+include mkomflib.smak
+
+# Forget temporary variables
+include comend.smak
+

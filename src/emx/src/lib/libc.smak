@@ -1,0 +1,551 @@
+# This is the top-level submakefile for building EMX C runtime library
+
+# Utility function used in second-level submakefiles
+# Creates four versions of object file name for all kinds of outputs.
+.MVER = $(foreach x,aout aout-prof,$.$x/src/lib/$1)
+
+# This is the list of object files for libc.dll (appended by some submakefiles)
+LIBC.DLL.OBJS :=
+
+# First of all, include all second-level libc submakefiles
+LIBC.SUBMAK := $(wildcard src/lib/*/*.smak) $(wildcard src/lib/bsd/*/*.smak) $(wildcard src/lib/lgpl/*/*.smak)
+-include $(LIBC.SUBMAK)
+# Add to the list of genrules.smak dependencies
+$.genrules.smak: $(LIBC.SUBMAK)
+
+# First of all, libc target needs the libc-std.h file generated.
+# If we depend directly on the header file, it is a pain since every
+# time a .c file is modified, the .h file is regenerated, and then
+# every source file is recompiled (since libc-std.h is included from
+# every libc source file). To avoid this, we create a stamp file which
+# takes care not to update libc-std.h if it has not been changed.
+libc: $.stmp-libc-std
+
+.MODULE	:= libc
+.MDESC	:= The C library
+.MDEP   := libsocket libsyslog
+
+.TARGET	:= libc_p_s.a
+.TKIND	:= aout prof
+.TSRC	:= $(libc.TSRC.$(CPU)) $(libc.TSRC)
+.TDEP	:= $(libc.TDEP.$(CPU)) $(libc.TDEP)
+.TCF	:= \
+ -DIN_INNOTEK_LIBC \
+ -D__IN_INNOTEK_LIBC__ \
+ -D__DBINTERFACE_PRIVATE \
+ -D__NETBSD_SYSCALLS \
+ -DPOSIX_MISTAKE \
+ -DHAVE_CONFIG_H \
+ -D_BSD_NAMESPACE_POLLUTION \
+ -I$.	\
+ -Isrc/lib/bsd/include \
+ -Isrc/lib/bsd/locale \
+ -Isrc/lib/lgpl \
+ -Isrc/lib/lgpl/sysdeps/os2 \
+ -Isrc/lib/lgpl/sysdeps/i386 \
+ -Isrc/lib/lgpl/sysdeps/generic \
+ -Isrc/lib/lgpl/include
+.TSF	+= $(.TCF)
+.INSDIR	= lib/
+.TKEEP	:= 1
+ifndef LIBC_CORE_ONLY
+include mklib.smak
+endif
+
+
+.TARGET := libc_l_s.a
+.TKIND	:= aout	log
+.TKEEP	:= 1
+ifndef LIBC_CORE_ONLY
+include mklib.smak
+endif
+
+# Build libc.a last since LIBC.DLL needs .OBJS from libc.a
+.TARGET	:= libc_s.a
+.TKIND	:= aout
+.TKEEP	:= 1
+include mklib.smak
+
+.TARGET	:= libc_omf386.lib
+.TKIND	:= omf
+.TSRC   := $(wildcard src/lib/sys/386/*.asm)
+.TDEP	:=
+.TCF	:=
+.TKEEP	:= 1
+include mklib.smak
+
+
+#------------------------------------------------------
+# Now define the rules for building libc$(VERSION).dll
+# bird: Build as OMF (#564).
+#------------------------------------------------------
+.TKIND	        := omf
+LIBC.STUB		:= $(wildcard $.omf/os2stub.bin)
+ifeq ($(EMXOMFLD_TYPE),wlink)
+LIBC.STUBARG	:= $(if $(LIBC.STUB),-Zlinker "OPTION STUB=$(LIBC.STUB)")
+else
+LIBC.STUBARG	:= $(if $(LIBC.STUB),-Zlinker -STUB:$(LIBC.STUB))
+endif
+LIBC.DLL        := $.omf/libc$(VH)$(VM)$(VL).dll
+LIBC.IMPLIB     := $.omf/libc_dll.lib $.aout/libc_dll.a
+LIBC.IMPLIB.TCPIPV4 := $.omf/tcpipv4/libc_dll.lib $.aout/tcpipv4/libc_dll.a
+LIBC.DEF        := $.omf/libc.def
+LIBC.OBJS.COMMON := \
+	$.omf/src/lib/sys/libcfork.obj \
+	$.omf/src/lib/sys/sharedpm.obj \
+	$.omf/src/lib/sys/__initdll.obj \
+	$.omf/src/lib/malloc/_heapvoting.obj \
+	$.omf/src/lib/sys/FastInfoBlocks.obj \
+	$.omf/src/lib/process/fmutex.obj \
+	$.omf/src/lib/sys/DosCreateEventSemEx.obj \
+	$.omf/src/lib/sys/DosEx.obj \
+	$.omf/src/lib/str/386/bzero.obj \
+	$.omf/src/lib/sys/386/__init_environ.obj \
+	$.omf/src/lib/malloc/_hmalloc.obj \
+	$.omf/src/lib/malloc/_hinitheap.obj \
+	$.omf/src/lib/sys/heaphigh.obj \
+	$.omf/src/lib/sys/DosAllocMemEx.obj \
+	$.omf/src/lib/malloc/ucreate2.obj \
+	$.omf/src/lib/malloc/iaddmem.obj \
+	$.omf/src/lib/malloc/imisc.obj \
+	$.omf/src/lib/malloc/uopen.obj \
+	$.omf/src/lib/sys/DosOpenEventSemEx.obj \
+	$.omf/src/lib/malloc/umalloc.obj \
+	$.omf/src/lib/malloc/ialloc.obj \
+	$.omf/src/lib/sys/filehandles.obj \
+	$.omf/src/lib/malloc/_hcalloc.obj \
+	$.omf/src/lib/malloc/ucalloc.obj \
+	$.omf/src/lib/startup/dllinit.obj \
+	$.omf/src/lib/startup/startup.obj \
+	$.omf/src/lib/startup/ctor1.obj \
+	$.omf/src/lib/sys/tcpipver.obj \
+	$.omf/src/lib/sys/tcpipver43.obj \
+	$.omf/src/lib/sys/pathrewrite.obj \
+	$.omf/src/lib/app/getenv.obj \
+	$.omf/src/lib/str/386/strlen.obj \
+	$.omf/src/lib/str/strncmp.obj \
+	$.omf/src/lib/app/stdio.obj \
+	$.omf/src/lib/process/fmutex2.obj \
+	$.omf/src/lib/io/_tmp.obj \
+	$.omf/src/lib/process/thread_internals.obj \
+	$.omf/src/lib/sys/b_threadInit.obj \
+	$.omf/src/lib/malloc/malloc.obj \
+	$.omf/src/lib/malloc/initr.obj \
+	$.omf/src/lib/malloc/_linitheap.obj \
+	$.omf/src/lib/sys/uflags.obj \
+	$.omf/src/lib/sys/sbrk.obj \
+	$.omf/src/lib/sys/heap.obj \
+	$.omf/src/lib/sys/__init.obj
+LIBC.OBJS       := \
+	$.omf/src/lib/startup/386/dll0hi.obj \
+	$(LIBC.OBJS.COMMON)
+LIBC.LIBS       := $.omf/libc_s.lib $.omf/libc_app.lib $.omf/libc_omf386.lib
+LIBC.DEPS       := $(LIBC.STUB) $.omf/libc_alias.lib $.omf/liblazyimp.lib $.omf-lazy/libos2_unicode_lazy.lib $.omf/libos2.lib $.omf/libend.lib
+LIBC.DLL.OBJS   :=
+LIBC.DIRS       := $(sort $(dir $(LIBC.OBJS) $(LIBC.DEPS) $(LIBC.DLL.OBJS)))
+
+LIBC.PRF.DLL	:= $(LIBC.DLL:.dll=.prf)
+LIBC.PRF.DEF    := $.omf/libc.prf.def
+LIBC.PRF.OBJS   := \
+	$.omf/src/lib/startup/386/dll0hi.obj \
+	$(subst /omf/,/omf-prof/,$(LIBC.OBJS.COMMON))
+LIBC.PRF.LIBS   := $.omf-prof/libc_p_s.lib $.omf-prof/libc_app_p.lib $.omf/libc_omf386.lib
+LIBC.PRF.DEPS   := $(LIBC.STUB) $.omf/libc_alias.lib $.omf-prof/liblazyimp_p.lib $.omf-lazy/libos2_unicode_lazy.lib $.omf-prof/libos2_p.lib $.omf/libend.lib
+LIBC.PRF.DIRS   := $(sort $(dir $(LIBC.PRF.OBJS) $(LIBC.PRF.DEPS)))
+
+LIBC.ELH.DLL	:= $(LIBC.DLL:.dll=.elh)
+LIBC.ELH.DEF    := $.omf/libc.elh.def
+LIBC.ELH.OBJS   := \
+	$.omf/src/lib/startup/386/dll0hi.obj \
+	$.omf/src/lib/startup/dllinit.obj
+LIBC.ELH.LIBS   := $(LIBC.LIBS)
+LIBC.ELH.DEPS   := $(LIBC.DEPS)
+LIBC.ELH.DIRS   :=
+
+LIBC.LOG.DLL	:= $(LIBC.DLL:.dll=.logchk)
+LIBC.LOG.DEF    := $(LIBC.DEF)
+LIBC.LOG.OBJS   := \
+	$.omf/src/lib/startup/386/dll0hi.obj \
+	$(subst /omf/,/omf-log/,$(LIBC.OBJS.COMMON))
+LIBC.LOG.LIBS   := $.omf-log/libc_l_s.lib $.omf-log/libc_app_l.lib $.omf/libc_omf386.lib
+LIBC.LOG.DEPS   := $(LIBC.DEPS)
+LIBC.LOG.DIRS   := $(sort $(dir $(LIBC.LOG.OBJS) $(LIBC.LOG.DEPS))) $.omf-log/
+
+TARGDIRS        += $(LIBC.DIRS) $(LIBC.PRF.DIRS) $(LIBC.ELH.DIRS) $(LIBC.LOG.DIRS)
+
+# generate fucking dependencies.
+define def_libc_omf_dep
+$(1): $(subst /omf/,/aout/,$(2))
+$(subst /omf/,/omf-log/,$(1)): $(subst /omf/,/aout-log/,$(2))
+$(subst /omf/,/omf-prof/,$(1)): $(subst /omf/,/aout-prof/,$(2))
+
+endef
+$(foreach o,$(LIBC.OBJS.COMMON),$(eval $(call def_libc_omf_dep,$(o),$(patsubst %.obj,%.o,$(o)))))
+
+
+# LIBC linking.
+$(LIBC.DLL): $(LIBC.OBJS) $(LIBC.LIBS) $(LIBC.DEF) $(LIBC.DEPS)
+	$(LD) -o $(@) -Zomf $(subst -s,,$(LDFLAGS.DLL)) -nostdlib  \
+	    $(LIBC.DEF) \
+		$(LIBC.OBJS) \
+		$(LIBC.LIBS) \
+		$(filter %.lib,$(LIBC.DEPS)) \
+		-L$.omf -lstdc++ -lgcc -lgcc_eh $(LIBC.STUBARG)
+ifeq ($(MODE),opt)
+	cp $@ $(@:.dll=.dbg)
+	lxlite $(LXLITE.FLAGS) $(subst /,\\,$@)
+endif
+
+# LIBC .def file
+$(LIBC.DEF): $(LIBC.LIBS) src/lib/libc.def src/lib/libstdc++.def version.smak
+	$(call RM,$@)
+	@$(call FECHO,$@,LIBRARY libc$(VH)$(VM)$(VL) INITINSTANCE TERMINSTANCE)
+	@$(call FECHO,$@,DESCRIPTION \"kLIBC version $(VERSION) $(INNOTEK_VERSION)\")
+	@$(call FECHO,$@,DATA MULTIPLE)
+	@$(call FECHO,$@,CODE SHARED)
+	@$(call FECHO,$@,EXPORTS)
+	$(call DO.EMXEXP,$(filter %.lib,$^),$@)
+	sed  -e "/\"___pfn/d" -e "/\"__sys_/d" -e "/\"___sys_/d" -e "/\"___libc_[a-z]/d" -e "/\"__nsyy/d" $@ > $@.tmp
+	mv -f $@.tmp $@
+	krx.exe src/lib/dlllegacy.cmd -e "_DLL_InitTerm" $@ src/lib/libc.def
+	mv -f $@ $@.tmp
+	cat "src/lib/libstdc++.def" >> $@.tmp
+	mv -f $@.tmp $@
+
+
+# LIBC import libraries with dllinit, libsocket and libsyslog.
+# (It's stuff which belongs to libc, but for historical reasons isn't physically in the .dll yet.)
+$(filter %.lib,$(LIBC.IMPLIB) $(LIBC.IMPLIB.TCPIPV4)): $(LIBC.DEF) $.omf/src/lib/startup/dllinit.obj \
+		$.omf/libsocket.lib $.omf/tcpipv4/libsocket.lib \
+		$.omf/libsyslog.lib $.omf/tcpipv4/libsyslog.lib
+	$(call RM,$@)
+	$(IMPLIB) -o $@ $<
+	$(AR) r $@ $(filter %.obj,$^) $(dir $@)libsocket.lib $(dir $@)libsyslog.lib
+
+$(filter   %.a,$(LIBC.IMPLIB) $(LIBC.IMPLIB.TCPIPV4)): $(LIBC.DEF) $.aout/src/lib/startup/dllinit.o  \
+		$.aout/libsocket.a  $.aout/tcpipv4/libsocket.a \
+		$.aout/libsyslog.a  $.aout/tcpipv4/libsyslog.a
+	$(call RM,$@)
+	$(IMPLIB) -o $@.imp.a $<
+	echo "CREATE $@.tmp.a" > $@.ar-script
+	echo "VERBOSE" >> $@.ar-script
+	echo "ADDMOD $(filter %.o,$^)" >> $@.ar-script
+	echo "ADDLIB $@.imp.a" >> $@.ar-script
+	echo "ADDLIB $(dir $@)libsocket.a" >> $@.ar-script
+	echo "ADDLIB $(dir $@)libsyslog.a" >> $@.ar-script
+	echo "SAVE" >> $@.ar-script
+	echo "END" >> $@.ar-script
+	$(AR) -M < $@.ar-script
+	mv -f $@.tmp.a $@
+
+# LIBC.LOG - Logging and checking version of libcXY.dll
+$(LIBC.LOG.DLL): $(LIBC.LOG.OBJS) $(LIBC.LOG.LIBS) $(LIBC.LOG.DEF) $(LIBC.LOG.DEPS)
+	$(LD) -o $@ -Zomf $(subst -s,,$(LDFLAGS.DLL)) -Zmap=$@.map -nostdlib  \
+	    $(LIBC.LOG.DEF) \
+		$(LIBC.LOG.OBJS) \
+		$(LIBC.LOG.LIBS) \
+		$(filter %.lib,$(LIBC.LOG.DEPS)) \
+		-L$.omf -lstdc++ -lgcc -lgcc_eh $(LIBC.STUBARG)
+	echo $@
+
+# LIBC.PRF - Profiling version of libcXY.dll
+$(LIBC.PRF.DLL): $(LIBC.PRF.OBJS) $(LIBC.PRF.LIBS) $(LIBC.PRF.DEF) $(LIBC.PRF.DEPS)
+	$(LD) -o $@ -Zomf $(subst -s,,$(LDFLAGS.DLL)) -Zmap=$@.map -nostdlib  \
+	    $(LIBC.PRF.DEF) \
+		$(LIBC.PRF.OBJS) \
+		$(LIBC.PRF.LIBS) \
+		$(filter %.lib,$(LIBC.PRF.DEPS)) \
+		-L$.omf-prof -L$.omf -lstdc++ -lgcc -lgcc_eh $(LIBC.STUBARG)
+	echo $@
+
+# LIBC.PREF .def file
+$(LIBC.PRF.DEF): $(LIBC.DEF)
+	$(call RM,$@)
+	cp $< $@
+	@$(call FECHO,$@,"")
+	@$(call FECHO,$@,"IMPORTS");
+	@$(call FECHO,$@," __mcount = KPROFILE.3")
+	@$(call FECHO,$@,"")
+
+
+# LIBC.ELH - Electric Heap version of libcXY.dll
+$(LIBC.ELH.DLL): $(LIBC.ELH.OBJS) $(LIBC.ELH.LIBS) $(LIBC.ELH.DEF) $(LIBC.ELH.DEPS)
+	$(LD) -o $@ -Zomf $(subst -s,,$(LDFLAGS.DLL)) -Zmap=$@.map -nostdlib  \
+	    $(LIBC.ELH.DEF) \
+		$(LIBC.ELH.OBJS) \
+		$(LIBC.ELH.LIBS) \
+		$(filter %.lib,$(LIBC.ELH.DEPS)) \
+		-L$.omf -lstdc++ -lgcc -lgcc_eh $(LIBC.STUBARG)
+	echo $@
+
+# LIBC.ELH .def file
+# Man! This sucks! Isn't there support for inline files (<<\nfile\n<<) in GNU MAKE?
+# Even M$/IBM nmake	have that. ;-)
+# And no, I couldn't care less about performance with this type of DLL. No need for ordinals.
+$(LIBC.ELH.DEF): $(LIBC.DEF) src/lib/libc.smak
+	$(call RM,$@)
+	cp $< $@
+	@$(call FECHO,$@,"")
+	@$(call FECHO,$@,"IMPORTS");
+	@$(call FECHO,$@,"  kHeapDbgException              = KLIBDBG.kHeapDbgException")
+	@$(call FECHO,$@,"  __std_calloc                   = KLIBDBG._gcc__std_calloc")
+	@$(call FECHO,$@,"  __um_default_alloc             = KLIBDBG._gcc__um_default_alloc")
+	@$(call FECHO,$@,"  __um_default_expand            = KLIBDBG._gcc__um_default_expand")
+	@$(call FECHO,$@,"  __um_default_release           = KLIBDBG._gcc__um_default_release")
+	@$(call FECHO,$@,"  __um_default_shrink            = KLIBDBG._gcc__um_default_shrink")
+	@$(call FECHO,$@,"  __std_expand                   = KLIBDBG._gcc__std_expand")
+	@$(call FECHO,$@,"  __std_free                     = KLIBDBG._gcc__std_free")
+	@$(call FECHO,$@,"  __heapchk                      = KLIBDBG._gcc__heapchk")
+	@$(call FECHO,$@,"  __heapmin                      = KLIBDBG._gcc__heapmin")
+	@$(call FECHO,$@,"  __heapset                      = KLIBDBG._gcc__heapset")
+	@$(call FECHO,$@,"  __heap_walk                    = KLIBDBG._gcc__heap_walk")
+	@$(call FECHO,$@,"  __um_seg_addmem                = KLIBDBG._gcc__um_seg_addmem")
+	@$(call FECHO,$@,"  __um_seg_setmem                = KLIBDBG._gcc__um_seg_setmem")
+	@$(call FECHO,$@,"  __um_addmem_nolock             = KLIBDBG._gcc__um_addmem_nolock")
+	@$(call FECHO,$@,"  __um_crumb_alloc               = KLIBDBG._gcc__um_crumb_alloc")
+	@$(call FECHO,$@,"  __um_lump_alloc                = KLIBDBG._gcc__um_lump_alloc")
+	@$(call FECHO,$@,"  __um_alloc_no_lock             = KLIBDBG._gcc__um_alloc_no_lock")
+	@$(call FECHO,$@,"  __um_free_maybe_lock           = KLIBDBG._gcc__um_free_maybe_lock")
+	@$(call FECHO,$@,"  __um_crumb_free_maybe_lock     = KLIBDBG._gcc__um_crumb_free_maybe_lock")
+	@$(call FECHO,$@,"  __um_lump_free_maybe_lock      = KLIBDBG._gcc__um_lump_free_maybe_lock")
+	@$(call FECHO,$@,"  __um_find_bucket               = KLIBDBG._gcc__um_find_bucket")
+	@$(call FECHO,$@,"  __um_lump_unlink_bucket        = KLIBDBG._gcc__um_lump_unlink_bucket")
+	@$(call FECHO,$@,"  __um_lump_unlink_heap          = KLIBDBG._gcc__um_lump_unlink_heap")
+	@$(call FECHO,$@,"  __um_lump_link_heap            = KLIBDBG._gcc__um_lump_link_heap")
+	@$(call FECHO,$@,"  __um_lump_make_free            = KLIBDBG._gcc__um_lump_make_free")
+	@$(call FECHO,$@,"  __um_lump_coalesce_free        = KLIBDBG._gcc__um_lump_coalesce_free")
+	@$(call FECHO,$@,"  __um_init_default_regular_heap = KLIBDBG._gcc__um_init_default_regular_heap")
+	@$(call FECHO,$@,"  __um_init_default_tiled_heap   = KLIBDBG._gcc__um_init_default_tiled_heap")
+	@$(call FECHO,$@,"  __um_realloc                   = KLIBDBG._gcc__um_realloc")
+	@$(call FECHO,$@,"  __um_walk_error                = KLIBDBG._gcc__um_walk_error")
+	@$(call FECHO,$@,"  __um_walk_no_lock              = KLIBDBG._gcc__um_walk_no_lock")
+	@$(call FECHO,$@,"  __std_malloc                   = KLIBDBG._gcc__std_malloc")
+	@$(call FECHO,$@,"  __mheap                        = KLIBDBG._gcc__mheap")
+	@$(call FECHO,$@,"  __msize                        = KLIBDBG._gcc__msize")
+	@$(call FECHO,$@,"  __std_realloc                  = KLIBDBG._gcc__std_realloc")
+	@$(call FECHO,$@,"  __tcalloc                      = KLIBDBG._gcc__tcalloc")
+	@$(call FECHO,$@,"  __tfree                        = KLIBDBG._gcc__tfree")
+	@$(call FECHO,$@,"  __theapmin                     = KLIBDBG._gcc__theapmin")
+	@$(call FECHO,$@,"  __tmalloc                      = KLIBDBG._gcc__tmalloc")
+	@$(call FECHO,$@,"  __trealloc                     = KLIBDBG._gcc__trealloc")
+	@$(call FECHO,$@,"  __uaddmem                      = KLIBDBG._gcc__uaddmem")
+	@$(call FECHO,$@,"  __ucalloc                      = KLIBDBG._gcc__ucalloc")
+	@$(call FECHO,$@,"  __uclose                       = KLIBDBG._gcc__uclose")
+	@$(call FECHO,$@,"  __ucreate                      = KLIBDBG._gcc__ucreate")
+	@$(call FECHO,$@,"  __ucreate2                     = KLIBDBG._gcc__ucreate2")
+	@$(call FECHO,$@,"  __udefault                     = KLIBDBG._gcc__udefault")
+	@$(call FECHO,$@,"  __udestroy                     = KLIBDBG._gcc__udestroy")
+	@$(call FECHO,$@,"  __uheapchk                     = KLIBDBG._gcc__uheapchk")
+	@$(call FECHO,$@,"  __uheapmin                     = KLIBDBG._gcc__uheapmin")
+	@$(call FECHO,$@,"  __uheapset                     = KLIBDBG._gcc__uheapset")
+	@$(call FECHO,$@,"  __umalloc                      = KLIBDBG._gcc__umalloc")
+	@$(call FECHO,$@,"  __uopen                        = KLIBDBG._gcc__uopen")
+	@$(call FECHO,$@,"  __ustats                       = KLIBDBG._gcc__ustats")
+	@$(call FECHO,$@,"  __utcalloc                     = KLIBDBG._gcc__utcalloc")
+	@$(call FECHO,$@,"  __utdefault                    = KLIBDBG._gcc__utdefault")
+	@$(call FECHO,$@,"  __utmalloc                     = KLIBDBG._gcc__utmalloc")
+	@$(call FECHO,$@,"  __uheap_type                   = KLIBDBG._gcc__uheap_type")
+	@$(call FECHO,$@,"  __uheap_walk                   = KLIBDBG._gcc__uheap_walk")
+	@$(call FECHO,$@,"  __uheap_walk2                  = KLIBDBG._gcc__uheap_walk2")
+	@$(call FECHO,$@,"  ")
+	@$(call FECHO,$@,"  __um_regular_heap			   = KLIBDBG._gcc__um_regular_heap")
+	@$(call FECHO,$@,"  __um_tiled_heap                = KLIBDBG._gcc__um_tiled_heap")
+
+
+# Put libc into the big picture. (semihacks)
+DO.HELP.MODULES += $(call ECHO,    libc-dll - The dynamic C library (.dll))$(NL)
+
+.PHONY: libc-dll
+all: libc-dll
+ifndef LIBC_CORE_ONLY
+libc-dll: emxbind emxexp app alias libc libos2 libos2@omf liblazyimp liblazyimp@omf libend \
+			$(LIBC.DIRS) $(LIBC.DLL) $(LIBC.IMPLIB) $(LIBC.IMPLIB.TCPIPV4) \
+			$(LIBC.PRF.DIRS) $(LIBC.PRF.DLL) \
+			$(LIBC.LOG.DIRS) $(LIBC.LOG.DLL) \
+			$(LIBC.ELH.DIRS) $(LIBC.ELH.DLL)
+else
+libc-dll: emxbind emxexp app alias libc libos2 libos2@omf liblazyimp liblazyimp@omf libend \
+			$(LIBC.DIRS) $(LIBC.DLL) $(LIBC.IMPLIB) $(LIBC.IMPLIB.TCPIPV4)
+endif
+
+# Installation.
+INS.FILES       += \
+  $(INS)lib/$(notdir $(LIBC.DLL)) \
+  $(INS)lib/$(notdir $(LIBC.DLL:.dll=.map)) \
+  $(addprefix $(INS)lib/,$(notdir $(LIBC.IMPLIB))) \
+  $(addprefix $(INS)lib/tcpipv4/,$(notdir $(LIBC.IMPLIB.TCPIPV4)))
+ifndef LIBC_CORE_ONLY
+INS.FILES       += \
+  $(INS)lib/$(notdir $(LIBC.LOG.DLL)) \
+  $(INS)lib/$(notdir $(LIBC.LOG.DLL).map) \
+  $(INS)lib/$(notdir $(LIBC.PRF.DLL)) \
+  $(INS)lib/$(notdir $(LIBC.PRF.DLL).map) \
+  $(INS)lib/$(notdir $(LIBC.ELH.DLL)) \
+  $(INS)lib/$(notdir $(LIBC.ELH.DLL).map)
+endif
+
+$(INS)lib/$(notdir $(LIBC.DLL)): $(LIBC.DLL)
+	if test -f $@; then rm -f $@ || (unlock $(subst /,\\,$@) && rm -f $@); fi
+	cp $< $@
+
+$(INS)lib/$(notdir $(LIBC.DLL:.dll=.map)): $(LIBC.DLL:.dll=.map)
+	$(call CP,$<,$@)
+
+$(INS)lib/$(notdir $(LIBC.LOG.DLL)): $(LIBC.LOG.DLL)
+	$(call CP,$<,$@)
+$(INS)lib/$(notdir $(LIBC.LOG.DLL).map): $(LIBC.LOG.DLL).map
+	$(call CP,$<,$@)
+
+$(INS)lib/$(notdir $(LIBC.PRF.DLL)): $(LIBC.PRF.DLL)
+	$(call CP,$<,$@)
+$(INS)lib/$(notdir $(LIBC.PRF.DLL).map): $(LIBC.PRF.DLL).map
+	$(call CP,$<,$@)
+
+$(INS)lib/$(notdir $(LIBC.ELH.DLL)): $(LIBC.ELH.DLL)
+	$(call CP,$<,$@)
+$(INS)lib/$(notdir $(LIBC.ELH.DLL).map): $(LIBC.ELH.DLL).map
+	$(call CP,$<,$@)
+
+ifeq ($(MODE),opt)
+INS.FILES       += $(INS)lib/$(notdir $(LIBC.DLL:.dll=.dbg))
+
+$(INS)lib/$(notdir $(LIBC.DLL:.dll=.dbg)): $(LIBC.DLL:.dll=.dbg)
+	$(call CP,$<,$@)
+endif
+
+$(addprefix $(INS)lib/,$(notdir $(LIBC.IMPLIB))): $(LIBC.IMPLIB)
+	$(call CP,$^,$(dir $@))
+
+$(addprefix $(INS)lib/tcpipv4/,$(notdir $(LIBC.IMPLIB.TCPIPV4))): $(LIBC.IMPLIB.TCPIPV4)
+	$(call CP,$^,$(dir $@))
+
+# How libc-std.h can be auto-generated.
+# Unfortunately, we cannot use libc.a to find out all _std_ names since
+# libc.a itself depends on this header file. Thus we have to scan all source
+# files for _STD() macros invocations. Fortunately, gawk rulez forever thus
+# this happens in just a fraction of second.
+_STD_WILDWILD = \
+	src/lib/*/*.c \
+	src/lib/*/386/*.s \
+	src/lib/msun/*/*.c \
+	src/lib/msun/*/*.S \
+	src/lib/bsd/*/*.c \
+	src/lib/bsd/*/glue/*.c \
+	src/lib/lgpl/*/*.c \
+	src/lib/lgpl/sysdeps/i386/*.S \
+	src/lib/lgpl/sysdeps/i386/*.c \
+	src/lib/lgpl/sysdeps/i386/i486/*.S \
+	src/lib/lgpl/sysdeps/i386/fpu/*.S \
+	src/lib/lgpl/sysdeps/i386/fpu/*.c \
+	src/lib/lgpl/sysdeps/generic/*.c \
+	src/lib/lgpl/sysdeps/ieee754/ldbl-96/*.c
+$.stmp-libc-std: $(wildcard $(_STD_WILDWILD))
+	cd src/lib && gawk -f ./mkstd.awk $(patsubst src/lib/%,%,$^) > ../../__tmp__
+	$(call UPDATE,__tmp__,$.libc-std.h)
+	$(call TOUCH,$@)
+
+libc-std.h: $.stmp-libc-std
+
+# dependencies to help make (baka, baka, baka)
+$.omf-prof/src/lib/startup/dllinit.obj: $.aout-prof/src/lib/startup/dllinit.o
+	$(DO.EMXOMF)
+
+# Forget temporary variables
+include comend.smak
+.MVER :=
+libc.TSRC.$(CPU) :=
+libc.TSRC :=
+libc.TDEP.$(CPU) :=
+libc.TDEP :=
+
+
+#
+# Forwarder DLLs for backward compatibility.
+#
+$.omf/fwdstub.obj: src/lib/fwdstub.asm
+	$(call DO.COMPILE.asm)
+
+# libc06
+$.omf/libc06.def: src/lib/libc06.def
+	$(call RM,$@)
+	cat $^ >> $@
+	@$(call FECHO,$@,DESCRIPTION \"kLIBC version $(VERSION) $(INNOTEK_VERSION)\")
+$.omf/libc06.dll: $.omf/libc06.def $.omf/fwdstub.obj $.omf/libc_dll.lib
+	gcc -Zomf -o $@ -nostdlib -Zdll $^
+$(INS)lib/libc06.dll: $.omf/libc06.dll
+	if test -f $@; then rm -f $@ || (unlock $(subst /,\\,$@) && rm -f $@); fi
+	$(call CP,$<,$@)
+INS.FILES += $(INS)lib/libc06.dll
+libc-dll: $.omf/libc06.dll
+
+# libc061
+$.omf/libc061.def: src/lib/libc061.def
+	$(call RM,$@)
+	cat $^ > $@
+	@$(call FECHO,$@,DESCRIPTION \"kLIBC version $(VERSION) $(INNOTEK_VERSION)\")
+$.omf/libc061.dll: $.omf/libc061.def $.omf/fwdstub.obj $.omf/libc_dll.lib
+	gcc -Zomf -o $@ -nostdlib -Zdll $^
+$(INS)lib/libc061.dll: $.omf/libc061.dll
+	if test -f $@; then rm -f $@ || (unlock $(subst /,\\,$@) && rm -f $@); fi
+	$(call CP,$<,$@)
+INS.FILES += $(INS)lib/libc061.dll
+libc-dll: $.omf/libc061.dll
+
+# libc062
+$.omf/libc062.def: src/lib/libc062.def src/lib/libstdc++.def
+	$(call RM,$@)
+	cat $^ > $@
+	@$(call FECHO,$@,DESCRIPTION \"kLIBC version $(VERSION) $(INNOTEK_VERSION)\")
+$.omf/libc062.dll: $.omf/libc062.def $.omf/fwdstub.obj $.omf/libc_dll.lib
+	gcc -Zomf -o $@ -nostdlib -Zdll $^
+$(INS)lib/libc062.dll: $.omf/libc062.dll
+	if test -f $@; then rm -f $@ || (unlock $(subst /,\\,$@) && rm -f $@); fi
+	$(call CP,$<,$@)
+INS.FILES += $(INS)lib/libc062.dll
+libc-dll: $.omf/libc062.dll
+
+# libc063
+$.omf/libc063.def: src/lib/libc063.def src/lib/libstdc++.def
+	$(call RM,$@)
+	cat $^ > $@
+	@$(call FECHO,$@,DESCRIPTION \"kLIBC version $(VERSION) $(INNOTEK_VERSION)\")
+$.omf/libc063.dll: $.omf/libc063.def $.omf/fwdstub.obj $.omf/libc_dll.lib
+	gcc -Zomf -o $@ -nostdlib -Zdll $^
+$(INS)lib/libc063.dll: $.omf/libc063.dll
+	if test -f $@; then rm -f $@ || (unlock $(subst /,\\,$@) && rm -f $@); fi
+	$(call CP,$<,$@)
+INS.FILES += $(INS)lib/libc063.dll
+libc-dll: $.omf/libc063.dll
+
+# libc064
+$.omf/libc064.def: src/lib/libc064.def src/lib/libstdc++.def
+	$(call RM,$@)
+	cat $^ > $@
+	@$(call FECHO,$@,DESCRIPTION \"kLIBC version $(VERSION) $(INNOTEK_VERSION)\")
+$.omf/libc064.dll: $.omf/libc064.def $.omf/fwdstub.obj $.omf/libc_dll.lib
+	gcc -Zomf -o $@ -nostdlib -Zdll $^
+$(INS)lib/libc064.dll: $.omf/libc064.dll
+	if test -f $@; then rm -f $@ || (unlock $(subst /,\\,$@) && rm -f $@); fi
+	$(call CP,$<,$@)
+INS.FILES += $(INS)lib/libc064.dll
+libc-dll: $.omf/libc064.dll
+
+# libc065
+$.omf/libc065.def: src/lib/libc065.def src/lib/libstdc++.def
+	$(call RM,$@)
+	cat $^ > $@
+	@$(call FECHO,$@,DESCRIPTION \"kLIBC version $(VERSION) $(INNOTEK_VERSION)\")
+$.omf/libc065.dll: $.omf/libc065.def $.omf/fwdstub.obj $.omf/libc_dll.lib
+	gcc -Zomf -o $@ -nostdlib -Zdll $^
+$(INS)lib/libc065.dll: $.omf/libc065.dll
+	if test -f $@; then rm -f $@ || (unlock $(subst /,\\,$@) && rm -f $@); fi
+	$(call CP,$<,$@)
+INS.FILES += $(INS)lib/libc065.dll
+libc-dll: $.omf/libc065.dll
+
+
+# Some parallel building hacks (kmk only as vanilla make doesn't support this syntax).
+ifdef KMK_VERSION
+.NOTPARALLEL: $.stmp-libc-std $.libc-std.h $(LIBC.PRF.DLL) $(LIBC.LOG.DLL) $(LIBC.ELH.DLL)
+endif
+
