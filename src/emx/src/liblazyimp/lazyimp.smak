@@ -1,0 +1,22 @@
+# This is the top-level submakefile for building EMX C runtime library
+include comend.smak
+
+.MODULE	:= liblazyimp
+.MDESC	:= The lazy import support library.
+.MDEP   := emxomf
+
+.TARGET	:= liblazyimp_p.a
+.TKIND	:= aout prof
+.TSRC	:= $(wildcard src/liblazyimp/*.c src/liblazyimp/*.s)
+.INSDIR	= lib/
+.TKEEP	:= 1
+include mklib.smak
+include mkomflib.smak
+
+.TARGET	:= liblazyimp.a
+.TKIND	:= aout
+include mklib.smak
+include mkomflib.smak
+
+# Forget temporary variables
+include comend.smak

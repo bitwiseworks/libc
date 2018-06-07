@@ -1,0 +1,91 @@
+# This submakefile builds c_alias.a, a library that defines
+# for all C runtime functions an alias with an underscore prefix.
+#
+# *****************************************************************
+# this is a placeholder for now. Ignore it -- everything is garbage
+#
+
+.MODULE	:= alias
+.MDESC	:= A library of underscored aliases for most C library functions
+.TKIND	:= aout
+.INSDIR := lib/
+.TARGET := libc_alias.a
+include common.smak
+
+ALIAS.FUNCS = $(shell gawk -f src/lib/alias/aliasfuncs.awk $.)
+ALIAS._FUNCS = $(shell gawk -f src/lib/alias/aliasfuncs.awk $. _)
+# list of alias pairs:
+ALIAS.ALIASES = $(shell gawk -f src/lib/alias/aliasbsdfuncs.awk $.) $(shell gawk -f src/lib/alias/aliasgnufuncs.awk $.) \
+	strcasecmp 		_std_stricmp \
+	strncasecmp 	_std_strnicmp \
+	itoa			_std_ltoa \
+	_itoa			_std_ltoa \
+	_Exit			_exit \
+	mempcpy			__mempcpy \
+	memrchr			_memrchr \
+	__memrchr		_memrchr \
+	strnlen			__strnlen \
+	__xpg_basename	_std_basename
+
+
+# For every aliased function create a .o file containing the alias
+# and add it to the target library.
+##$.$(.TARG): $.stmp-libc-std
+## Depending on the timestamp kind of sucks, now we depend on the
+## header, which is better but will require libc to be build first.
+$.$(.TARG): $.libc-std.h src/lib/alias/alias.smak
+	$(call MKDIR,$.aliases)
+# custom aliases
+	fun1=; \
+	for fun in $(ALIAS.ALIASES); do \
+	    if test -z "$$fun1"; then \
+			fun1=$$fun; \
+		else \
+			echo "Aliasing _$$fun1 to _$$fun ..."; \
+			echo ".stabs \"_$${fun1}\",11,0,0,0;.stabs \"_$${fun}\",1,0,0,0;" > $.aliases/_$$fun1.s; \
+			if as -o $.aliases/_$$fun1.o $.aliases/_$$fun1.s; then \
+			else exit 1; \
+			fi; \
+			fun1=; \
+		fi; \
+	done
+# standard aliases.
+	for i in $(ALIAS.FUNCS); do \
+		echo "Aliasing _$$i to __std_$$i ..."; \
+        echo ".stabs \"_$$i\",11,0,0,0;.stabs \"__std_$$i\",1,0,0,0;" > $.aliases/_$$i.s; \
+        if test -f $.aliases/_$$i.o || as -o $.aliases/_$$i.o $.aliases/_$$i.s; then \
+		else exit 1; \
+		fi \
+	done
+	for i in $(ALIAS._FUNCS); do \
+		echo "Aliasing __$$i to __std_$$i ..."; \
+		echo ".stabs \"__$$i\",11,0,0,0;.stabs \"__std_$$i\",1,0,0,0;" > $.aliases/__$$i.s; \
+		if test -f $.aliases/__$$i.o || as -o $.aliases/__$$i.o $.aliases/__$$i.s; then \
+		else exit 1; \
+		fi \
+	done
+# archiver scripting
+	echo "CREATE $(@F)" > $@.ar-script
+	fun1=; \
+	for fun in $(ALIAS.ALIASES); do \
+	    if test -z "$$fun1"; then \
+			fun1=$$fun; \
+		else \
+			echo "ADDMOD $.aliases/_$$fun1.o" >> $@.ar-script; \
+			fun1=; \
+		fi; \
+	done
+	for i in $(ALIAS.FUNCS); do \
+		echo "ADDMOD $.aliases/_$$i.o" >> $@.ar-script; \
+	done
+	for i in $(ALIAS._FUNCS); do \
+		echo "ADDMOD $.aliases/__$$i.o" >> $@.ar-script; \
+	done
+	echo "SAVE" >> $@.ar-script
+	echo "END" >> $@.ar-script
+	rm -f $(@F) $@
+	ar -M < $@.ar-script
+	mv $(@F) $@
+
+include mkomflib.smak
+include comend.smak

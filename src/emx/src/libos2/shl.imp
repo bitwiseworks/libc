@@ -1,0 +1,33 @@
+;
+; shl.imp
+;
+PrfAddProgram                   pmshapi 109 3
+PrfChangeProgram                pmshapi 110 3
+PrfCloseProfile                 pmshapi 103 1
+PrfDestroyGroup                 pmshapi 106 2
+PrfOpenProfile                  pmshapi 102 2
+PrfQueryDefinition              pmshapi 111 4
+PrfQueryProfile                 pmshapi 107 2
+PrfQueryProfileData             pmshapi 117 5
+PrfQueryProfileInt              pmshapi 114 4
+PrfQueryProfileSize             pmshapi 101 4
+PrfQueryProfileString           pmshapi 115 6
+PrfQueryProgramTitles           pmshapi 113 5
+PrfRemoveProgram                pmshapi 104 2
+PrfReset                        pmshapi 108 2
+PrfWriteProfileData             pmshapi 118 5
+PrfWriteProfileString           pmshapi 116 4
+WinAddSwitchEntry               pmshapi 120 1
+WinChangeSwitchEntry            pmshapi 123 2
+WinCreateSwitchEntry            pmshapi 121 2
+WinQuerySessionTitle            pmshapi 122 4
+WinQuerySwitchEntry             pmshapi 124 2
+WinQuerySwitchHandle            pmshapi 125 2
+WinQuerySwitchList              pmshapi 126 3
+WinQueryTaskSizePos             pmshapi 127 3
+WinQueryTaskTitle               pmshapi 128 3
+WinRemoveSwitchEntry            pmshapi 129 1
+WinStartApp                     pmshapi 119 5
+WinSwitchProgramRegister        pmshapi 156 ?
+WinSwitchToProgram              pmshapi 131 1
+WinTerminateApp                 pmshapi 130 1

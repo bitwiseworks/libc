@@ -1,0 +1,3 @@
+TARGET=emptyc
+NOLINKING=1
+include common.gmk

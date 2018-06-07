@@ -1,0 +1,78 @@
+# $Id: helloworld.gmk 1798 2005-01-28 20:12:53Z bird $
+## @file
+#
+# _System declaration and definition testcases.
+#
+# InnoTek Systemberatung GmbH confidential
+#
+# Copyright (c) 2003 InnoTek Systemberatung GmbH
+# Author: knut st. osmundsen <bird-srcspam@anduin.net>
+#
+# All Rights Reserved
+#
+#
+
+TESTCASE= helloworld
+ifdef GCC_OMF
+CFLAGS  = -Zomf
+O		= .obj
+A	    = .lib
+CC		= gcc
+SUFF	= -omf
+else
+CFLAGS  = -Zaout
+O		= .o
+A	    = .a
+CC		= gcc
+SUFF	=
+endif
+
+EXEOBJS = $(TESTCASE)$O
+	
+		
+all: $(TESTCASE)$(SUFF).exe #$(TESTCASE)$(SUFF)-static.exe
+
+check: all
+	echo "hello world" > stdout-ok
+	echo -n "" > stderr-ok
+	$(TESTCASE)$(SUFF).exe > stdout 2>stderr
+	diff stdout stdout-ok
+	diff stderr stderr-ok
+#	$(TESTCASE)$(SUFF)-static.exe > stdout 2>stderr
+#	diff stdout stdout-ok
+#	diff stderr stderr-ok
+	
+install:	
+	
+clean distclean:
+	rm -f *$(TESTCASE)[-.]*obj *$(TESTCASE)[-.]*o \
+	      *$(TESTCASE)[-.]*lib *$(TESTCASE)[-.]*a \
+		  *$(TESTCASE)[-.]*map $(TESTCASE)[-.]*exe \
+		  stdout-ok stdout stderr stderr-ok
+
+
+.SUFFIXES:
+.SUFFIXES: .c .cpp .asm .s .o .obj
+.c$O:
+	$(CC) -c $(CFLAGS) -o "$(@)" "$<"
+	
+.cpp$O:
+	$(CC) -c $(CFLAGS) -o "$(@)" "$<"
+
+.asm$O:
+	../tools/x86.os2/masm/v6.0/binp/ml.exe -c /Zi $<
+	
+.s$O:
+	$(CC) -c $(CFLAGS) -o "$(@)" "$<"
+	
+				
+$(TESTCASE)$(SUFF).exe: $(EXEOBJS) $(TESTCASE).gmk
+	if $(CC) -Zmap $(CFLAGS) -o "$@" $(EXEOBJS); then true; \
+	else	rm -f $@; false; \
+	fi
+	
+$(TESTCASE)$(SUFF)-static.exe: $(EXEOBJS) $(TESTCASE).gmk
+	if $(CC) -static -Zmap $(CFLAGS) -o "$@" $(EXEOBJS); then true; \
+	else	rm -f $@; false; \
+	fi
+

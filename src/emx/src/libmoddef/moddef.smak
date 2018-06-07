@@ -1,0 +1,8 @@
+.MODULE	:= moddef
+.MDESC	:= A library for working with .DEF files
+
+.TARGET	:= libmoddef.a
+.TKIND	:= aout
+.TSRC	:= $(wildcard src/libmoddef/*.c)
+.INSDIR	= lib/
+include mklib.smak

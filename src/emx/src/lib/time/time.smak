@@ -1,0 +1,1 @@
+libc.TSRC += $(filter-out %_gen.c, $(wildcard src/lib/time/*.c))

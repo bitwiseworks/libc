@@ -1,0 +1,29 @@
+
+CFLAGS = -Zomf
+
+LIBOBJS = 416-lib+6.obj 416lib7.obj
+# Make only understands escapes
+EXEOBJS = 416main.obj \ 416\ 4\ +.obj 416\ 3\ .obj 416++1.obj 416++2++.obj 416,5.obj
+	
+# The escapes here doesn't work in cmd.exe
+SHELL = sh	
+
+.SUFFIXES: .c .o .obj	
+.c.obj:
+	gcc -c $(CFLAGS) -o "$(@)" "$<"
+
+
+check all: 416+.exe
+	
+416++lib.lib: $(LIBOBJS) 416.gmk
+	rm -f $@
+	emxomfar rc $@ $(LIBOBJS)
+
+	
+416+.exe: $(EXEOBJS) 416++lib.lib 416.gmk
+	gcc -Zmap $(CFLAGS) -o "$@" "416main.obj" " 416 4 +.obj" 416\ 3\ .obj 416++1.obj "416++2++.obj" 416,5.obj 416++lib.lib "416+ +;.def"
+	
+install:	
+	
+clean distclean:
+	rm -f *416*.obj *416*.exe *416*.lib *416*.a *416*.o *416*.map

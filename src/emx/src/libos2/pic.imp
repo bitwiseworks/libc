@@ -1,0 +1,6 @@
+;
+; pic.imp
+;
+PicIchg                         pmpic 12 4
+PicPrint                        pmpic 11 4
+PrfPif2Met                      pmpic 13 ?

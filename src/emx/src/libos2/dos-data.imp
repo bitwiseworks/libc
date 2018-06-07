@@ -1,0 +1,27 @@
+;
+; dos-data.imp
+; Also includes loadmodule and queryproc so lazy lib will work.
+;
+DosLoadModule                   doscalls 318 4
+DosQueryProcAddr                doscalls 321 4
+
+DosTIB                          doscalls 419 ?
+Dos32TIB                        doscalls 419 ?
+DOS32TIB                        doscalls 419 ?
+
+; Private API and globals.
+SMArray                         doscalls 859 ?
+SMArraySize                     doscalls 862 ?
+SMInitialized                   doscalls 861 ?
+SMPIDArray                      doscalls 860 ?
+SMQueueRamSem                   doscalls 858 ?
+
+; Constants (sort of private)
+DosMaxPathLen                   doscalls 214 ?
+DosPageSize                     doscalls 215 ?
+DosLocalInfo                    doscalls 216 ?
+DosGlobalInfo                   doscalls 217 ?
+DosFlatCS                       doscalls 369 ?
+DosFlatDS                       doscalls 370 ?
+DosLDTSel                       doscalls 599 ?
+

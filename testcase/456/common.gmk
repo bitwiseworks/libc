@@ -1,0 +1,184 @@
+# $Id: common.gmk 1405 2004-04-30 00:57:13Z bird $
+#
+# common makefile stuff for the defect 456 (Stabs -> HLL)
+#
+# Assumes TARGET is set.
+#
+
+
+
+ifndef PATH_TARGET
+PATH_TARGET		= bin
+endif
+ifndef TARGET_SRCEXT
+TARGET_SRCEXT   = c
+endif
+ifndef TARGET2_SRCEXT
+TARGET2_SRCEXT  = c
+endif
+ifndef TARGET_SOURCE
+TARGET_SOURCE   = $(TARGET).$(TARGET_SRCEXT)
+endif
+ifndef TARGET2_SOURCE
+TARGET2_SOURCE  = $(TARGET2).$(TARGET2_SRCEXT)
+endif
+
+ifndef EMXOMF
+EMXOMF = emxomf.exe
+else
+EMXOMF_DEP = $(EMXOMF)
+endif
+
+ifndef LISTOMF
+LISTOMF = listomf.exe
+else
+LISTOMF_DEP = $(LISTOMF)
+endif
+
+ifndef GCC
+GCC = gcc
+endif
+ifndef GXX
+GXX = g++
+endif
+
+
+ifndef NOLINKING
+TARGET_LINKED_VAC = $(PATH_TARGET)/$(TARGET).vac.exe \
+   				    $(PATH_TARGET)/$(TARGET).vac.dump \
+				    $(PATH_TARGET)/$(TARGET).vac.hlldump
+TARGET_LINKED_GCC = $(PATH_TARGET)/$(TARGET).gcc.exe \
+				    $(PATH_TARGET)/$(TARGET).gcc.dump \
+				    $(PATH_TARGET)/$(TARGET).gcc.hlldump
+endif
+
+ifdef TARGET2
+TARGET2_VAC = $(PATH_TARGET)/$(TARGET2).vac.obj \
+			  $(PATH_TARGET)/$(TARGET2).vac.lst
+TARGET2_GCC = $(PATH_TARGET)/$(TARGET2).gcc.s   \
+			  $(PATH_TARGET)/$(TARGET2).gcc.o   \
+			  $(PATH_TARGET)/$(TARGET2).gcc.obj \
+			  $(PATH_TARGET)/$(TARGET2).gcc.lst
+
+TARGET2_LINK_VAC = $(PATH_TARGET)/$(TARGET2).vac.obj
+TARGET2_LINK_GCC = $(PATH_TARGET)/$(TARGET2).gcc.obj
+endif
+
+.SUFFIXES:
+.SUFFIXES:
+
+
+all: $(TARGET)
+
+
+$(TARGET): $(PATH_TARGET) vac gcc
+
+$(PATH_TARGET):
+	mkdir -p $(PATH_TARGET)
+
+vac: \
+	$(PATH_TARGET)/$(TARGET).vac.obj \
+	$(PATH_TARGET)/$(TARGET).vac.lst \
+	$(TARGET2_VAC) \
+	$(TARGET_LINKED_VAC)
+	
+gcc: \
+	$(PATH_TARGET)/$(TARGET).gcc.s   \
+	$(PATH_TARGET)/$(TARGET).gcc.o   \
+	$(PATH_TARGET)/$(TARGET).gcc.obj \
+	$(PATH_TARGET)/$(TARGET).gcc.lst \
+	$(TARGET2_GCC) \
+	$(TARGET_LINKED_GCC)
+
+	
+	
+$(PATH_TARGET)/$(TARGET).vac.hlldump: $(PATH_TARGET)/$(TARGET).vac.exe
+	-hlldump $< > $@
+
+$(PATH_TARGET)/$(TARGET).gcc.hlldump: $(PATH_TARGET)/$(TARGET).gcc.exe
+	-hlldump $< > $@
+	
+	
+	
+$(PATH_TARGET)/$(TARGET).vac.dump: $(PATH_TARGET)/$(TARGET).vac.exe
+	rdrdump $< > $@
+
+$(PATH_TARGET)/$(TARGET).gcc.dump: $(PATH_TARGET)/$(TARGET).gcc.exe
+	rdrdump $< > $@
+
+								
+
+$(PATH_TARGET)/$(TARGET).vac.exe: $(PATH_TARGET)/$(TARGET).vac.obj $(TARGET2_LINK_VAC)
+	icc -Ti+ /Fm$(PATH_TARGET)/$(TARGET).vac.map /B/LINENUMBERS /B/DBGPACK -Fe$@ $< $(TARGET2_LINK_VAC)
+	
+$(PATH_TARGET)/$(TARGET).gcc.exe: $(PATH_TARGET)/$(TARGET).gcc.obj $(TARGET2_LINK_GCC)
+ifeq "$(TARGET_SRCEXT)" ".c"
+	if $(GCC) -g -Zomf -Zcrtdll -Zmap=$(PATH_TARGET)/$(TARGET).gcc.map -o $@ -Zlinker "/LINENUMBERS /MAP:FULL /PM:VIO" $< $(TARGET2_LINK_GCC); then true; else rm -f $@; false; fi
+else
+	if $(GXX) -g -Zomf -Zcrtdll -Zmap=$(PATH_TARGET)/$(TARGET).gcc.map -o $@ -Zlinker "/LINENUMBERS /MAP:FULL /PM:VIO" $< $(TARGET2_LINK_GCC); then true; else rm -f $@; false; fi
+endif	
+
+	
+$(PATH_TARGET)/$(TARGET).vac.obj: $(TARGET_SOURCE)
+	icc -c -Gd -Ti+ -Fo$@ $<
+$(PATH_TARGET)/$(TARGET2).vac.obj: $(TARGET2_SOURCE)
+	icc -c -Gd -Ti+ -Fo$@ $<
+									
+								
+$(PATH_TARGET)/$(TARGET).gcc.obj: $(PATH_TARGET)/$(TARGET).gcc.o $(EMXOMF_DEP)
+	$(EMXOMF) -o $@ $< > $@.emxomf 2>&1
+	cat $@.emxomf
+$(PATH_TARGET)/$(TARGET2).gcc.obj: $(PATH_TARGET)/$(TARGET2).gcc.o $(EMXOMF_DEP)
+	$(EMXOMF) -o $@ $< > $@.emxomf 2>&1
+	cat $@.emxomf
+	
+$(PATH_TARGET)/$(TARGET).gcc.o:   $(TARGET_SOURCE)
+	$(GCC) -c -g -o $@ $<
+$(PATH_TARGET)/$(TARGET2).gcc.o:  $(TARGET2_SOURCE)
+	$(GCC) -c -g -o $@ $<
+	
+$(PATH_TARGET)/$(TARGET).gcc.s:   $(TARGET_SOURCE)
+	$(GCC) -S -g -o $@ $<
+$(PATH_TARGET)/$(TARGET2).gcc.s:  $(TARGET2_SOURCE)
+	$(GCC) -S -g -o $@ $<
+	
+	
+	
+$(PATH_TARGET)/$(TARGET).vac.lst:  $(PATH_TARGET)/$(TARGET).vac.obj $(LISTOMF_DEP)
+	-$(LISTOMF) -x $< > $@
+$(PATH_TARGET)/$(TARGET2).vac.lst: $(PATH_TARGET)/$(TARGET2).vac.obj $(LISTOMF_DEP)
+	-$(LISTOMF) -x $< > $@
+
+$(PATH_TARGET)/$(TARGET).gcc.lst:  $(PATH_TARGET)/$(TARGET).gcc.obj $(LISTOMF_DEP)
+	-$(LISTOMF) -x $< > $@
+$(PATH_TARGET)/$(TARGET2).gcc.lst: $(PATH_TARGET)/$(TARGET2).gcc.obj $(LISTOMF_DEP)
+	-$(LISTOMF) -x $< > $@
+
+	
+clean:	
+	rm -f \
+	$(PATH_TARGET)/$(TARGET).vac.obj \
+	$(PATH_TARGET)/$(TARGET).vac.lst \
+	$(PATH_TARGET)/$(TARGET).vac.exe \
+	$(PATH_TARGET)/$(TARGET).vac.map \
+	$(PATH_TARGET)/$(TARGET).vac.dump \
+	$(PATH_TARGET)/$(TARGET).vac.hlldump \
+	$(PATH_TARGET)/$(TARGET).gcc.o \
+	$(PATH_TARGET)/$(TARGET).gcc.s \
+	$(PATH_TARGET)/$(TARGET).gcc.obj \
+	$(PATH_TARGET)/$(TARGET).gcc.lst \
+	$(PATH_TARGET)/$(TARGET).gcc.exe \
+	$(PATH_TARGET)/$(TARGET).gcc.map \
+	$(PATH_TARGET)/$(TARGET).gcc.dump \
+	$(PATH_TARGET)/$(TARGET).gcc.hlldump
+ifdef TARGET2_VAC
+	rm -f \
+	$(PATH_TARGET)/$(TARGET2).gcc.o \
+	$(PATH_TARGET)/$(TARGET2).gcc.s \
+	$(PATH_TARGET)/$(TARGET2).gcc.obj \
+	$(PATH_TARGET)/$(TARGET2).gcc.lst \
+	$(PATH_TARGET)/$(TARGET2).vac.obj \
+	$(PATH_TARGET)/$(TARGET2).vac.lst
+endif	
+	
+	

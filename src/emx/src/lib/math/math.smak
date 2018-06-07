@@ -1,0 +1,3 @@
+libc.TSRC.386 += $(wildcard src/lib/math/386/*.s)
+libc.TSRC += $(wildcard src/lib/math/*.c)
+

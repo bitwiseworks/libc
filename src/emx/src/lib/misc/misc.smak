@@ -1,0 +1,2 @@
+libc.TSRC.386 += $(wildcard src/lib/misc/386/*.s)
+libc.TSRC += $(wildcard src/lib/misc/*.c)

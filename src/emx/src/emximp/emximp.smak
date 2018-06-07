@@ -1,0 +1,11 @@
+.MODULE := emximp
+.MDESC  := Import library management tool
+.MDEP	:= omflib@omf moddef@omf
+.INSDIR := bin/
+
+.TARGET := emximp.exe
+.TKIND	:= $(TOOLFMT)
+.TSRC   := $(wildcard src/emximp/*.c)
+.TCF	:= $(CFLAGS.DEF.VERSION)
+.TDEP	:= @O@libomflib$A @O@libmoddef$A
+include mkexe.smak

@@ -1,0 +1,22 @@
+# This is the top-level submakefile for building EMX C runtime library
+include comend.smak
+
+.MODULE	:= libdl
+.MDESC	:= Stub dynamic loading library (move into libc)
+.MDEP   := emxomf
+
+.TARGET	:= libdl_p.a
+.TKIND	:= aout prof
+.TSRC	:= $(wildcard src/libdl/*.c)
+.INSDIR	= lib/
+.TKEEP	:= 1
+include mklib.smak
+include mkomflib.smak
+
+.TARGET	:= libdl.a
+.TKIND	:= aout
+include mklib.smak
+include mkomflib.smak
+
+# Forget temporary variables
+include comend.smak

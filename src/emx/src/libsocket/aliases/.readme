@@ -1,0 +1,3 @@
+This directory contains __cdecl to _System aliases for libsocket functions
+which we wrap or implement. The libsocket functions which are imported
+directly have these aliases in the .imp files.

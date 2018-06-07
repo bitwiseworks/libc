@@ -1,0 +1,63 @@
+INS.FILES += $(addprefix $(INS), $(wildcard include/*.h))
+$(INS)include/%.h: include/%.h
+	$(call CP,$<,$@)
+
+INS.FILES += $(addprefix $(INS), $(wildcard include/sys/*.h))
+$(INS)include/sys/%.h: include/sys/%.h
+	$(call CP,$<,$@)
+
+INS.FILES += $(addprefix $(INS), $(wildcard include/sys/gnu/*.h))
+$(INS)include/sys/gnu/%.h: include/sys/gnu/%.h
+	$(call CP,$<,$@)
+
+INS.FILES += $(addprefix $(INS), $(wildcard include/386/*.h))
+$(INS)include/386/%.h: include/386/%.h
+	$(call CP,$<,$@)
+
+INS.FILES += $(addprefix $(INS), $(wildcard include/arpa/*.h))
+$(INS)include/arpa/%.h: include/arpa/%.h
+	$(call CP,$<,$@)
+
+INS.FILES += $(addprefix $(INS), $(wildcard include/machine/*.h))
+$(INS)include/machine/%.h: include/machine/%.h
+	$(call CP,$<,$@)
+
+INS.FILES += $(addprefix $(INS), $(wildcard include/net/*.h))
+$(INS)include/net/%.h: include/net/%.h
+	$(call CP,$<,$@)
+
+INS.FILES += $(addprefix $(INS), $(wildcard include/netinet/*.h))
+$(INS)include/netinet/%.h: include/netinet/%.h
+	$(call CP,$<,$@)
+
+INS.FILES += $(addprefix $(INS), $(wildcard include/netnb/*.h))
+$(INS)include/netnb/%.h: include/netnb/%.h
+	$(call CP,$<,$@)
+
+INS.FILES += $(addprefix $(INS), $(wildcard include/protocol/*.h))
+$(INS)include/protocol/%.h: include/protocol/%.h
+	$(call CP,$<,$@)
+
+INS.FILES += $(addprefix $(INS), $(wildcard include/protocols/*.h))
+$(INS)include/protocols/%.h: include/protocols/%.h
+	$(call CP,$<,$@)
+
+INS.FILES += $(addprefix $(INS), $(wildcard include/bsd/*.h))
+$(INS)include/bsd/%.h: include/bsd/%.h
+	$(call CP,$<,$@)
+
+INS.FILES += $(addprefix $(INS), $(wildcard include/emx/*.h))
+$(INS)include/emx/%.h: include/emx/%.h
+	$(call CP,$<,$@)
+
+INS.FILES += $(addprefix $(INS), $(wildcard include/gnu/*.h))
+$(INS)include/gnu/%.h: include/gnu/%.h
+	$(call CP,$<,$@)
+
+INS.FILES += $(addprefix $(INS), $(wildcard include/InnoTekLIBC/*.h))
+$(INS)include/InnoTekLIBC/%.h: include/InnoTekLIBC/%.h
+	$(call CP,$<,$@)
+	
+INS.FILES += $(addprefix $(INS), $(wildcard include/klibc/*.h))
+$(INS)include/klibc/%.h: include/klibc/%.h
+	$(call CP,$<,$@)	

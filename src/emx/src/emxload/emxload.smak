@@ -1,0 +1,9 @@
+.MODULE := emxload
+.MDESC  := Fast loader daemon
+.INSDIR := bin/
+
+.TARGET := emxload.exe
+.TKIND	:= $(TOOLFMT)
+.TSRC   := $(wildcard src/emxload/*.c)
+.TCF	:= $(CFLAGS.DEF.VERSION)
+include mkexe.smak

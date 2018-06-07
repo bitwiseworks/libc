@@ -1,0 +1,1360 @@
+
+
+    R e l e a s e    N o t e s    G C C   f o r   O S / 2
+    +---------------------------------------------------+
+
+
+(C)'2004-2007 Knut St. Osmundsen (bird-kLIBC-spam@anduin.net)
+(C)'2003-2005 InnoTek Systemberatung GmbH (http://www.innotek.de)
+
+
+GCC v3.3.5 CSD 3 / LIBC v0.6.3:
+-------------------------------
+
+    First, thanks to Paul, Yuri and Peter for patches, bugs
+    and other kind of feedback.
+
+
+    Fix list:
+        #162 libc: -Zno-fork -> unresolved do_return_failure
+                   and do_return_success
+        #166 libc: three serious __libc_tcpipops_Close4x bugs
+                   that might cause process crashes/hangs
+        #172 libc: dup2/dup on tcpip socket doesn't clear the
+                   no-inhert/close-on-exec flags
+        #173 libc: bsdselect (4.4) will corrupt the stack / fail
+                   when given more than 64 sockets
+        #167 libc: __spawnve should wait for children to finish
+                   the inheriting
+        #168 libc: close filehandles on exec
+        #163 libc: rmdir resolves symlinks in the last component
+        #132 libos2: Please add a high-mem safe wrapper for
+                     DosQueryAppType()
+        #169 libos2: Crash in safe version of DosStartSession()
+                     when passing NULLs
+        #170 libos2: SafeDosStartSession only passed first
+                     environment variable to child
+
+
+
+GCC v3.3.5 CSD 2 / LIBC v0.6.2:
+-------------------------------
+
+    First, thanks to Yuri, Froloff and Paul for patches, bugs
+    and other kind of feedback.
+
+
+    Fix list:
+         #54 libc: fchdir(open('.', O_RDONLY)) may corrupt path
+                   resolving
+         #76 libc: fork() failed when using dlopen()
+        #102 libc: thread db locked after fork
+        #103 libc: atexit() callbacks in dlls are called after
+                   dlclose()/DosFreeModule() on the DLL
+        #112 libc: stdio.h va_list & _POSIX_C_SOURCE=1
+        #113 libc: scanf("%lld", &lld)
+        #114 libc: Unloading a DLL can break wait*() and other
+                   libc operations.
+        #118 libc: Incorrect DosSetFHState mask
+        #119 libc: logging stops in fork() child after libc data
+                   segment copying
+        #122 libc: open("file", O_RDONLY | O_CREAT, 0666) fails
+        #125 libc: Missing nan(), nanl() and nanf()
+        #133 libc: _SC_PAGESIZE missing in sysconf()
+        #135 libc: setlocale(LC_COLLATE, "C") doesn't work correctly
+        #136 libc: incorrect parsing of single quotes in commandline
+                   arguments
+        #141 libc: include the right types.h from sys/param.h,
+                   arpa/nameser.h and resolv.h
+        #142 libc: tempnam(NULL,NULL) crashes and tempnam messes
+                   up errno
+        #143 libc: __libc_Back_fsDirCurrentSet is hiding failures
+                   (chdir)
+        #144 libc: tolower() doesn't work for the first 128 chars
+                   if not inlined.
+        #146 libc: fread() on a write-only stream incorrectly puts
+                   it in an irreversable read mode
+        #147 libc: merge in current regex code and fix REG_ERANGE
+                   bug (sed/grep/++)
+        #149 libc: stat("/dev/null", &s) fails, fix.
+        #150 libc: symlinks 'files' contain garbage instead of
+                   the name
+        #151 libc: Recursive "LIBC SYS Filehandle Mutex" panic
+        #152 libc: lost signals / thread pokes
+        #153 libc: Add a @executable_path rewrite rule by default.
+        #155 libc: setlocale calls UniFreeUconvObjec(NULL) instead
+                   of UniFreeLocalObject causing crash in UConv.dll
+        #158 libc: printf("%#X, 255) outputs 0xFF instead of 0XFF
+        #160 libc: 3 more default rewrite rules; /@system_root,
+                   /@system_drive and /@tmpdir
+        #111 libos2: Correct som data imports
+        #128 libos2: unidef.h is missing a few defines
+        #100 gcc: can't throw across dll/exe boundraries
+        #109 libstdc++: infinite recursion during thread exit
+        #124 libc/gcc: link libstdc++ into the libc dll
+        #145 emxomf: deal with non-standard enum stabs
+        #148 emxomf: The anonymous members of struct stat chokes
+                     the debuggers
+        #137 emxomf: Don't truncate symbols twice.
+        #115 weakld: Don't bitch about export aliases
+         #89 emxomfld: Support wlink (the watcom linker)
+        #123 emxomfld: exit with rc 8 on genuin weakld failures,
+                       not -1.
+        #159 emxomfld: wrc support
+         #47 emxomfld: Create .sym files directly from emxomfld
+        #134 emxomfld/wlink: The internalname and entryname of an
+                             IMPORTS statement is switched
+         #39 dllar.cmd enhancements
+        #140 Definition file line can be greater than 512 bytes
+
+
+
+GCC v3.3.5 CSD 1 / LIBC v0.6.1:
+-------------------------------
+
+    First, thanks to Yuri, nickk, Paul, Andy and Michal for patches,
+    bugs and other kind of feedback.
+
+
+    Fix list:
+
+        #19	gcc: gcc limits.h overrides limits.h from libc
+        #20	libc: random panic SIGSEGV when doing parallel builds
+        #48	libc: freopen(NULL, "rb", stdio) panics (doesn't work
+                  as expected)
+        #60	libc: filehandle inheritance doesn't work right!
+        #22	libc: path resolver fails on open file
+        #23	libc: symlink is broken
+        #50	libc: umask isn't inherited
+        #51	libc: unlink fails on readonly file
+        #53	libc: freopen("missing",,) causes panic
+        #54	libc: fchdir(open('.', O_RDONLY)) may corrupt path
+                  resolving
+        #58	libc: closed standard handles cause uninitialized
+                  stdout/stdin/stderr streams
+        #21	libc: limit Unix EAs to specific file systems
+        #24	libc: fts crashes because it's still using chdir()
+        #32	libc: readdir_r returns -1 instead of errno
+        #33	libc: panic when using timers
+        #38	libc: when debugged default to breakpoint on panic
+        #40	libc: open("/", RDONLY) fails.
+        #41	libc: incorrect __libc_back_fsUnixAttribsGet() usage
+                  caused st_dev and st_ino to be 0 in some stat()s
+                  and chmod & fchmod to set MODE EA without type
+        #46	ilink map file name is wrong when multiple dots are in
+                  target name
+        #49	libc: st_ctime is incorrect and st_birthtime isn't
+                  converted to UTC
+        #52	libc: path resolver fails resolving a directory
+                  symlink for lstat
+        #61	libc: symlink(,existing) returns the wrong errno
+        #62	libc: getdelim / getline returns failure when the last
+                  line doesn't end with the delimiter / newline
+        #65	libc: sys/stat.h doesn't work in non BSD source mode
+        #67	libc: Remove ncurses headers
+        #68	libc: getopt prototype clashes (getopt.h/unistd.h)
+        #69	libc: basename & dirname return incorrect results
+                  for paths with drive
+        #71	libc: Incorrect fmutex padding in FILE
+        #27	ld bug when map files are requested
+        #34	weakld: generate duplicate weak aliases	bird
+        #30	setlocale / ctype is broken
+        #70	emxomf: Demangle function names for omf debug info
+        #55	emxomfld doesn't delete temporary files
+        #56	emxomfld doesn't properly allocate space for map file name
+        #28	emxbind doesn't read library name from .def file
+        #36	emxbind: export truncation bug and allow export & imports
+                     up to 255 chars
+
+    Full details can be found at:
+
+        http://svn.netlabs.org/libc/query?status=closed&milestone=libc-0.6.1
+
+
+
+GCC v3.3.5 / LIBC v0.6:
+-----------------------
+
+    There was a build problem with the first attempt at releasing.
+    This is the 2nd attempt, hope I got it right this time...
+
+    WARNINGS
+
+    There are several incompatible interface changes. So, you'll have
+    to rebuild static libraries and it's a good idea to do the same
+    thing for dynamic libs and programs too.
+
+    The build is not tested as much as I would've liked. I'm very
+    pressed on time as usual, but I really wanted to get the 0.6 stuff
+    out now. I can only hope everything still builds and works.
+
+
+    The Project is Moving
+
+    The source code has been migrated to subversion and now resides
+    on the svn.netlabs.org server. The server also provides an issue
+    tracker and project management service called trac. Check it
+    out at http://svn.netlabs.org/libc/.
+
+    The source code for this release (and any bugfix releases on
+    the 0.6 code base) can be checked out using this url:
+        http://svn.netlabs.org/repos/libc/branches/libc-0.6
+
+    Developers who wish to contribute to the 0.7 code will have to
+    diff against the trunk. There are several pending restructuring
+    tasks on 0.7, so don't expect everything to build fine or work
+    properly while those are still open. Anyway, the url:
+        http://svn.netlabs.org/repos/libc/trunk
+
+    Users are encouraged to join the gcc-user@netlabs.org mailing list
+    and use that list for questions rather than the InnoTek form. If
+    you think you've found a bug, you should first ask on the mailing
+    list, and if I decide it's a *real*, *new*, bug I'll open a
+    ticket for it and address it.
+
+    Developers which have patches for real bugs or enhancements can
+    create trac tickets and drop me or the gcc-user list a mail (we
+    haven't figure out how to get email notifications from trac yet).
+
+
+    New features:
+
+        o Added __libc_Back_gfProcessHandlePCBatchScripts and
+          __libc_Back_gfProcessHandleHashBangScripts (globale
+          variables) to turn on/off script handling in exec/spawn.
+          Very useful for shells.
+
+        o Changed the default stack of emxomfld and emxbind to 1MB,
+          it used to be 8KB and 8MB.
+
+        o open() can now open directories like on unix, and fchdir()
+          can chdir to the opened directories.
+
+        o Implemented much of the unix-attributes-in EA stuff.
+
+        o Implemented getdirents(), will be used to replace
+          opendir/readdir/seekdir/telldir/closedir in 0.7.
+
+        o Implemented the fcntl interface for setting and clearing
+          the O_NONBLOCK flag on sockets.
+
+
+    Bug fixes:
+
+        o Fixed bug preventing libc from working on legacy systems.
+          Kudos to Andrew Below for spotting it.
+
+        o Fixed ld bustage in rc1.
+
+        o Fixed fork bug in shm.
+
+        o Fixed spawn/exec bug where .exe was appended too early
+          preventing configure and other scripts without suffix
+          from being executed.
+
+        o Fixed several signal bugs (deadlocks, sigsuspend, pause).
+
+        o Fixed symbol truncation problem in emxomf.
+
+        o Fixed a generic error handling bug in ioctl, write, read,
+          dup and dup2 which was causing incorrect errno values.
+
+
+    Known Issues, see open ticket in trac:
+        http://svn.netlabs.org/libc/report/1
+
+
+GCC v3.3.5 / LIBC v0.6 - Release Candidate 1:
+---------------------------------------------
+
+    New features:
+
+        o Replaced the BSD regex with the GLIBC one.
+
+        o Replaced the BSD getopt with the GLIBC one adding optreset
+          for BSD compatability.
+
+        o Added libcrypt from GLIBC.
+
+        o Added argp from GLIBC.
+
+        o Added obstack from GLIBC.
+
+        o Finally added a crude [v]asprintf() implementation.
+
+        o Added missing math bits from GLIBC.
+
+        o New functions:
+          rawmemchr(), strchrnul(), fgets_unlocked(), gets_unlocked(),
+          fwide(), asprintf(), vasprintf(), get_current_dir_name(),
+          getdelim(), getline(), getlogin_r(), _getopt_internal(),
+          _getopt_internal_r(), _getopt_long_only_r(),
+          _getopt_long_r(), argp_error(), argp_failure(),
+          argp_fmtstream_ensure(), argp_fmtstream_free(),
+          argp_fmtstream_point(), argp_fmtstream_printf(),
+          argp_fmtstream_putc(), argp_fmtstream_puts(),
+          argp_fmtstream_set_lmargin(), argp_fmtstream_set_rmargin(),
+          argp_fmtstream_set_wmargin(), argp_fmtstream_update(),
+          argp_fmtstream_write(), argp_help(), argp_input(),
+          argp_make_fmtstream(), argp_parse(),
+          argp_program_bug_address(), argp_program_version(),
+          argp_program_version_hook(), argp_state_help(), argp_usage(),
+          cacos(), cacosf(), cacosh(), cacoshf(), cacoshl(), cacosl(),
+          cargf(), casin(), casinf(), casinh(), casinhf(), casinhl(),
+          casinl(), catan(), catanf(), catanh(), catanhf(), catanhl(),
+          catanl(), ccos(), ccosf(), ccosh(), ccoshf(), ccoshl(),
+          ccosl(), cexp(), cexpf(), cexpl(), clog(), clog10(),
+          clog10f(), clog10l(), clogf(), clogl(), cpow(), cpowf(),
+          cpowl(), cproj(), cprojf(), cprojl(), csin(), csinf(),
+          csinh(), csinhf(), csinhl(), csinl(), csqrt(), csqrtf(),
+          csqrtl(), ctan(), ctanf(), ctanh(), ctanhf(), ctanhl(),
+          ctanl(), exp10(), log2(), log2f(), log2l(), sincos(),
+          sincosf(), sincosl(), asinhl(), atanhl(), llrintl(),
+          lrintl(), erfcl(), erfl(), exp2l(), expm1l(), log1pl(),
+          logbl(), nearbyintl(), remainderl(), remquol(), cabsl(),
+          carg(), cargl(), gammal_r(), exp10f(), tgammaf(), tgammal(),
+          __fpu_control(), acoshl(), exp10l(), j0l(), j1l(), jnl(),
+          lgammal_r(), nexttowardl(), scalbl(), significandl(), y0l(),
+          y1l(), ynl(), gammal(), lgammal(), _obstack_allocated_p(),
+          obstack_alloc_failed_handler(), _obstack_begin(),
+          _obstack_begin_1(), obstack_exit_failure(), obstack_free(),
+          _obstack_memory_used(), _obstack_newchunk(), nftw(),
+          stpncpy(), crypt_r(), encrypt_r(), init_des(), init_des_r(),
+          md5_buffer(), md5_crypt(), md5_crypt_r(), md5_finish_ctx(),
+          md5_init_ctx(), md5_process_block(), md5_process_bytes(),
+          md5_read_ctx(), md5_stream(), setkey_r(), crypt(), encrypt(),
+          setkey(), _ufc_dofinalperm_r(), _ufc_doit_r(), _ufc_foobar(),
+          _ufc_mk_keytab_r(), _ufc_output_conversion_r(),
+          _ufc_setup_salt_r(), getmode(), optreset(), bsd_setmode(),
+          getpgid(), getsid(), setlinebuf(), re_comp(),
+          re_compile_fastmap(), re_compile_pattern(), re_exec(),
+          re_match(), re_match_2(), re_search(), re_search_2(),
+          re_set_registers() and re_set_syntax().
+
+
+    Bug fixes:
+
+        o Fixed various bugs related to __declspec.
+
+        o Fixed a bug in alloca which was causing all -O levels
+          to break.
+
+        o Added UniStrFromUcs and UniStrToUcs to uconv.h and libos2.
+
+        o Fixed quite a few libc issues, see the ChangeLog.LIBC
+          for full details.
+
+
+    Known problems:
+
+        o Static linking not possible - will be fixed.
+
+        o Job control will only be applied to thread 1 in a process.
+          This won't change.
+
+        o Missing some process group interfaces required for
+          job control. They'll show up soon.
+
+        o The HLL debug info isn't working 100% correctly.
+
+
+
+GCC v3.3.5 / LIBC v0.6 - Beta 5:
+--------------------------------
+
+    Thanks to Lorne, Froloff, nickk and Andy for sending me patches,
+    debugging problems and/or testing fixes.
+
+    New features:
+
+        o Added support for __declspec(dllexport), _Export
+          and __declspec(dllimport), the latter being a stub.
+          This also included adding N_EXP to the a.out format.
+
+        o Lot's of math stuff, mostly untested.
+
+        o Optimized zeroing of new file space in ftruncate and
+          chsize with knowlegde about the filesystem. HPFS, JFS
+          and FAT will do the zeroing for us.
+
+        o Support for unlocked stdio, with both BSD and GNU
+          extensions implemented.
+
+        o Execute .cmd, .bat, .btm and hash-bang scripts.
+
+        o Respect single quotes in argument handling (sed craze).
+
+        o Ported fts.h and the BSD implementation.
+
+        o Ported BSD sysctl. (Does not include the tcpip v4.1
+          sysctl() bits yet.)
+
+        o Ported the FreeBSD implementation of SysV semaphores
+          and shared memory.
+
+        o Env.var. LIBC_THREAD_MIN_STACK_SIZE can be used to
+          specify the minimum stack size for new threads. The
+          default minimum is 4096 bytes.
+
+        o Ported (lib)intl from glibc.
+
+        o New gcc arguments -Zargs-wild and -Zargs-resp.
+
+        o New functions (might not be 100% correct):
+          __bindtextdomain(), __dcgettext(), __dcigettext(),
+          __dcngettext(), __dgettext(), __dngettext(), __gettext(),
+          __gettext_extract_plural(), __gettext_free_exp(),
+          __gettextparse(), _nl_make_l10nflist(), __ngettext(),
+          __textdomain(), _nl_locale_name(), on_exit(), nanosleep(),
+          wmemcpy(), wmemchr(), wmemcmp(), wmemmove(), wmemset(),
+          gethrtime(), _nl_expand_alias(), _nl_explode_name(),
+          _nl_normalize_codeset(), __fbufsize(), __fpending(),
+          getpriority(), setpriority(), nice(), sysctl(),
+          sysctlbyname(), sysctlnametomib(), fchmod(), _chdir_os2(),
+          fts_children(), fts_close(), fts_get_clientptr(),
+          fts_get_stream(), fts_open(), fts_read(), fts_set(),
+          fts_set_clientptr(), mkfifo(), futimes(), _getenv_int(),
+          _getenv_long(), _getenv_longlong(), ftok(), semctl(),
+          semget(), semop(), shmat(), shmctl(), shmdt(), shmget(),
+          acosf(), acosh(), acoshf(), asinf(), asinh(), asinhf(),
+          atan2f(), atanf(), atanh(), atanhf(), cabs(), cabsf(),
+          cbrtf(), ceilf(), cimag(), cimagf(), cimagl(), conj(),
+          conjf(), conjl(), cosf(), coshf(), creal(), crealf(),
+          creall(), erf(), erfc(), erfcf(), erff(), exp2(), exp2f(),
+          expf(), expm1(), expm1f(), truncf(), fabsf(), fdim(),
+          fdimf(), fdiml(), fegetenv(), feholdexcept(),
+          feraiseexcept(), fesetexceptflag(), feupdateenv(), floorf(),
+          fma(), fmaf(), fmal(), fmax(), fmaxf(), fmaxl(), fmin(),
+          fminf(), fminl(), fmodf(), frexpf(), hypotf(), ilogb(),
+          ilogbf(), ilogbl(), ldexpf(), lgamma(), lgammaf(), llrint(),
+          llrintf(), llround(), llroundf(), llroundl(), log10f(),
+          log1p(), log1pf(), logb(), logbf(), logf(), lrint(),
+          lrintf(), lround(), lroundf(), lroundl(), modff(),
+          nearbyint(), nearbyintf(), nexttoward(), nexttowardf(),
+          powf(), remainder(), remainderf(), remquo(), remquof(),
+          rintf(), round(), roundf(), roundl(), scalbf(), scalbln(),
+          scalblnf(), scalblnl(), scalbn(), scalbnf(), scalbnl(),
+          signgam(), sinf(), sinhf(), sqrtf(), tanf(), tanhf(),
+          tgamma(), drem(), dremf(), finite(), finitef(), gamma(),
+          gammaf(), gammaf_r(), gamma_r(), j0(), j0f(), j1(), j1f(),
+          jn(), jnf(), lgammaf_r(), lgamma_r(), scalb(),
+          significand(), significandf(), powl(), y0(), y0f(), y1(),
+          y1f(), yn(), ynf(), arc4random(), arc4random_addrandom(),
+          arc4random_stir(), _mktemp(), mkdtemp(), mkstemps(),
+          clearerr_unlocked(), feof_unlocked(), ferror_unlocked(),
+          fgetc_unlocked(), fileno_unlocked(), flockfile(),
+          ftrylockfile(), funlockfile(), getchar_unlocked(),
+          getc_unlocked(), putchar_unlocked(), fputc_unlocked(),
+          putc_unlocked(), fputs_unlocked(), puts_unlocked() and
+          fread_unlocked().
+
+    Removed features:
+
+        o smallcnv is gone.
+
+        o old weak symbol handling in emxomf is gone.
+
+
+    Bug fixes:
+
+        o Numerous bugfixes in libc, see ChangeLog.LIBC for
+          details.
+
+        o Fixed problems with receiving signals during fork().
+
+        o Fixed bug in timer backend if the system had no
+          exiting timers. Kudos to Froloff for noticing this.
+
+
+    Known problems:
+
+        o Static linking not possible - will be fixed.
+
+        o Job control will only be applied to thread 1 in a process.
+          This won't change.
+
+        o Missing some process group interfaces required for
+          job control. They'll show up soon.
+
+        o The HLL debug info isn't working 100% correctly.
+
+
+    Todos before LIBC06.DLL:
+
+        0. Make my way through the glibc testsuite.
+
+        1. New select() from Brian (aka nuke).
+
+        2. Missing job pgid functions.
+
+
+
+GCC v3.3.5 / LIBC v0.6 - Beta 4:
+--------------------------------
+
+    Thanks to Lorne, Froloff and nickk for sending me patches,
+    debugging problems and testing fixes.
+
+    New features:
+
+        o Added st_dev and st_ino calculation for fstat and stat.
+
+        o Added most of the wide string functions.
+          N.B. the stream functions are still missing.
+
+        o New functions:
+          SafeDosStartSession(), wcscat(), wcschr(), wcscmp(),
+          wcscoll(), wcscpy(), wcscspn(), wcslcat(), wcslcpy(),
+          wcslen(), wcsncat(), wcsncmp(), wcsncpy(), wcspbrk(),
+          wcsrchr(), wcsspn(), wcsstr(), wcstok() and wcswidth()
+
+
+    Bug fixes:
+
+        o settimeofday() year problem.
+
+        o Some underflow/overflow problems tested for by many
+          Configure scripts was fixed by using a 64-bit time
+          type internally.
+
+        o fxsave/fxrstore problem in fork(). (This isn't tested
+          because lack of (reliable) obsolete hardware.)
+
+        o Fixed fork() and DosLoadModule problem in child.
+
+        o nl_langinfo(CODESET) now returns something useful,
+          adding a few ascii codeset aliases at the same time.
+
+        o Bug in socket inheritance over exec/spawn.
+
+        o Missing semphore and signal blocking when processing
+          external signals.
+
+        o Two rmdir errno problems, and made it fail on symlink.
+
+        o Fixed incorrect monetary locale for the "C" locale
+          after setlocale call.
+
+        o Fixed signal queue node leak.
+
+        o Fixed missing release of signal semaphore and signal
+          unblocking in a failure code path.
+
+        o Fixed a few filehandle conversion bugs in os2_select.
+
+        o Fixed libsocket to set errno to ENOSOCK when given a
+          filehandle instead of a socket. Previous was ENOSYS.
+
+        o Corrected NP_NBLK define in os2emx.h.
+
+        o Export __mcount stub. LIBCxx.prf export non-stub.
+
+        o Added missing libdl stub libraries (dlfcn is in libc
+          as of last release).
+
+        o Fixed missing WNOHANG handling in the wait functions.
+
+        o Adjusted the ECHILD and EINVAL errnos usage in
+          the wait functions to match the waitpid() spec.
+
+        o ???
+
+    Todos before LIBC06.DLL:
+
+        0. Fix all bugs. :-)
+
+        1. Reimplement opendir in BSD style (+fchdir).
+
+        2. Shared IPC structures for XSI msq, sem and shm.
+
+        3. Missing job pgid functions.
+
+        4. Port GLIBC intl/*. gettext is a pita! because it's
+           passing FILE pointers around between different LIBCs.
+           objdump is constantly broken between LIBC versions.
+
+        5. Figure out the EA exclusive read access trouble.
+
+        6. Calc ino_t on file creation and store it in EAs.
+
+        7. Some sysctl() required for coreutils + a bit
+           of tcpip additions.
+
+        8. adjtime() implementation.
+
+
+
+GCC v3.3.5 / LIBC v0.6 - Beta 2:
+--------------------------------
+
+    New features:
+
+        o wchar.h and wctype.h and much of the non-stream functions
+          declared therein are implemented. Though, the FreeBSD
+          string/w*.c functions are still in the porting queue.
+
+        o Added __mcount stub to all LIBC DLLs but the .prf one which
+          is forwarding __mcount from kProfile.dll.
+
+        o DosLoadModuleEx and DosFreeModuleEx was created to support
+          loaded modules over a fork(). dlopen/dlclose backend was
+          changed to use these.
+
+        o Fixed rand() range problem. Using the BSD code for this
+          too, which means a new algorithm.
+
+        o Update all BSD source-files (not headers) to FreeBSD 5.3
+          level.
+
+        o New functions:
+          DosLoadModuleEx(), DosFreeModuleEx(), sranddev(),
+          getsubopt(), rand_r(), llabs(), lldiv(), dlfunc(),
+          issetugid(), pread(), pwrite(), _UTF8_mbrtowc(),
+          _UTF8_mbsinit(), _UTF8_mbsnrtowcs(), _UTF8_wcrtomb(),
+          _UTF8_wcsnrtombs(), digittoint(), isideogram(),
+          isrune(), iswalnum(), iswalpha(), iswascii(),
+
+          iswblank(), iswcntrl(), iswctype(), iswdigit(),
+          iswgraph(), iswhexnumber(), iswideogram(), iswlower(),
+          iswnumber(), iswprint(), iswpunct(), iswrune(),
+          iswspace(), iswupper(), iswxdigit(), btowc(), mbrlen(),
+          mbrtowc(), mbsinit(), mbsnrtowcs(), mbsrtowcs(),
+          nl_langinfo(), towctrans(), wcrtomb(), wcsftime(),
+          wcsnrtombs(), wcsrtombs(), wcstod(), wcstof(),
+          wcstoimax(), wcstol(), wcstold(), wcstoll(), wcstoul(),
+          wcstoull(), wcstoumax(), wctob(), wctrans(), wctype(),
+          towlower(), towupper().
+
+
+    Bug fixes:
+
+        o Fixed missing WNOHANG handling in waitpid(), wait4()
+          and waitid().
+
+        o Corrected several severe bugs in the path resolver.
+
+        o Fixed handling of paths ending with slash.
+
+        o Fixed weird fork() problem which showed up as a heap
+          deadlock.
+
+        o Fixed broken _getdrive().
+
+        o Made _chdrive() return -1 on error. It used to always
+          return success earlier. (don't ask me why)
+
+        o Fixed incorrect handling of -shared in GCC. It should
+          be treated as -Zdll.
+
+        o Various incorrect assertions in the strict/log build.
+
+        o ...
+
+    Known Limitiations/Problems:
+
+        o Static linking not possible - might be fixed later.
+
+        o Job control will only be applied to thread 1 in a process.
+          This won't change.
+
+        o Missing some process group interfaces required for
+          job control. They'll show up soon I hope.
+
+        o Not tested too well. Especially the regex update.
+
+    Todos before LIBC06.DLL:
+
+        0. Fix all bugs. :-)
+
+        1. Implement new ino_t scheme and reimplement opendir
+           in BSD style while doing so (+fchdir).
+
+        2. Shared IPC structures for XSI msq, sem and shm.
+
+        3. Port string/w* functions.
+
+        4. Missing job pgid functions.
+
+        5. Port GLIBC intl/*. gettext is a pita! because it's
+           passing FILE pointers around between different LIBCs.
+           objdump is constantly broken between LIBC versions.
+
+
+
+GCC v3.3.5 / LIBC v0.6 - Beta 1:
+--------------------------------
+
+    New features:
+
+        o setitimer/alarm implementation. Needs some review later
+          the accuracy isn't extacly great.
+
+        o Added a couple of missing os2emx.h features.
+
+        o Some more 16-bit thunkers.
+
+    Bug fixes:
+
+        o Select worker called wrong tcpip function.
+
+        o Incorrect assertion during thread destruction.
+
+        o Fixed broken chdir and getdrive.
+
+        o Improved deadlock detection (fmutex have changed,
+          thus stdio FILE is also changed).
+
+        o ...
+
+
+    Known Limitiations/Problems:
+
+        o Static linking not possible - will be fixed.
+
+        o Job control will only be applied to thread 1 in a process.
+          This won't change.
+
+        o Missing some process group interfaces required for
+          job control. They'll show up soon.
+
+        o Doesn't evaluate trailing slash in paths as directory
+          specifier, it's currently ignored.
+
+
+
+GCC v3.3.5 / LIBC v0.6 - Alpha 3:
+---------------------------------
+
+    This release have been timebombed and will stop working at the
+    end of December 2004. The reason for this is that data structures
+    shared between LIBC 0.6 and all future LIBC versions are not yet
+    quite finalized. (For your comfort the timebomb will go away when
+    the betas start, and this is the last planned LIBC v0.6 alpha.)
+
+
+    New Features:
+
+        o Updated GCC to version 3.3.5.
+
+        o Replaced the signal implementation. The new implementation
+          is much closer to the POSIX specs and implements a lot of
+          new interfaces.
+
+        o Experimental delayed loading import libraries. emximp have
+          a new -l option for generating such libraries. At present
+          emximp can only generate a.out libraries of this kind - so
+          use emxomf to convert to OMF.
+
+        o The dlfcn.h functions are in LIBC now.
+
+        o New functions:
+          getgrouplist(), initgroups(), memalign(), valloc(),
+          mprotect(), _signal_os2(), _signal_sysv(),
+          __sigpause_bsd(), bsd_signal(), killpg(), psignal(),
+          sigaltstack(), sigblock(), sighold(), sigignore(),
+          siginterrupt(), sigpause(), sigrelse(), sigsetmask(),
+          sigtimedwait(), sigvec(), sigwait(), sigwaitinfo(),
+          sigqueue(), sigset(), getgrgid(), getpwnam(),
+          getpwuid(), setegid(), seteuid(), setregid(),
+          setresgid(), setresuid(), setreuid(),
+          setrgid(), setruid(), waitid(), wait3(),
+          wait4() and getopt_long_only().
+
+
+    Bug fixes;
+
+        o Sockets were broken on some systems. Hopefully, this
+          should be corrected now.
+
+        o stat() failed on a file open for writing.
+
+        o fork() didn't work for processes which allocated lot's
+          of memory. Fixed incorrect syncing of memory objects.
+
+        o ...
+
+
+    Known Limitiations/Problems:
+
+        o Static linking not possible - will be fixed.
+
+        o alarm() is still missing. Code is 80% done but didn't
+          make it for the release.
+
+        o Job control will only be applied to thread 1 in a process.
+          This won't change.
+
+        o Missing some process group interfaces required for
+          job control. They'll show up soon.
+
+
+
+GCC v3.3.4 / LIBC v0.6 - Alpha 2:
+---------------------------------
+
+    This release have been timebombed and will stop work at the
+    end of October 2004. The reason for this is that data structures
+    shared between LIBC 0.6 and all future LIBC versions are not yet
+    finalized.
+
+
+    New Features:
+
+        o Updated GCC to version 3.3.4.
+
+        o 2nd fork() implementation.
+          All binaries are by default forkable, use the link option
+          -Zno-fork to disable this.
+          The fork implementation rendered _rmutex useless and it
+          has been removed.
+
+        o Symlinks using EAs. This is work in progress. One of the
+          limitiations is that readir will not report DT_LNK yet.
+
+        o Unix compartment using chroot(). This offers a
+          redirection of '/' to the chroot'ed root. The entrance
+          to the compartment is the '/'. The exits are drive letters.
+          The unix compartment is inherited by LIBC child processes.
+
+        o getcwd() will now return the driveletter too (as VAC does)
+          when not inside the unix compartement.
+          _getcwdux() has been provided for porters which requires
+          behaviour like the old getcwd() implementation.
+
+        o Paths to unix files #defined in headers are now prefixed
+          with "/@unixroot" which will be redirected to where the
+          environment variable UNIXROOT points. After calling
+          chroot() the target of "/@unixroot" will be changed too.
+
+        o LIBC specific path rewriting (redirection). Built in is
+          "/dev/null", "/dev/tty" and "/@unixroot".
+          The environment variable LIBC_PATHREWRITERS is examined
+          during init and DLLs specified in it are loaded and called.
+          See src/emx/src/sys/pathrewrite.c for more details.
+
+        o Non-unix like mode - link option -Zno-unix.
+          This affects slashes and various other Unix-like features
+          like for instance fork and symlinks.
+
+        o Printf et al. have been extended to support some new format
+          specifiers. (It's still lacking a bit to be SuS comforming.)
+
+        o Sockets handles are now inherited by LIBC child processes.
+
+        o LIBC specific filehandle flags are now inherited by LIBC
+          child processes.
+
+        o The GCCxyz.DLL is no longer needed when LIBC is used.
+          However it is still shipped for special cases where LIBC
+          isn't needed.
+
+        o A good bunch of 'new' functions both from the SuS and from
+          various Unix flavors, even one or two PC functions have been
+          added. Accompanying these are new headers and header updates.
+          Here are most of the new function names:
+            __strverscmp(), _atfork_callback(), _getcwdux(),
+            _getdcwd(), _nsdbtaddsrc(), _nsdbtput(), _nsdispatch(),
+            _realrealpath(), canonicalize_file_name(), catclose(),
+            catgets(), catopen(), chown(), chroot(), eaccess(),
+            endgrent(), endnetgrent(), endusershell(), fchown(),
+            fstatfs(), fstatvfs(), getdtablesize(), getfsstat(),
+            getgrent(), getgrent_r(), getgrgid_r(), getgrnam_r(),
+            getloadavg(), getmntinfo(), getnetgrent(),
+            getpwent_r(), getpwnam_r(), getpwuid_r(), getrlimit(),
+            getusershell(), innetgr(), lchown(), link(), mknod(),
+            readlink(), setgrent(), setgroupent(), setgroups(),
+            setnetgrent(), setpassent(), setrlimit(),
+            setusershell(), sl_add(), sl_find(), sl_free(),
+            sl_init(), statfs(), statvfs(), strmode(), strtok_r(),
+            symlink() and sync().
+
+
+    Bug fixes:
+
+        o setlocale() have been rewritten. The code page is now
+          taken from the locale rather than OS/2. Old behaviour
+          is used if environment variable LIBC_SETLOCALE_OLDSTYLE
+          is defined.
+
+        o Buggy strspn() replaced by BSD implementation.
+
+        o Thread backend have been reworked fixing certain
+          problems when LIBC was loaded and initialized in threads
+          other than the primary one. A LIBC specific TLS api
+          was created during this effort.
+
+        o Fixed a missing export from GCCxyz.dll which was causing
+          incorrect behaviour of C++ exceptions in all previous
+          releases.
+
+        o Fixed a buffer overrun in iconv_open() which caused a
+          corruption of the FS selector register, thus crashing
+          the processing.
+
+        o ...
+
+
+    Known limitations and bugs:
+
+        o mktime() works incorrectly for exterme values causing
+          configure test to fail.
+
+        o NSS probably doesn't work.
+
+        o Trailing slashes of a path specification are not
+          handled correctly after the rewrite of the path
+          handling.
+
+        o New path handling is not DBCS ready.
+
+        o Socket handle duplication have not been implemented yet.
+
+        o The __<syscall> function are in the process of being
+          removed.
+
+        o Not tested with mozilla.
+
+
+
+v3.2.2 Beta 4 CSD 1:
+--------------------
+
+    Bug fixes:
+
+        o Fixed crash in file stream allocation code.
+
+        o Fixed incorrect time on machines which had DATETIME::timezone
+          set. This fix changes the time granularity from hundredths of
+          a second to milliseconds.
+
+        o Added the SPBCDATA struct, the defines FCF_CLOSEBUTTON and
+          BS_NOTEBOOKBUTTON and infosegment structs to os2emx.h
+
+        o Fixed bug in sys/locale.h where it hid the lconv struct.
+
+        o Fixed missing error number translations in getsockopt() and
+          setsockopt().
+
+        o Fixed potential conflict caused by sys/types.h not defining
+          _KEY_T with the key_t typedef.
+
+        o Fixed missing 64bit I/O support in ftell(), fstat() and stat().
+
+        o Fixed UCS-2 codepage mappings.
+
+        o Fixed problem with emxbind not recognizing option -e and
+          a problem with case sensitivity in the export checking.
+
+
+v3.2.2 Beta 4:
+--------------
+
+    (The changelog is removed, thus the release notes are more detailed.)
+
+    New features and fixes:
+
+        o Filehandle rewrite. Files, pipes and sockets now share the same
+          handle space.
+
+        o Updated binutils from v2.11.2 to v2.14 adding as-elf.exe and
+          ld-elf.exe as goodies for the adventurous.
+
+        o GCC defines __INNOTEK_LIBC__=0x005.
+          The value reflects the LIBC version, form: 0xGMM
+          Where G=major version and MM=middle version numbers.
+
+        o Changed library search algorithms for the linkers (emxomfld
+          and ld). Three variations, static, shared and shared+dll.
+          (The options indicated corresponds to what binutils 2.12.x
+          documents.)
+          static: (-Bstatic, -non_shared, -dn, -static)
+            1. libfoo_s.a
+            2. foo_s.a
+            3. libfoo.a
+            4. foo.a
+          shared: (default, -Bshared, -call_shared, -dy)
+            1. libfoo_dll.a
+            2. foo_dll.a
+            3. libfoo.a
+            4. foo.a
+            5. libfoo_s.a
+            6. foo_s.a
+          shared+dll: (-Zdll-search with -Bshared, -call_shared, -dy)
+            1. libfoo_dll.a
+            2. foo_dll.a
+            3. libfoo.a
+            4. foo.a
+            5. foo.dll
+            6. libfoo_s.a
+            7. foo_s.a
+
+        o Added some deadlock checking/termination checks to semphores.
+
+        o Added macros to os2emx.h for preserving FPU control word and
+          applied these to certain read and write operations in LIBC.
+
+        o Added feature to emxomfld to automatically convert a.out
+          libraries and objects to OMF (using temporary files). Enabled
+          by default but can be disabled by the option -Zno-autoconv.
+
+        o Added support to emximp for dlls.
+
+        o Added support for automatic conversion of dlls to temporary
+          import libraries emxomfld and ld.
+
+        o Added getopt_long() and changed getopt() to FreeBSD
+          implementations.
+
+        o Added a few more code page aliases.
+
+        o Added optional breakpoint in abort. The presense of the env.var.
+          LIBC_BREAKPOINT_ABORT triggers the breakpoint instruction.
+
+        o Added syslog interfaces (contrib from Yuri Dario).
+
+        o Added to libc and updated BSD db code to FreeBSD 5.1 level.
+
+        o Added to libc and updated regex code to FreeBSD 5.1 level.
+
+        o Ported the posix spawn api from GLIBC v2.3.2.
+
+        o Updated with os2emx.h flags for DosQueryMemState().
+
+        o Changed size_t to unsigned int (from unsigned long int) and
+          ptrdiff_t to signed int (from signed long int) to comply with
+          most of the other i386 environments.
+
+        o Changed abort and default signal termination messages to say
+          which process it's printed from.
+
+        o Changed the glob() and globfree() implemenation with a port of
+          the FreeBSD 5.1 implemenation.
+
+        o Changed so_ioctl() to os2_ioctl() to better match the toolkit.
+
+        o Changed time_t to be signed as in BSD & linux.
+          (Negative values means date/time before epoc.)
+
+        o Changed to FreeBSD implementation of difftime().
+
+        o Increased default stream buffer size to 2 pages.
+
+        o Workaround for DosSetFileLocksL() on non JFS volumes.
+
+        o Workaround for bad FIL_STANDARDL buffer handling in os2krnl.
+
+        o Fixed waitpid() to respect the WNOHANG flag.
+
+        o Fixed strerror() to set errno if an invalid error number is
+          specified.
+
+        o Fixed problem with emxexp emitting ordinal without being told.
+
+        o Fixed broken setenv().
+
+        o Fixed errno value for read() and write() when the handle isn't
+          opened for that operation.
+
+        o Fixed a bad record length problem in emxomf.
+
+        o Fixed type_tag too long issue in emxomf.
+
+        o Fixed repetition of main source file in HLL debuginfo (emxomf).
+
+        o Fixed weakld problem with selfrefering aliases.
+
+        o Fixed weakld problem with PUBLIC and COMM clash.
+
+        o Fixed problem with streams not being flushed on termination.
+
+        o Fixed define clash in float.h when in C99 mode.
+
+        o Fixed abend in GCC if TMPDIR or TMP was ending with a slash.
+
+        o Fixed crash in ld when having fixups to weak symbols.
+
+        o Fixed bad conversion of dll0*.o to OMF, the OMF version got an
+          unwanted stack object.
+
+        o New functions:
+            isblank(), ishexnumber(), isnumber(), mempcpy(), realpath(),
+            strnlen(), asctime_r(), ctime_r(), gmtime_r(), localtime_r(),
+            strerror_r(), usleep().
+
+        o New functions & globals (from FreeBSD 5.1):
+            imaxabs(), imaxdiv(), strtoimax(), strtoumax(), hcreate(),
+            hdestroy(), hsearch(), insque(), lfind(), lsearch(),
+            remque(), tdelete(), tfind(), tsearch(), twalk(), reallocf(),
+            strsignal(), sys_signame, sys_siglist, sys_nsig, regcomp(),
+            regerror(), regexec(), regfree(), + bsd db functions.
+
+        o New functions (from GLIBC 2.3.2):
+            error(), error_at_line(), strndup(), argz_add(),
+            argz_add_sep(), argz_append(), argz_count(), argz_create(),
+            argz_create_sep(), argz_delete(), argz_extract(),
+            argz_insert(), argz_next(), argz_replace(), argz_stringify(),
+            posix_spawnp() posix_spawn(), posix_spawnattr_destroy(),
+            posix_spawnattr_getflags(), posix_spawnattr_getpgroup(),
+            posix_spawnattr_getschedparam(),
+            posix_spawnattr_getschedpolicy(),
+            posix_spawnattr_getsigdefault(),
+            posix_spawnattr_getsigmask(), posix_spawnattr_init(),
+            posix_spawnattr_setflags(), posix_spawnattr_setpgroup(),
+            posix_spawnattr_setschedparam(),
+            posix_spawnattr_setschedpolicy(),
+            posix_spawnattr_setsigdefault(),
+            posix_spawnattr_setsigmask(),
+            posix_spawn_file_actions_addclose(),
+            posix_spawn_file_actions_adddup2(),
+            posix_spawn_file_actions_addopen(),
+            posix_spawn_file_actions_destroy(),
+            posix_spawn_file_actions_init()
+
+        o New headers:
+            nerrno.h (toolkit compatability).
+
+        o New headers (from FreeBSD 5.1):
+            search.h, sys/queue.h, net/if_types.h.
+
+        o New headers (from GLIBC 2.3.2):
+            features.h (somewhat crippled),
+            sys/gnu/cdefs.h (included from BSD styled sys/cdefs.h).
+
+        o Updated headers:
+            stddef.h (FreeBSD, sys/stddef.h (FreeBSD),
+            ulsitem.h (missing defines), os2emx.h, ...
+
+        o What I forgot...
+
+
+v3.2.2 Beta 3 Fix 1 (private build):
+------------------------------------
+
+    Fixes to LIBC:
+
+        o Crash if calloc was called before main().
+
+        o TZ parsing of timezones such as PST8EDT.
+
+        o sigsetjmp() and siglongjmp() visibility.
+
+
+v3.2.2 Beta 3:
+--------------
+
+    A few new features and fixes.
+
+        o Fixed a bunch of debug info problems.
+
+        o Added large file support.
+
+        o Enabled high memory support for LIBC. Two new options to GCC:
+          -Zhigh-mem and -Zhigh-low. If the program is to be enabled for
+          high memory use, specify -Zhigh-mem when linking.
+
+          Note that socket is not high memory enabled yet.
+
+        o Made LIBC preserve the FS selector.
+
+        o Added random() and *rand48() from BSD.
+
+        o Fixed crash with link386 and unresolved symbols.
+
+
+v3.2.2 Beta 2:
+--------------
+
+    A few bugfixes and a some new features (as usual).
+
+        o Added file locking support to LIBC.
+
+        o Fixed _System and _Optlink bugs and made _Optlink support
+          floating point argument passing in registers.
+
+        o Header updates related to limits and file locking primarily.
+
+        o Timezone fixes.
+
+        o Fixed some CRT init trouble in regards to getenv and putenv.
+
+        o And some other minor stuff..
+
+
+v3.2.2 Beta 1:
+--------------
+
+    A few bugfixes and a some new features.
+
+        o Locale support in libc.
+
+        o Implemented a different approach to OMF and weak symbols. This
+          new hack performs pre-linking before invoking the OMF linker
+          generating new .def files if needed and an extra object file with
+          aliases to resolve the weak symbols correctly.
+          The old approach will be used used when GCC_WEAKSYMS is present in
+          the environment.
+
+          Please note that due to a bug in BFD, weak symbols don't work
+          100% correctly. This will be addressed as soon as we have
+          performed the switch to a more recent version of binutils.
+
+        o A couple of new functions in libc, and a few corrections to
+          existing in respect to namespaces.
+
+        o Addressed issues with calling conventions. We now detect
+          incompatible calling conventions, emitting warnings and errors
+          where appropriate.
+
+        o _Optlink is much better, but there are still some issues
+          left. Passing prototyped floating point parameters to
+          _Optlink doesn't work. Mixing of parameters which go into
+          registers (eax, edx, ecx) and parameters which
+          don't - void foo(int eax, struct sss s, int edx) - doesn't
+          work. All these issues are being addressed and are expected
+          to be fixed in the next build.
+
+        o Changed GCC to link with shared libc by default. This means
+          that in order to link with the static libc one has to specify
+          -static. It also means that -Zmtd or -Zcrtdll are no longer
+          required for linking with shared libc and can be removed from
+          all makescripts.
+
+        o Changed EMXOMFLD defaults to ilink from Visual Age for C++
+          v3.6.5 or later (preferably later). The emxomfld usage output
+          will instruct you on how to use older linkers. For VAC308 and
+          VAC365 linkers /dbgpack is specified if debuginfo is to be
+          generated. Emxomf checks for EMXOMFLD_TYPE=link386 when choosing
+          debug info level.
+
+        o Shipping three extra libc dlls:
+            libc02.dbg:     Unstripped version of libc02.dll. This is
+                            identical except from the presense of debug
+                            info.
+            libc02.prf:     Linked together from profiled enabled
+                            libraries using kProfiler.
+            libc02.elh:     Standard libc but linked with an external
+                            electrical fence heap from kLibDbg.
+          These libc02.* dlls can be used instead of libc02.dll. kLibDbg
+          and kProfiler is available in separate zip files at same
+          location as the rest of the InnoTek GCC suite. However these
+          external tools are provided as is. (I might actually not find
+          time to put them out yet.)
+
+        o Distribution is splitted into several zips:
+            -core.zip:  All you really need.
+            -dbg.zip:   Map files, unstripped tools and libs, and
+                        libc02.elh.
+            -prf.zip:   Profiling libraries and libc02.prf.
+            libc.zip:   The runtime libraries. (included in core.)
+          The big zip is everything.
+
+v3.2.2 Alpha 3:
+---------------
+
+    Primarily bugfixes.
+
+        o Changed code generator for floating point truncations (double
+          to int casts and such) so PM can freely mess up the fpu status.
+
+        o We were using the wrong float.h in two sense. We're now using
+          the correct one which includes all the PC defines and
+           prototypes.
+
+        o Fixed a few issues with error defines and tcpip.
+          Note that some of the error defines have changed value in the
+          process so we could become compatible with the tcpip stack
+          and FreeBSD.
+
+        o Corrected bugs in a number of headers.
+
+        o Added more OS/2 prototypes and imports. There is still work
+          left on the header part,
+
+        o Optimized emxomf debug info conversion.
+
+        o Wrapped bsdselect for BSD 4.4 header mode to implement
+          bsdselect().
+
+        o .... what did we forget...
+
+
+v3.2.2 Alpha 2:
+---------------
+
+    A few bugfixes and a couple of new features.
+
+        o The TCP/IP headers and libraries scheme have been changed.
+          The default is the current OS/2 tcpip toolkit (BSD 4.4 based).
+          To target the older OS/2 tcpip stack (BSD 4.3 based) you must
+          define TCPV40HDRS before including any TCP/IP headers and make
+          sure usr/lib/tcpipv4 is searched before usr/lib (this is to
+          get the right libsocket). It is recommended to use the -D
+          compiler option for the define and either the LIBRARY_PATH or
+          the -L compiler/linker option for the library.
+
+        o There are a couple of new and updated based on FreeBSD 5.1.
+          sys\stdint.h and inttypes.h (and a few internal once) are new.
+          sys\types.h and unistd.h are the ones most heavily updated.
+          We're working on getting the headers and libc in a better
+          shape standardwise to easy compatability and portability.
+
+        o A infinite loop in emxomf has been fixed.
+
+        o Linker error on sopen() has been corrected.
+
+        o .... what did we forget...
+
+
+v3.2.2 Alpha 1:
+---------------
+
+    This is the first release from InnoTek, and it contains the InnoTek LIBC.
+    In addition to the new LIBC there is a number of other major changes:
+
+        o Name mangling in OMF mode have changed.
+          Until this release emxomf used to pretty much strip one leading '_'
+          from symbols when converting them to omf. This is now longer done
+          chiefly in order to correctly support mangling calling conventions
+          like __stdcall and __cdecl. This change have the following side
+          effects:
+            - _System and __cdecl no longer produces the same names and hence
+              all OS/2 API which are _System must be declared as _System in
+              order to link.
+            - Assembly code might need an extra underscore to work, or
+              perhaps change the prototypes to _System.
+            - Global variables are prepended and underscore, so mixing VAC and
+              GCC, or accessing globals from asm, take care.
+              (MSC v6.0 does this too, so it's not any uncommon practise.)
+
+          The OS/2 headers which are included are all updated to use _System.
+
+        o TCPIP headers are updated a quite a bit to match the toolkit ones
+          and to reflect the fact that the new libc does not a having common
+          handle space for files and sockets. These changes aren't 100%
+          completed yet, and usage probably will uncover some issues left in
+          there. Also for the programmer there is the following changes in
+          the apis provided:
+            - TCPV40HDRS are supported and should work like with the toolkit
+              headers. It will alias all functions to tcpip40_ editions
+              (using #defines) so we get the right imports thru -llibsocket.
+            - There is no support for sockets in select(). To do select on
+              sockets you will have to use bsdselect() or os2_select().
+              bsdselect() is only available for TCPV40HDRS. For
+              !defined(TCPV40HDRS) fd_set is in the emx/bsd format and not the
+              OS/2 tcpip v5.0 format.
+            - Socket IOCTLs are not supported by the ioctl() libc function
+              because of the separate handle space for sockets. For sockets
+              so_ioctl() and os2_ioctl() are used. os2_ioctl() is not available
+              when TCPV40HDRS is defined. According to the tcpref in v5.0
+              so_ioctl() only supports BSD ioctls.
+            - writev() and readv() also clashes with libc. For socket handles
+              use so_writev() and so_readv().
+
+        o The prefered OMF linker is now ilink. link386 will fail with an odd
+          error message if you tell gcc/g++ to make debug info. Set the
+          EMXOMFLD_LINKER environment variable to value ilink in order to use
+          ilink as OMF linker.
+          It likely that we will change the default OMF linker to ilink in an
+          later version of the GCC suite.
+
+        o .... what did we forget...

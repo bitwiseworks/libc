@@ -1,0 +1,7 @@
+;
+; msg.imp
+;
+DosInsertMessage        msg 4 7
+DosPutMessage           msg 5 3
+DosTrueGetMessage       msg 6 8
+DosIQueryMessageCP      msg 8 5

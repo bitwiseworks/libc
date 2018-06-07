@@ -1,0 +1,11 @@
+;
+; que.imp
+;
+DosCloseQueue           quecalls  11 1
+DosCreateQueue          quecalls  16 3
+DosOpenQueue            quecalls  15 3
+DosPeekQueue            quecalls  13 8
+DosPurgeQueue           quecalls  10 1
+DosQueryQueue           quecalls  12 2
+DosReadQueue            quecalls   9 8
+DosWriteQueue           quecalls  14 5

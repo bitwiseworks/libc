@@ -1,0 +1,165 @@
+;
+; Legalesy-free Unicode API interface for OS/2
+; Unicode API import definitions
+;
+; Written by Andrew Zabolotny <zap@cobra.ru>
+; Missing APIs added by bird.
+;
+; This file is put into public domain. You are free to do
+; literally anything you wish with it: modify, print, sell,
+; rent, eat, throw out of window: in all (esp. in later)
+; cases I am not responsible for any damage it causes.
+;
+
+; -------- UNIKBD.DLL --------
+UniCreateKeyboard       unikbd     1 3
+UniDestroyKeyboard      unikbd     2 1
+UniQueryKeyboard        unikbd     3 2
+UniResetShiftState      unikbd     4 3
+UniUpdateShiftState     unikbd     5 4
+UniTranslateKey         unikbd     6 6
+UniTranslateDeadkey     unikbd     7 5
+UniUntranslateKey       unikbd     8 5
+UniInitKeyboard         unikbd     9 ?
+
+; -------- UCONV.DLL --------
+UniCreateUconvObject    uconv      1 2
+UniUconvToUcs           uconv      2 6
+UniUconvFromUcs         uconv      3 6
+UniFreeUconvObject      uconv      4 1
+UniQueryUconvObject     uconv      7 6
+UniSetUconvObject       uconv      8 2
+UniMapCpToUcsCp         uconv     10 3
+UniStrFromUcs           uconv     11 4
+UniStrToUcs             uconv     12 4
+UniMalloc               uconv     13 ?
+UniFree                 uconv     14 1
+
+; -------- LIBUNI.DLL --------
+UniQueryXdigit          libuni     1 2
+UniQuerySpace           libuni     2 2
+UniQueryPrint           libuni     3 2
+UniQueryGraph           libuni     4 2
+UniQueryCntrl           libuni     5 2
+UniQueryAlpha           libuni     6 2
+UniFreeAttrObject       libuni     7 1
+UniQueryCharAttr        libuni     8 2
+UniQueryUpper           libuni     9 2
+UniQueryPunct           libuni    10 2
+UniQueryLower           libuni    11 2
+UniQueryDigit           libuni    12 2
+UniQueryBlank           libuni    13 2
+UniQueryAlnum           libuni    14 2
+UniScanForAttr          libuni    15 5
+UniCreateAttrObject     libuni    16 3
+UniCreateTransformObject libuni    17 3
+UniFreeTransformObject  libuni    18 1
+UniQueryLocaleObject    libuni    19 4
+UniCreateLocaleObject   libuni    20 3
+UniFreeLocaleObject     libuni    21 1
+UniFreeMem              libuni    22 1
+UniNextCompChar         libuni    23 ?
+UniQueryCompChar        libuni    25 ?
+UniQueryCompCharLen     libuni    26 ?
+UniFreeLocaleInfo       libuni    28 1
+UniQueryLocaleInfo      libuni    29 2
+UniQueryLocaleItem      libuni    30 3
+UniStrcat               libuni    31 2
+UniStrchr               libuni    32 2
+UniStrcmp               libuni    33 2
+UniStrcmpi              libuni    34 3
+UniStrcoll              libuni    35 3
+UniStrcpy               libuni    36 2
+UniStrcspn              libuni    37 2
+UniStrfmon              libuni    38 ?
+UniStrftime             libuni    39 5
+UniStrlen               libuni    40 1
+UniStrncat              libuni    41 3
+UniStrncmp              libuni    42 3
+UniStrncmpi             libuni    43 4
+UniStrncpy              libuni    44 3
+UniStrpbrk              libuni    45 3
+UniStrptime             libuni    46 4
+UniStrrchr              libuni    47 2
+UniStrspn               libuni    48 2
+UniStrstr               libuni    49 2
+UniStrtod               libuni    50 4
+UniStrtol               libuni    51 5
+UniStrtoul              libuni    52 5
+UniStrxfrm              libuni    53 4
+UniLocaleStrToToken     libuni    54 3
+UniLocaleTokenToStr     libuni    55 3
+UniTransformStr         libuni    56 5
+UniTransLower           libuni    57 2
+UniTransUpper           libuni    58 2
+UniTolower              libuni    59 1
+UniToupper              libuni    60 1
+UniStrupr               libuni    61 1
+UniStrlwr               libuni    62 1
+UniStrtok               libuni    63 2
+UniMapCtryToLocale      libuni    67 3
+UniMakeKey              libuni    70 ?
+UniQueryChar            libuni    71 2
+UniGetOverride          libuni    72 ?
+UniGetColval            libuni    73 ?
+UniQueryAttr            libuni    74 1
+UniQueryStringType      libuni    75 4
+UniQueryCharType        libuni    76 1
+UniQueryNumericValue    libuni    77 1
+UniQueryCharTypeTable   libuni    78 2
+UniProcessUconv         libuni    80 ?
+backward_collate_unistd libuni   100 ?
+back_pos_collate_unistd libuni   101 ?
+_getcolval_unistd       libuni   102 ?
+_wc_getcolval_unistd    libuni   103 ?
+_mbucoll_unistd         libuni   104 ?
+_mbce_lower_unistd      libuni   105 ?
+__compose_unistd        libuni   106 ?
+__decompose_unistd      libuni   107 ?
+forward_collate_unistd  libuni   108 ?
+forw_pos_collate_unistd libuni   109 ?
+replacement_unistd      libuni   110 ?
+__createattr_unistd     libuni   111 ?
+__freeattr_unistd       libuni   112 ?
+__scanfor_unistd        libuni   113 ?
+__freexfrm_unistd       libuni   114 ?
+__createxfrm_unistd     libuni   115 ?
+__ext_tables_unistd     libuni   116 ?
+__xfrm_unistd           libuni   117 ?
+__is_wctype_unistd      libuni   118 ?
+__get_wctype_unistd     libuni   119 ?
+__mblen_unistd          libuni   120 ?
+__mbstopcs_unistd       libuni   121 ?
+__mbstowcs_unistd       libuni   122 ?
+__mbtopc_unistd         libuni   123 ?
+__mbtowc_unistd         libuni   124 ?
+__pcstombs_unistd       libuni   125 ?
+__pctomb_unistd         libuni   126 ?
+__regcomp_unistd        libuni   127 ?
+__regexec_unistd        libuni   128 ?
+__regfree_unistd        libuni   129 ?
+__strcoll_unistd        libuni   130 ?
+__strfmon_unistd        libuni   131 ?
+__strftime_unistd       libuni   132 ?
+__strptime_unistd       libuni   133 ?
+__strxfrm_unistd        libuni   134 ?
+__todigit_unistd        libuni   135 ?
+__towlower_unistd       libuni   136 ?
+__towupper_unistd       libuni   137 ?
+__ucs_level_unistd      libuni   138 ?
+__wcscoll_unistd        libuni   139 ?
+__wcsftime_unistd       libuni   140 ?
+__wcstombs_unistd       libuni   142 ?
+__wcsxfrm_unistd        libuni   145 ?
+__wctomb_unistd         libuni   146 ?
+;ParseMessage            libuni   147 ?
+;Locale                  libuni   151 ?
+UniMakeUserLocale       libuni   152 2
+UniSetUserLocaleItem    libuni   153 4
+UniDeleteUserLocale     libuni   154 1
+UniCompleteUserLocale   libuni   155 0
+UniQueryLocaleValue     libuni   156 3
+UniQueryLocaleList      libuni   157 3
+UniQueryLanguageName    libuni   158 3
+UniQueryCountryName     libuni   159 3
+

@@ -1,0 +1,7 @@
+;
+; ses.imp
+;
+DosSelectSession        sesmgr    38 1
+DosSetSession           sesmgr    39 2
+DosStartSession         sesmgr    37 3
+DosStopSession          sesmgr    40 2

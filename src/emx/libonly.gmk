@@ -1,0 +1,11 @@
+# Hack for building less.
+
+MAKEFILE := libonly.gmk
+GENRULES  = $.genrules-libonly.smak
+SUBMAK   := version.smak $(wildcard src/lib*/*.smak) include/include.smak
+
+include Makefile.gmk
+
+# dummy dependencies
+emxomf ld emxomfar emxomfld emxbind emxload emxexp emximp:
+

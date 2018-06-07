@@ -1,0 +1,6 @@
+NAME duplicate1 WINDOWCOMPAT
+
+EXPORTS
+    __ZN14wxBaseArrayInt5ClearEv
+    __ZN14wxBaseArrayInt5clearEv
+

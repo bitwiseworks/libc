@@ -1,0 +1,66 @@
+libc.TSRC.386 += $(filter-out %smallcnv.s,$(wildcard src/lib/conv/386/*.s))
+libc.TSRC += $(filter-out %makepow5.c,$(wildcard src/lib/conv/*.c))
+libc.TDEP += $(addprefix @O@src/lib/conv/,strtoul.o strtoll.o strtoull.o)
+
+# bird: this doesn't work any better now. sorry. :/
+#$(call .MVER,conv/strtoul.o): src/lib/conv/strtol.c
+#	$(call DO.COMPILE.c, -I$. -DUNSIGNED)
+#$(call .MVER,conv/strtoll.o): src/lib/conv/strtol.c
+#	$(call DO.COMPILE.c, -I$. -DLONG_LONG)
+#$(call .MVER,conv/strtoull.o): src/lib/conv/strtol.c
+#	$(call DO.COMPILE.c, -I$. -DLONG_LONG -DUNSIGNED)
+
+$.aout-prof/src/lib/conv/strtoul.o: src/lib/conv/strtol.c
+	$(call DO.COMPILE.c, -I$. -DUNSIGNED)
+$.aout-prof/src/lib/conv/strtoll.o: src/lib/conv/strtol.c
+	$(call DO.COMPILE.c, -I$. -DLONG_LONG)
+$.aout-prof/src/lib/conv/strtoull.o: src/lib/conv/strtol.c
+	$(call DO.COMPILE.c, -I$. -DLONG_LONG -DUNSIGNED)
+				
+$.aout-log/src/lib/conv/strtoul.o: src/lib/conv/strtol.c
+	$(call DO.COMPILE.c, -I$. -DUNSIGNED)
+$.aout-log/src/lib/conv/strtoll.o: src/lib/conv/strtol.c
+	$(call DO.COMPILE.c, -I$. -DLONG_LONG)
+$.aout-log/src/lib/conv/strtoull.o: src/lib/conv/strtol.c
+	$(call DO.COMPILE.c, -I$. -DLONG_LONG -DUNSIGNED)
+		
+$.aout/src/lib/conv/strtoul.o: src/lib/conv/strtol.c
+	$(call DO.COMPILE.c, -I$. -DUNSIGNED)
+$.aout/src/lib/conv/strtoll.o: src/lib/conv/strtol.c
+	$(call DO.COMPILE.c, -I$. -DLONG_LONG)
+$.aout/src/lib/conv/strtoull.o: src/lib/conv/strtol.c
+	$(call DO.COMPILE.c, -I$. -DLONG_LONG -DUNSIGNED)
+		    					
+.TCF.src/lib/conv/bipow5.c := -I$.
+$(call .MVER,conv/bipow5.o): $.bipow5.tab
+src/lib/conv/bipow5.c: $.bipow5.tab
+$.bipow5.tab: $.makepow5.exe
+	$< -o $@ -s -m325 4951
+	
+# bird: This ain't performance ciritical, so while my -Zomf is broken could we use aout?
+# bird: Bootstrapping is impossible if we include -Iinclude sometimes, hope that's ok t exclude...
+$.makepow5.exe: src/lib/conv/makepow5.c
+	$(LD) $(CFLAGS:-Iinclude=) $(CFLAGS.dbg) $(LDFLAGS.dbg) $(LDFLAGS.aout) -o $@ $<
+
+# Build smallcnv separately (for smaller but less accurate printf())
+.MODULE :=
+.TKIND	:= aout
+#.TSRC.386 := src/lib/conv/386/smallcnv.s - smallcnv is dead.
+.TSRC	:= $(.TSRC.$(CPU))
+.INSDIR	:=
+include common.smak
+
+.OBJS += $(subst /aout/,/omf/,$(patsubst %.o,%.obj,$(.OBJS)))
+.DIRS := $(sort $(dir $(.OBJS)))
+TARGDIRS += $(.DIRS)
+
+libc: $(.DIRS) $(.OBJS)
+
+INS.FILES += $(addprefix $(INS)lib/,$(notdir $(.OBJS)))
+$(addprefix $(INS)lib/,$(notdir $(.OBJS))): $(.OBJS)
+	$(call CP,$^,$(dir $@))
+
+# Additional dependencies to help stupid make.
+$.omf/src/lib/conv/386/smallcnv.obj: $.aout/src/lib/conv/386/smallcnv.o
+
+include comend.smak

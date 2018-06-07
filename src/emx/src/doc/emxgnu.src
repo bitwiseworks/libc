@@ -1,0 +1,2002 @@
+þtext
+===============================================================================
+emxgnu.doc        emx 0.9d     GNU DEVELOPMENT TOOLS INFORMATION    21-Dec-1998
+===============================================================================
+                                     Copyright (c) 1990-1998 by Eberhard Mattes
+þendtext
+
+þtitle GNU Development Tools Information
+
+þformat bold emx emxbind emximp emxomf emxomfld emxtsf pmgdb
+þformat bold GCC CPP GDB GAS GASP readline ld ar nm objdump GPPDEMID
+þformat bold genclass makeinfo texindex termcap texinfo
+
+þformat tty .a .cc .cpp .cxx .C .def .dll .exe .o .obj .res .map
+þformat tty install.doc build.doc emxl.exe emx.dll emxlibc.dll emxlibcm.dll
+þformat tty emxlibcs.dll emxomf.exe
+þformat tty gcc.exe cpp.exe cc1.exe cc1plus.exe cc1obj.exe as.exe
+þformat tty c_alias.a c_alias.lib sys.lib os2.a os2.lib
+þformat tty emx2.a emx2.lib libg++
+þformat tty dll0.o dll0.obj crt0.o lib1.a lib2.a
+þformat tty .gdbinit termcap.dat gppdemid.dll
+þformat tty /emx /emx/bin /emx/etc
+þformat tty -mepilogue -mno-epilogue -mprobe -mno-probe -pg -pn -fstack-check
+þformat tty -Zdll -Zexe -Zmt -Zmtd -Zmts -Zomf -Zstack -Zso -Zno-rte -Zcrtdll
+þformat tty -Zsys -Zno-demangle -Zdemangle-proto -Zbsd-signals -Zsysv-signals
+þformat tty -Zsmall-conv
+þformat tty -lgpp -lobjc -ltermcap -lbtermcap -lstdcpp -ltmalloc
+þformat tty -c -s -d -da -freg-struct-return
+þformat tty -fpcc-struct-return -E -R -l -r -b -ZC++-comments -Zc++-comments
+þformat tty -Zlinker -O -Xlinker -Zmap -Zstrip -Zbin-files
+
+þformat tty __MT__ __32BIT__ __EMX__
+
+þformat tty alloca() fopen() open() ptrace() malloc() _heapchk() _tmalloc()
+þformat tty fork()
+þformat tty <stdarg.h> <varargs.h> <fix-args.h>
+þformat tty DosCreateThread DosAllocMem
+
+þformat tty __.SYMDEF
+
+þformat abbrev etc. W.M.
+
+
+þif text
+þh= Table of Contents
+þtoc
+þendif
+
+
+þh1 Introduction to GNU Development Tools Information
+þipf
+:font facename=Helv size=24x14.:hp2.GNU Development Tools Information
+:ehp2.
+:p.
+:font facename=Helv size=16x10.      Copyright (c) 1990-1993 by Eberhard Mattes
+:font facename=default size=0x0.
+:p.
+þendipf
+
+  This text describes how to use the GNU C Compiler and other GNU
+  utilities with emx.
+þif text
+  See emxdev.doc for instructions for the emx utilities.
+þendif
+  For detailed information about GCC, GDB, and GAS, read the GCC, GDB,
+  and GAS manuals, see install.doc.  See build.doc for details on
+  compiling the GNU utilities.
+
+  All programs assume that the entire package is installed on one
+  disk drive in these directories:
+
+þexample
+/emx/bin           Executable files
+/emx/etc           termcap.dat
+/emx/lib           Library files
+/emx/include       Header files (C language)
+/emx/include/cpp   Header files (C++ language)
+/emx/include/objc  Header files (Objective C language)
+þendexample
+
+If the /emx directory is not on the current drive, use the
+C_INCLUDE_PATH and LIBRARY_PATH environment variables, for instance
+
+þexample
+set C_INCLUDE_PATH=c:/emx/include
+set LIBRARY_PATH=c:/emx/lib
+þendexample
+
+  to use drive C.
+
+  Use forward slashes instead of backward slashes in path names!
+
+  Directories:
+
+þexample
+/emx                            Main directory, empty
+/emx/bin                        Executable files and batch files
+/emx/dll                        Dynamic link libraries
+/emx/doc                        Documentation
+/emx/etc                        termcap.dat
+/emx/gnu/binutils.old           old GNU binary utilities (sources)
+/emx/gnu/binutils.26            new GNU binary utilities (sources)
+/emx/gnu/doc                    Documentation
+/emx/gnu/duel                   DUEL (for GDB)
+/emx/gnu/gcc-2.8                GNU C compiler source (GCC)
+/emx/gnu/gdb-4.16               GNU debugger source (GDB)
+/emx/gnu/gppdemid               C++ demangler for LINK386
+/emx/gnu/info                   GNU info source
+/emx/gnu/libtxi                 -libtxi  (for GNU info)
+/emx/gnu/libg++-2.8.1.1a        GNU C++ library (obsolete)
+/emx/gnu/libstdc++-2.8.1.1      GNU standard C++ library
+/emx/gnu/makeinfo               GNU makeinfo source
+/emx/gnu/termcap                GNU termcap
+/emx/gnu/texindex               GNU texindex source
+/emx/include                    header files (C language)
+/emx/include/cpp                Header files (C++ language)
+/emx/include/objc               Header files (Objective C language)
+/emx/lib                        Libraries
+þendexample
+
+
+þh1 GCC -- compiling and linking C and C++ programs
+þlabel GCC
+þi1 GCC
+þkeyword GCC
+
+  GCC 2.8.1 has been ported to emx, including Richard W.M. Jones's
+  bounds checking patches.
+
+þipfminitoc
+
+þh2 Calling GCC
+þlabel Calling GCC
+
+For small projects, one invokation GCC can be used to compile and link
+the program.  Example:
+
+þexample
+gcc dwim.c
+þendexample
+
+  This assumes that emxl.exe can be found in one of the directories
+  listed in the EMXPATH and PATH environment variables, or in the
+  directory /emx/bin, see also þhpt{ld}.  If no output file name is
+  given, the name of the first input file, with .exe extension (or
+  .dll extension if -Zdll is given), is used for the output file
+  unless linking is suppressed (with the -c option, for instance).
+  That is, the above example creates þtt{dwim.exe}.
+
+  Please note that the example given above creates a file named
+  þtt{dwim} which will be deleted after conversion to .exe format.
+
+  If the output file name doesn't end in .exe or .dll, the output file
+  will have a.out format (however, see þhpt{-Zexe}).  Example:
+
+þexample
+gcc -o dwim dwim.c
+þendexample
+
+  This example creates the a.out file `þtt{dwim}'.
+
+
+þh2 Environment variables
+þlabel Environment variables for GCC
+
+  If you want to develop programs on a drive different from the drive
+  where emx is installed, you have to set the C_INCLUDE_PATH and
+  LIBRARY_PATH environment variables, for instance,
+
+þexample
+set C_INCLUDE_PATH=c:/emx/include
+set LIBRARY_PATH=c:/emx/lib
+þendexample
+
+  If you want to compile þhpt{C++} programs, set CPLUS_INCLUDE_PATH as well:
+
+þexample
+set CPLUS_INCLUDE_PATH=c:/emx/include/cpp;c:/emx/include
+þendexample
+
+  If you want to compile þhpt{Objective C} programs, set
+  OBJC_INCLUDE_PATH as well:
+
+þexample
+set OBJC_INCLUDE_PATH=c:/emx/include
+þendexample
+
+  The genclass utility needs the following environment variable:
+
+þexample
+set PROTODIR=c:/emx/include/cpp/gen
+þendexample
+
+  If the TMPDIR, TMP and TEMP environment variables are not set, GCC
+  writes temporary files in the current working directory.  GCC tries
+  TMPDIR, TMP and TEMP in turn and uses the first valid one.  Note
+  that þtt{c:} is not a valid directory name, you have to use þtt{c:/}
+  or þtt{\} instead.  In other cases, a trailing slash or backslash is
+  optional.  For instance, use
+
+þexample
+SET TMPDIR=f:/tmp/
+þendexample
+
+  to put temporary files into the þtt{f:/tmp} directory.
+
+  When compiling projects consisting of many modules (such as
+  libraries) under OS/2, you can speed up compilation if you have
+  enough memory by keeping GCC in memory.  For example, to keep GCC in
+  memory for 5 minutes, use
+
+þexample
+set GCCLOAD=5
+þendexample
+
+  The following programs use GCCLOAD: gcc.exe, cpp.exe, cc1.exe,
+  cc1plus.exe, cc1obj.exe, as.exe and emxomf.exe.
+
+  You can put GCC options into the environment variable GCCOPT.  These
+  options will be read before the options given on the command line.
+  For example, to use þtt{-pipe}, type
+
+þexample
+set GCCOPT=-pipe
+þendexample
+
+þh2 Bounds checking
+
+  The emx port of GCC includes Richard W.M. Jones's bounds checking
+  patches.  See the GCC manual and þtt{\emx\gnu\doc\bounds\README} for
+  details.  The complete report is in
+  þtt{\emx\gnu\doc\bounds\bcrep2.ps} (shipped in þtt{gnudoc.zip}).
+  Use GhostScript if you don't have a PostScript printer.
+  þtt{\emx\gnu\doc\bounds\bcreport.txt} contains important excerpts
+  from an earlier version of the report as plain ASCII text.
+
+  There are a few additional restrictions under OS/2:
+
+þitemize
+þitem
+  Bounds checking is not available for multithread programs
+þitem
+  Bounds checking is available for statically linked programs only
+þitem
+  Bounds checking is not available for DLLs
+þitem
+  If your program uses _tmalloc(), you have use the -ltmalloc
+  option as the bounds checking library þtt{check.a} replaces
+  malloc()
+þenditemize
+
+  The header files <stdarg.h> and <varargs.h> automatically include
+  <fix-args.h> if bounds checking is enabled.  Therefore you don't
+  have to include <fix-args.h> yourself.
+
+
+þh2 #pragma statement
+þlabel #pragma statement
+þlabel #pragma pack()
+þindex #pragma pack()
+þkeyword #pragma
+
+  The emx port of GCC supports the
+
+þtypewriter
+  #pragma pack(þpa{N})
+þendtypewriter
+
+  statement where þpa{N} is 1, 2 or 4.  The default is 4.  Structure
+  fields are aligned to multiples of þpa{N} bytes, according to the
+  value þpa{N} as set by the last þtt{#pragma pack} statement.
+
+þexample
+#pragma pack()
+þendexample
+
+  reverts to the default (4).  Note that other C compilers revert to
+  the value in effect before the previous þtt{#pragma pack}
+  statement.
+
+
+þh2 Additional command line options
+þlabel Additional command line options
+
+  Several command line options have been added to GCC:
+
+þlist
+þitem þhpt{-mepilogue}
+
+    emit only one epilogue per function
+
+þitem -mno-epilogue
+
+    emit multiple epilogues per function if appropriate (default)
+
+þitem þhpt{-mprobe}
+
+    generate stack probes
+
+þitem -mno-probe
+
+    do not generate stack probes (default)
+
+þitem þhpt{-pn}
+
+    Enable profiling but do not generate profile hooks
+
+þitem þhpt{-Zbin-files}
+
+    open files in binary mode by default
+
+þitem þhpt{-Zbsd-signals}
+
+    select the `BSD' signal processing model
+
+þitem þhpt{-Zcrtdll}
+
+    link the C library dynamically
+
+þitem þhpt{-Zdll}
+
+    create a dynamic link library
+
+þitem þhpt{-Zexe}
+
+    touch output file, add .exe extension
+
+þitem þhpt{-Zmap}
+
+    let LINK386 or emxbind create a .map file
+
+þitem þhpt{-Zlinker}
+
+    pass option to LINK386
+
+þitem þhpt{-Zmt}
+
+    multithread code
+
+þitem þhpt{-Zmtd}
+
+    multithread code, link C library dynamically
+
+þitem þhpt{-Zmts}
+
+    multithread code, link C library statically
+
+þitem þhpt{-Zno-rte}
+
+    create DLL without runtime environment
+
+þitem þhpt{-Zomf}
+
+    create .obj files instead of .o files
+
+þitem þhpt{-Zsmall-conv}
+
+    use small, fast, and inaccurate routines for converting decimal
+    numbers to binary and vice versa
+
+þitem þhpt{-Zstack}
+
+    set the stack size
+
+þitem þhpt{-Zso}
+
+    create stand-alone DLL
+
+þitem þhpt{-Zsys}
+
+    create stand-alone OS/2 program (no emx.dll)
+
+þitem þhpt{-Zsysv-signals}
+
+    select the `System V' signal processing model
+
+þendlist
+
+  The following table shows which compiler phases are affected by the
+  options.  If an option affects the preprocessor, the compiler, or
+  the assembler, you should use that option when compiling.  When an
+  option affects the linker, you should use that option when linking.
+  However, you can use options affecting the preprocessor, the
+  compiler, or the assembler also when not compiling; you can use
+  options affecting the linker also when not linking.
+
+þexample
+               ³ Prepro- ³ Com-  ³ Assem- ³
+Option         ³ cessor  ³ piler ³ bler   ³ Linker
+ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄ
+-mepilogue     ³    X    ³   X   ³        ³
+-mno-epilogue  ³    X    ³   X   ³        ³
+-mprobe        ³         ³   X   ³        ³
+-mno-probe     ³         ³   X   ³        ³
+ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄ
+-pg            ³    X    ³   X   ³        ³   X
+-pn            ³         ³       ³        ³   X
+ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄ
+-Zcrtdll       ³         ³       ³        ³   X
+-Zdll          ³         ³       ³        ³   X
+-Zmt           ³    X    ³       ³        ³   X
+-Zmtd          ³    X    ³       ³        ³   X
+-Zmts          ³    X    ³       ³        ³   X
+-Zomf          ³    X    ³       ³   X    ³   X
+-Zno-rte       ³         ³       ³        ³   X
+-Zso           ³         ³       ³        ³   X
+-Zsys          ³         ³       ³        ³   X
+ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄ
+-Zexe          ³         ³       ³        ³   X
+-Zlinker       ³         ³       ³        ³   X
+-Zmap          ³         ³       ³        ³   X
+-Zstack        ³         ³       ³        ³   X
+ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄ
+-Zbin-files    ³         ³       ³        ³   X
+-Zbsd-signals  ³         ³       ³        ³   X
+-Zsmall-conv   ³         ³       ³        ³   X
+-Zsysv-signals ³         ³       ³        ³   X
+þendexample
+
+
+þh3 -mepilogue
+þlabel -mepilogue
+þi2 -mepilogue
+þi2 -mno-epilogue
+þkeyword -mepilogue -mno-epilogue
+
+  By default (-mno-epilogue), GCC may emit multiple epilogues (return
+  statements) per function if appropriate. With -mepilogue, GCC emits
+  only one epilogue at the end of each function; any function exit in
+  the middle of a function jumps to the epilogue at the end of the
+  function.  Moreover, -mepilogue causes a symbol to be defined at the
+  start of the epilogue code.  The name of that symbol is constructed
+  by prepending `tt{__POST$}' to the function's label.
+
+  -mno-epilogue generates faster code. For tracing with the OS/2
+  þtt{TRACE} command, however, each function should have only one
+  epilogue, so that a tracepoint can be defined for the epilogue.
+
+  The C library for emx has been compiled with -mepilogue to enable
+  tracing of DLLs.  See also þhpt{emxtsf}.
+
+þh3 -mprobe
+þlabel -mprobe
+þi2 -mprobe
+þi2 -mno-probe
+þkeyword -mprobe -mno-probe
+
+  -mprobe enables generation of þhpt{stack probes} (see below),
+  -mno-probe (which is the default) disables generation of stack
+  probes.  See also GCC's -fstack-check option.
+
+  All libraries for emx are compiled with both stack probes and stack
+  checking enabled.
+
+
+þh3 -pn
+þlabel -pn
+þi2 -pn
+þkeyword -pn
+
+  -pn enables profiling by using þtt{gcrt0.o} instead of þtt{crt0.o}
+  for linking the program.  In contrast to -pg, no profiling hooks are
+  generated.
+
+þh3 -Zbin-files
+þlabel -Zbin-files
+þi2 -Zbin-files
+þkeyword -Zbin-files
+
+  The additional GCC command line option -Zbin-files causes the
+  program to be linked with þtt{binmode.o}, selecting binary mode
+  as default for fopen(), open(), etc.
+
+
+þh3 -Zbsd-signals
+þlabel -Zbsd-signals
+þi2 -Zbsd-signals
+þkeyword -Zbsd-signals
+
+  The additional GCC command line option -Zbsd-signals causes the
+  program to be linked with þtt{sigbsd.o}, selecting the `BSD' signal
+  processing model.  See also þhpt{-Zsysv-signals}.  -Zbsd-signals
+  cannot be used with þhpt{-Zsys}.
+
+
+þh3 -Zcrtdll
+þlabel -Zcrtdll
+þi2 -Zcrtdll
+þkeyword -Zcrtdll
+
+  -Zcrtdll causes the executable file to be linked dynamically to the
+  C runtime library.  If -Zmt is also given, the program will use
+  emxlibcm.dll.  Otherwise, the program will use emxlibcs.dll.
+  Without -Zcrtdll, the executable file is linked statically to the C
+  runtime library.
+
+  -Zcrtdll uses the import library þtt{c_import} and a small static
+  library (þtt{c_static}) which contains code that must be linked
+  statically.  To link with a different import library, use
+  þsy{-Zcrtdll=<lib>} instead of -Zcrtdll.  The library name
+  þsy{<lib>} must not include a directory or a suffix.  The library
+  will be sought in the standard library path, therefore you can use
+  the þtt{-L} option for adding another library directory.  Example:
+þexample
+gcc -Zcrtdll=myclib -L/mylib myprog.c
+þendexample
+þif ipf
+  See also þhpt{-Zmt}, þhpt{-Zmtd}, þhpt{-Zmts}, and þhpt{Startup
+  modules and libraries}.
+þendif
+
+
+þh3 -Zdll
+þlabel -Zdll
+þi2 -Zdll
+þkeyword -Zdll
+
+  The additional GCC command line option -Zdll causes the program to
+  be linked with dll0.o (or dll0.obj if þhpt{-Zomf} is given) instead
+  of crt0.o.  This is required for creating dynamic link libraries.
+þif ipf
+  See also þhpt{Startup modules and libraries}.
+þendif
+
+
+þh3 -Zexe
+þlabel -Zexe
+þi2 -Zexe
+þkeyword -Zexe
+
+  To avoid changing Unix-style makefiles, the additional GCC command line
+  option -Zexe can be used.  If -Zexe is present, the linker (ld or
+  emxomfld) automatically adds the .exe extension to the output file
+  name and creates an empty file of that name (without .exe) to keep
+  the þbf{make} utility happy.  The output file name must not have an
+  extension.  See the descriptions of þhpt{ld} and þhpt{emxomfld} for details.
+
+þh3 -Zlinker
+þlabel -Zlinker
+þi2 -Zlinker
+þkeyword -Zlinker
+
+  Use the additional GCC command line option -Zlinker to pass an
+  option to LINK386.  -Zlinker should be used only when using the
+  -Zomf option.  The argument following -Zlinker will be passed to
+  þhpt{emxomfld} (preceded by an -O option) which in turn will pass it
+  to LINK386.  The LINK386 option must start with a slash.  Example:
+
+þexample
+gcc yzzyx.obj -Zomf -Zlinker /runfromvdm
+þendexample
+
+  Don't confuse the -Zlinker option with the -Xlinker option, which
+  passes an option to þhpt{ld} or emxomfld.
+
+þh3 -Zmap
+þlabel -Zmap
+þi2 -Zmap
+þkeyword -Zmap
+
+  Use the additional GCC command line option -Zmap to let LINK386 or
+  emxbind create a .map file.  The name of the .map file will be
+  derived from the output file name, both LINK386 and emxbind add the
+  default extension .map.  To specify the name of the .map file, use
+  þsy{-Zmap=<map_file>}.
+
+  GCC passes the -Zmap option down to emxomfld (or ld) which passes
+  the file name down to LINK386 (or emxbind).
+
+  To get a detailed .map file including all the public symbols, also
+  use þtt{-Zlinker /map} with -Zomf.  By default, the .map file
+  created by LINK386 lists only the segments.  Example:
+
+þexample
+gcc -o dwimtest.exe dwim.c -Zomf -Zmap -Zlinker /map
+þendexample
+
+  Note that LINK386 creates the .map file in the same directory as the
+  .exe file unless the name of the .map file includes a path.
+
+þh3 -Zmt
+þlabel -Zmt
+þi2 -Zmt
+þkeyword -Zmt
+
+  Use the additional GCC command line option -Zmt to compile
+  multithread code.  The preprocessor macro __MT__ will be
+  defined when -Zmt is used.
+þif ipf
+  See also þhpt{-Zmts} and þhpt{-Zmtd}.
+þendif
+
+
+þh3 -Zmtd
+þlabel -Zmtd
+þi2 -Zmtd
+þkeyword -Zmtd
+
+  Use the additional GCC command line option -Zmtd to link a
+  multithread program that uses emxlibcm.dll, the DLL version of
+  the C library.  The preprocessor macro __MT__ will be defined when
+  -Zmtd is used.  -Zmtd is equivalent to -Zmt -Zcrtdll and is provided
+  for compatibility with existing makefiles.
+þif ipf
+  See also þhpt{-Zcrtdll}, þhpt{-Zmt}, þhpt{-Zmts}, and þhpt{Startup
+  modules and libraries}.
+þendif
+
+
+þh3 -Zmts
+þlabel -Zmts
+þi2 -Zmts
+þkeyword -Zmts
+
+  Use the additional GCC command line option -Zmts to link a
+  multithread program which is statically linked with the C
+  library.  The preprocessor macro __MT__ will be defined if -Zmts is
+  used.  -Zmts is equivalent to -Zmt (without -Zcrtdll) and is provided
+  for compatibility with existing makefiles.
+þif ipf
+  See also þhpt{-Zcrtdll}, þhpt{-Zmt}, þhpt{-Zmtd}, and þhpt{Startup
+  modules and libraries}.
+þendif
+
+
+þh3 -Zno-rte
+þlabel -Zno-rte
+þi2 -Zno-rte
+þkeyword -Zno-rte
+
+  Use -Zno-rte with þhpt{-Zdll} and þhpt{-Zomf} (all of which must be
+  specified) to create a DLL without runtime environment
+  not use the runtime environment of its client application.
+  þhpt{-Zcrtdll}, þhpt{-Zmt}, þhpt{-Zmtd}, þhpt{-Zmts}, þhpt{-Zso}, and
+  þhpt{-Zsys} must not be used with -Zno-rte.
+þif ipf
+  See also þhpt{Startup modules and libraries}.
+þendif
+
+
+þh3 -Zomf
+þlabel -Zomf
+þi2 -Zomf
+þkeyword -Zomf
+
+  The additional GCC command line option -Zomf causes GCC to call
+  þhpt{emxomf} for converting .o files to .obj files and to call
+  þhpt{emxomfld} instead of þhpt{ld}.  As emxomfld calls LINK386, this
+  option works only under OS/2.  You should use a module definition
+  file (.def file) or the þhpt{-Zstack} option if you need a stack
+  bigger than 0x8000 bytes.  Note that LINK386 adds a default
+  extension (.exe or .dll) to the output file name.
+
+þh3 -Zsmall-conv
+þlabel -Zsmall-conv
+þi2 -Zsmall-conv
+þkeyword -Zsmall-conv
+
+  The additional GCC command line option -Zomf causes the program to
+  be linked with þtt{smallcnv.o}, select smaller, faster, and
+  inaccurate routines for converting decimal numbers to binary and
+  vice versa.  By default, accurate conversion routines are used.
+  -Zsmall-conv saves about 14KB for programs which use binary to
+  decimal conversions, about 11KB for programs which use decimal to
+  binary conversions, and about 15KB for programs which use both.
+
+  The -Zsmall-conv option cannot be used with the -Zcrtdll option;
+  the C runtime DLLs always use the accurate conversion routines.
+
+þh3 -Zstack
+þlabel -Zstack
+þi2 -Zstack
+þkeyword -Zstack
+
+  The -Zstack option sets the OS/2 stack size of the executable.
+  -Zstack takes an argument, which is the stack size in KByte.  The
+  stack size can be given in decimal, octal or hexadecimal, using C
+  notation.  The -Zstack option is passed down unmodified to þhpt{ld}
+  or þhpt{emxomfld}.  Example:
+
+þexample
+gcc bigstack.c -Zomf -Zstack 0x2000
+þendexample
+
+  This sets the stack size to 8 MBytes.
+
+þh3 -Zso
+þlabel -Zso
+þi2 -Zso
+þkeyword -Zso
+
+  Use -Zso with þhpt{-Zdll}, þhpt{-Zsys}, and þhpt{-Zomf} (all of
+  which must be specified) to create a stand-alone DLL, that is, a DLL
+  which does not use the runtime environment of its client application
+  but has a runtime environment of its own.
+þif ipf
+  See also þhpt{Startup modules and libraries}.
+þendif
+
+
+þh3 -Zsys
+þlabel -Zsys
+þi2 -Zsys
+þkeyword -Zsys
+
+  Use -Zsys with þhpt{-Zomf} to link with the system call library (emx
+  emulator) sys.lib instead of using the run time library emx.dll for
+  system calls.  The library version of the system calls provide only
+  a subset of the emx system call interface.  þhpt{fork()}, for
+  instance, isn't supported with -Zsys.  DLLs created with -Zsys must
+  be either custom C runtime DLLs or stand-alone DLLs (see þhpt{-Zso}).
+þif ipf
+  See also þhpt{Startup modules and libraries}.
+þendif
+
+
+þh3 -Zsysv-signals
+þlabel -Zsysv-signals
+þi2 -Zsysv-signals
+þkeyword -Zsysv-signals
+
+  The additional GCC command line option -Zsysv-signals causes the
+  program to be linked with þtt{sigsysv.o}, selecting the `System V'
+  signal processing model.  See also þhpt{-Zbsd-signals}.
+  -Zsysv-signals cannot be used with þhpt{-Zsys}.
+
+
+þh2 Special file extensions
+þlabel Special file extensions
+
+  You can give the name of a module definition file on the command
+  line.  The name must end with .def and is passed to þhpt{ld}, which
+  in turn passes it to þhpt{emxbind}.  When using þhpt{-Zomf}, the
+  name is passed to þhpt{emxomfld}, which in turn passes it to
+  LINK386.  If the output file names ends with .dll, a default module
+  definition file is used by emxbind unless a .def file is given on
+  the GCC command line.
+
+  You can give the name of a binary resource file on the command
+  line.  The name must end with .res and is passed to ld, which in
+  turn passes it to emxbind.  When using -Zomf, the name is passed to
+  emxomfld, which runs þbf{rc} to copy the resources to the output
+  file.
+
+þh2 Startup modules and libraries
+þlabel Startup modules and libraries
+
+  The following table shows the startup module and the libraries
+  passed to the linker by GCC, depending on the command line options
+  þhpt{-Zcrtdll}, þhpt{-Zmt}, þhpt{-Zomf}, þhpt{-Zso}, þhpt{-Zsys}, and
+  þhpt{-Zdll}.  Note that -Zmtd is equivalent to -Zmt -Zcrtdll and
+  -Zmts is equivalent to -Zmt without -Zcrtdll:
+
+þexample
+Options                      ³Startup³ Libraries
+ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ
+-Zomf not specified          ³ *.o   ³ *.a
+-Zomf specified              ³ *.a   ³ *.lib
+ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ
+(none)                       ³ crt0  ³ gcc st/c st/c_app   st/emx emx2
+                         -Zmt³ crt0  ³ gcc mt/c mt/c_app   mt/emx emx2
+              -Zsys          ³ crt0  ³ gcc st/c st/c_app   st/sys
+              -Zsys      -Zmt³ crt0  ³ gcc mt/c mt/c_app   mt/sys
+      -Zcrtdll               ³ crt0  ³ c_static st/c_import       emx2
+      -Zcrtdll           -Zmt³ crt0  ³ c_static mt/c_import       emx2
+ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ
+-Zdll                        ³ dll0  ³ gcc st/c st/c_dllrt st/emx emx2
+-Zdll                    -Zmt³ dll0  ³ gcc mt/c mt/c_dllrt mt/emx emx2
+-Zdll         -Zsys          ³ dll0  ³ gcc st/c st/c_dllrt st/sys
+-Zdll         -Zsys      -Zmt³ dll0  ³ gcc mt/c mt/c_dllrt mt/sys
+-Zdll         -Zsys -Zso     ³ dll0  ³ gcc st/c st/c_dllso st/sys
+-Zdll         -Zsys -Zso -Zmt³ dll0  ³ gcc mt/c mt/c_dllso mt/sys
+-Zdll         -Zno-rte       ³ dll0  ³ gcc st/c c_dllnrt
+-Zdll -Zcrtdll               ³ dll0  ³ c_static st/c_import       emx2
+-Zdll -Zcrtdll           -Zmt³ dll0  ³ c_static mt/c_import       emx2
+þendexample
+
+  In addition to the libraries mentioned above, the alias library
+  (c_alias.a or c_alias.lib) and the OS/2 import library (os2.a or
+  os2.lib) are always passed to the linker.  If -Zomf is used,
+  þtt{end.lib} is also passed to the linker.  Note that -Zomf must be
+  used if -Zsys is used.
+
+þh2 Assertions
+þlabel Assertions
+
+  The following assertions are predefined in the emx port of GCC:
+  þtt{#system(unix)}, þtt{#system(emx)}, þtt{#cpu(i386)} and
+  þtt{#machine(i386)}.
+
+
+þh2 C++
+þlabel C++
+
+  Files containing C++ programs should have one of the following file
+  name extensions:
+
+þdescription
+þitem .cc
+
+    Unix style
+
+þitem .cpp
+
+    PC style (GCC has been patched to recognize this)
+
+þitem .cxx
+
+    (?)
+
+þitem .C
+
+    Type an upper-case C!
+
+þenddescription
+
+  Use the -lstdcpp command line option to link C++ programs with the
+  GNU standard C++ library (þhpt{libstdc++}), which includes the
+  former iostream library.
+
+  Use the -lgpp command line option to link C++ programs with the GNU
+  C++ class libraray (þhpt{libg++}).  If you link with libg++,
+  you have to obey the rules stated in þtt{/emx/doc/COPYING.LIB}.
+
+  Example:
+
+þexample
+gcc hello.cc -lstdcpp -s
+þendexample
+
+  The þbf{collect} program is not required with the emx port of GCC.
+
+  Hint: Use the -s option (of GCC, þhpt{emxomf} or þhpt{emxbind}) to
+  remove the symbol table; it's quite big.
+
+
+þh2 Objective C
+þlabel Objective C
+
+  To link a program written in the Objective C language, you have to
+  use library þtt{objc}: use -lobjc on the GCC command line.  Example:
+
+þexample
+gcc objcsamp.m -lobjc -s
+þendexample
+
+  Note that GCC does not include any class libraries for Objective C.
+
+
+þh2 Stack probes
+þlabel Stack probes
+þlabel stack probes
+
+  Stack probes are used to manage automatic stack growth if the stack
+  is not completely committed.  When allocating stack space, the new
+  stack pages are touched before changing the stack pointer to make
+  them accessible.  Generation of stack probes is disabled by default.
+  Use the þhpt{-mprobe} option to enable generation of stack probes.
+
+  The -fstack-check option of GCC generates stack probes for stack
+  checking; when there's not enough stack space, an exception will be
+  generated.  Unlike -mprobe, -fstack-check guarantees "enough" stack
+  space left for running a simple exception handler.
+
+  You need stack probes if
+
+þitemize
+þitem
+
+  you use DosCreateThread to create a thread that doesn't have a
+  completely committed stack, that is, if bit 1 of the
+  þsl{ulThreadFlags} argument is zero, or
+
+þitem
+
+  you create a DLL which might be used by an application which uses
+  DosCreateThread to create a thread that doesn't have a completely
+  committed stack, or
+
+þitem
+
+  you want to trap the stack overflow exception issued when hitting
+  the guard page at the bottom of the stack.  (You should use
+  -fstack-check instead of -mprobe.)
+
+þenditemize
+
+  Stack probes are not generated for all allocations of stack space: A
+  stack probe is not generated if the size of the allocated memory
+  block is constant and less than 4096 bytes.  This optimization
+  causes a problem if two such allocations of stack space occur
+  without access to the stack between the allocations.  There are two
+  occasions for this: Two calls in a row to þhpt{alloca()} with
+  constant argument which is less than 4096 and where nothing is
+  stored to the first pointer returned by alloca() before getting the
+  second pointer:
+
+þexample
+p = alloca (0xf00);
+q = alloca (0xf00);
+þendexample
+
+  The second case is a function with less than 4096 bytes of local
+  data which calls alloca() with constant argument which is less than
+  4096 before accessing a local variable or calling a function:
+
+þexample
+void test (void)
+{
+  char local[0xf00], *p;
+
+  p = alloca (0xf00);
+  /*...*/
+}
+þendexample
+
+  As both cases are unlikely to occur in practice, I chose to not
+  generate a stack probe for less than 4096 bytes.  If you experience
+  problems (that is, stack exceptions), insert the statement
+
+þexample
+{char *p=alloca (0); *p = 0;}
+þendexample
+
+  in critical places, as between the two alloca() calls in the first
+  example and before the alloca() call in the second example.
+
+  All emx libraries are compiled with both stack probes and stack
+  checking enabled.
+
+
+þh2 Other changes
+þlabel Other changes
+
+  The preprocessor CPP defines the symbols __32BIT__ and __EMX__.  If
+  the þhpt{-Zmt}, þhpt{-Zmts}, or þhpt{-Zmtd} option is given on the
+  GCC command line, the symbol __MT__ is defined.
+
+  The file name extensions of the debugging output files (-d option)
+  have been changed as follows:
+
+þexample
+combine  -> cmb
+cse      -> cs1
+cse2     -> cs2
+flow     -> flo
+greg     -> gre
+jump     -> jp1
+jump2    -> jp2
+loop     -> loo
+lreg     -> lre
+sched    -> sd1
+sched2   -> sd2
+stack    -> stk
+þendexample
+
+  The extension is added to the base name of the input file, not to
+  the complete name of the input file.  For instance, when compiling
+  þtt{world.c}, the file þtt{world.cs1} will be created instead of
+  þtt{world.c.cse}.  If using the -da GCC option, you should use the
+  þtt{-h30} emx option.
+
+
+þh2 Calling conventions
+þlabel Calling conventions
+
+  The calling convention used by GCC is almost compatible with the
+  `þtt{system}' calling convention of IBM C Set/2.  Structures are
+  returned differently: IBM C Set/2 uses a hidden parameter which is
+  removed from the stack by the caller, GCC returns the structure in
+  registers EAX and EDX if its size is 8 bytes or less
+  (-freg-struct-return is the default).  GCC uses a hidden parameter
+  if the size of the structure is more than 8 bytes, but the callee
+  removes the hidden parameter from the stack.  Currently, the GCC
+  option -fpcc-struct-return doesn't solve that problem.  Instead,
+  rewrite the function and the function call as follows:
+
+þexample
+/* Original code */
+struct s1 func1 (int a1)
+{
+  struct s1 t1;
+  ...
+  return (t1);
+}
+...
+
+struct s1 v1;
+v1 = f1 (0);
+þendexample
+
+
+þexample
+/* Modified code */
+
+struct s1 *f1 (struct s1 *ret, int a1)
+{
+  struct s1 t1;
+  ...
+  *ret = t1;
+  return (ret);
+}
+
+...
+
+struct s1 v1;
+f1 (&v1, 0);
+þendexample
+
+þi1
+
+þh1 libg++ -- the GNU C++ library (gpp.a and gpp.lib)
+þlabel libg++
+þlabel gpp
+þindex libg++
+þindex gpp
+
+  libg++ 2.8.1.1a, the obsolete GNU C++ library, has been ported to
+  emx.
+
+  If you link with libg++, (-lgpp), you have to obey the rules
+  stated in þtt{/emx/doc/COPYING.LIB}.
+
+  Due to name collisions, the following include files have been renamed:
+
+þexample
+Complex.h   -> Complx.h
+Regex.h     -> Regx.h
+String.h    -> Strng.h
+þendexample
+
+
+þh1 libstdc++ -- the GNU standard C++ library
+þlabel libstdc++
+þindex libstdc++
+
+  libstdc++ 2.8.1.1, the GNU standard C++ library, is provided for emx.
+  Use the -lstdcpp option to link with that library.
+  See þtt{/emx/doc/COPYING.SCP} for copyright information.
+
+  The þtt{istream::seekg}, þtt{istream::tellg}, þtt{ostream::seekp},
+  and þtt{ostream::tellg} methods do not work for text files.
+
+
+þh1 GDB -- debugging programs
+þlabel GDB
+þindex GDB
+þkeyword GDB
+
+  GDB uses GNU þhpt{readline}, see below.  GDB works only with a.out
+  files (under DOS) and with bound files (both under OS/2 and DOS),
+  not with arbitrary DOS or OS/2 progams.  The DUEL debugging language
+  has been added to GDB, see below.  Anthony Green's þhpt{GDBRX}
+  extension has been added to GDB, see below.
+
+  See the GDB manual for details.
+
+  A preliminary version of a Presentation Manager front end for GDB is
+  shipped with emx.  See the online help and the online tutorial of
+  pmgdb for details.
+
+þh2 Example
+
+  The following example shows how to debug a fictitious program
+  þtt{myprog.exe}.  See install.doc for an example with one of the emx
+  sample programs.
+
+þexample
+C> gcc -g myprog.c                                   (compile)
+C> gdb myprog.exe                                    (start debugger)
+(gdb) set args -o myprog.out myprog.in               (set arguments)
+(gdb) b main                                         (set breakpoint)
+(gdb) run                                            (start program)
+(gdb) dl argv[0..argc-1]                             (display arguments)
+(gdb) s                                              (step)
+þendexample
+
+  Command line arguments for the program to be debugged can be passed
+  on the GDB command line if the þtt{--args} option is used:
+
+þexample
+C> gcc -g myprog.c                                   (compile)
+C> gdb --args myprog.exe -o myprog.out myprog.in     (start debugger)
+(gdb) b main                                         (set breakpoint)
+(gdb) run                                            (start program)
+(gdb) dl argv[0..argc-1]                             (display arguments)
+(gdb) s                                              (step)
+þendexample
+
+  If the executable file cannot be found and does not include a
+  filename extension, GDB appends `þtt{.exe}' to the filename and
+  tries again.
+
+  Continuing the example, if there's no file named `þtt{myprog}', you
+  can omit the `þtt{.exe}' extension of the executable file name:
+
+þexample
+C> gdb --args myprog -o myprog.out myprog.in
+þendexample
+
+  That is, you can just prepend `þtt{gdb --args}' to the command line.
+
+þh2 Restrictions
+
+  Please do not use backslashes in path names.  For your convenience,
+  backslashes in path names specified as command line arguments of GDB
+  are automatically turned into slashes.  For commands entered
+  interactively, you have to use slashes yourself.
+
+  The following GDB commands do not work or do not work completely or
+  have been changed:
+
+þitemize
+þitem
+
+ `þtt{signal}' does not work under OS/2 unless the same signal is used
+  by which the debuggee has been stopped
+
+þitem
+
+  `þtt{attach}' and `þtt{detach}' cannot work in general; however,
+  these commands can be used in a limited way for descendant processes
+  as explained below
+
+þitem
+
+  `þtt{tty}' and `þtt{term-status}' are not implemented
+
+þitem
+
+  `þtt{directory}' has been changed to use semicolons instead of
+  colons for separating directories.
+
+þitem
+
+  `þtt{watch}' is almost unusable because GDB disables the watchpoints
+  as soon as a function without debugging symbols is called, such as
+  an OS/2 API function.  That could be fixed by making GDB believe
+  that the functions in os2.a have debugging symbols.
+
+þenditemize
+
+þh2 Special features
+
+  Various special features have been added to the emx port of GDB.
+
+þipfminitoc
+
+þh3 Setting command line arguments for the program being debugged
+
+  The þtt{--args} option of GDB causes all arguments following the
+  name of the executable file on the command line of GDB to be used as
+  arguments for the program for the program being to debugged.
+  Example:
+
+þexample
+gdb --args -nx myprog.exe -o myprog.out myprog.in
+þendexample
+
+  This invocation of GDB is equivalent to running
+
+þexample
+gdb -nx myprog.exe
+þendexample
+
+  and typing the GDB command
+
+þexample
+set args -o myprog.out myprog.in
+þendexample
+
+  However, the `þtt{set args}' command supports redirection operators,
+  whereas þtt{--args} passes them as command line arguments to the
+  program being debugged.  The `þtt{show args}' command does not print
+  the equivalent `þtt{set args}' arguments for achieving the effect of
+  þtt{--args}; for instance, quoting is not correct.
+
+þh3 Running the debuggee in the same window
+
+  If you want to run the debuggee in the same OS/2 session (window) as
+  GDB (for instance if you're running GDB in a full-screen session),
+  use the -E emx option.
+
+þh3 Switching sessions
+
+  By default, GDB selects the child session when executing a þtt{CALL}
+  instruction of the inferior process.  Use the `þtt{set switch off}'
+  command to disable that feature.  Use `þtt{set switch on}' to turn
+  on switching to the child session.  Use `þtt{show switch}' to
+  display the current setting.  Under DOS, `þtt{set switch}' is
+  ignored.
+
+  To debug a Presentation Manager application, run GDB full-screen and
+  use `þtt{set switch on}'.  Do not manually switch to the
+  Presentation Manager session while the program is stopped!
+  Otherwise the Presentation Manager will hang and you will have to reboot.
+  Alternatively, you can use pmgdb to debug Presentation Manager
+  applications.
+
+  As import method þhpt{(I1)} uses a þtt{JMP} instruction instead of a
+  þtt{CALL} instruction to call OS/2 API functions, the `þtt{stepi}'
+  command must not be used to step into the code generated by emximp
+  for a method (I1) import.  Use `þtt{nexti}' on the call to that
+  code, instead.
+
+þh3 Closing the window after termination of the debuggee
+
+  Use the `þtt{set close}' command to control whether to close the
+  child session window after termination of the debuggee.  `þtt{set
+  close off}' is the default -- the window will stay open.  After a
+  debuggee has been started, `þtt{set close}' doesn't take effect for
+  that debuggee.
+
+þh3 Debugging threads
+
+  You can freeze a thread with the `þtt{thread disable}' command
+  (`þtt{freeze}' is an alias).  Without argument, this command freezes
+  the current thread.  Otherwise, the argument must be a thread
+  number.  A frozen thread won't execute until you thaw it.
+
+  You can thaw a thread with the `þtt{thread enable}' command
+  (`þtt{thaw}' is an alias).  Without argument, this command thaws the
+  current thread.  Otherwise, the argument must be a thread number.
+
+  You can freeze or thaw multiple threads with one command by using
+  `þtt{thread apply}':
+
+þexample
+thread apply all thaw
+thread apply 2-4 6 freeze
+þendexample
+
+  Restarting the process being debugged while the current thread is
+  frozen will result in this message:
+
+þexample
+ptrace: No such process.
+þendexample
+
+  Use the `þtt{thread}' command to switch to an enabled thread when
+  this happens:
+
+þexample
+thread 5
+þendexample
+
+  Note that debugging multithread processes has some rough edges.  See
+  the GDB manual for more information on debugging multithread
+  processes.
+
+þh3 Debugging DLLs
+
+  GDB automatically loads the symbols of DLLs created with ld and
+  emxbind.  Currently, there are a few rough edges such as problems
+  with restarting the program being debugged if symbols have been
+  loaded from DLLs.
+
+  Use the `þtt{set show-dlls on}' command to let GDB show the path names
+  of DLLs as they are loaded and freed.
+
+  Use the `þtt{dll-break}' command to set a stop-on-load breakpoint on
+  a DLL.  The `þtt{dll-break}' command takes one argument, the name of
+  the DLL.  The name must not include a path; the extension
+  `þtt{.dll}' will be added if no extension is provided.  Letter case
+  does not matter.  When the named DLL is loaded, GDB will stop the
+  program being debugged.  Then, you can set breakpoints in the DLL
+  and continue.  The `þtt{dll-clear}' command removes a stop-on-load
+  breakpoint by number; the `þtt{info dll-break}' command lists all
+  stop-on-load breakpoints, showing the number of the stop-on-load
+  breakpoint and the name of the DLL.
+
+þh3 Debugging descendant processes
+
+  Under OS/2, you can optionally debug processes (descendant
+  processes) started by the debuggee.  For each descendant process to
+  be debugged, one extra instance of GDB will be required.  Due to
+  OS/2 limitations, session switching does not work for descendants;
+  therefore descendants which are Presentation Manager applications
+  cannot be debugged.
+
+  GDB maintains a list of programs to be debugged when started by the
+  debuggee.  The `þtt{descendant add}' command adds a program to that
+  list.  The first argument of that command is the name of the
+  executable file, which can be specified in the following three ways:
+
+þenumerate
+þitem
+  A path name (including a directory) will be turned into an absolute
+  path name by GDB; all descendants matching the absolute path name
+  will be debugged.  The path name should include the correct file
+  name extension as no default extension will be applied.
+þitem
+  A file name (without directory); all descendants whose file name
+ (without directory) match the specified file name will be debugged.
+  The file name should include the correct file name extension as no
+  default extension will be applied.
+þitem
+  The word `þtt{fork}' means that this entry applies to child
+  processes created with fork().
+þitem
+  A `þtt{*}' means that this entry applies to all descendants, without
+  regard to their file names.
+þendenumerate
+
+  The second argument specifies the action to be taken when a
+  descendant with a matching executable file name is started.  The
+  following actions are available:
+
+þdescription
+þitem þtt{window}
+  Start a new instance of GDB, running in a new windowed session.
+
+þitem þtt{fs}
+  Start a new instance of GDB, running in a new full-screen session.
+
+þitem þtt{cont}
+  Do not start a new instance of GDB and continue the debuggee.  The
+  descendant will block until GDB is attached to the descendant.  Note
+  that the debuggee may also block if it waits for the start or
+  completion of the child process.
+þenddescription
+
+  If the first argument is `þtt{fork}' and the third argument is
+  `þtt{init}', you'll be able to debug the initialization code of the
+  forked process; this is used for debugging the implementation of
+  fork().  If there is no third argument or if the third argument is
+  not `þtt{init}', debugging of the child process will start in the
+  fork() call; one `þtt{step}' command will step to the location (in
+  the child process) from which fork() has been called (in the parent
+  process).
+
+  Any remaining arguments should be GDB options and will be passed to
+  the new instance of GDB.  This is in particular useful to set up GDB
+  with commands from a file specified with `þtt{--command}' or to
+  prevent GDB from reading the `þtt{!gdbinit}' file with `þtt{-nx}'.
+
+  Examples for `þtt{descendant add}':
+
+þexample
+desc add * window
+desc add fork window init -q
+desc add special.exe window --command special.gdb
+þendexample
+
+  At least one descendant must be defined with `þtt{descendant add}'
+  þem{before} the start of the debuggee; otherwise debugging of
+  descendants will be disabled.  If debugging of descendants is
+  enabled (by defining at least one descendant), GDB will show a
+  message each time a new descendant is started:
+
+þexample
+[New process: 4713 C:/EMX/TEST/ARGS.EXE]
+þendexample
+
+  The message includes the process ID (4713 in the example) and the
+  path name of the executable file.  If the path name does not match
+  any entry in the table of descendants, the descendant will be run
+  with debugging disabled.  The descendant will be terminated or will
+  block if the instance of GDB debugging its parent process ends.
+
+  If the path name matches an entry in the table of descendants, the
+  associated action will be performed.  First, the table is searched
+  for a matching absolute path name.  If there is no matching entry,
+  all entries having file names (without directory) will be searched.
+  If there is still no matching entry, the `þtt{*}' entry will be used
+  if present.  That is, the most stricly matching entry will be used,
+  falling back to more general entries if there is no matching entry.
+
+  For the actions `þtt{window}' and `þtt{fs}' a new instance of GDB
+  will be started for the descendant.  Now, you can set a breakpoint
+  (usually on `þtt{main}') and continue execution of the descendant
+  with the `þtt{continue}' command.  If the descendant has been
+  created with fork(), use the `þtt{step}' command.  The instance of
+  GDB debugging the parent process of the descendant must not be
+  terminated until debugging of all the descendants of that parent
+  process is complete.
+
+  The following example shows how to debug `þtt{args.exe}' when run
+  from `þtt{exec.exe}'.  Both are test programs in þtt{\emx\test}.
+  First, start GDB on the parent process:
+
+þexample
+[c:\emx\test]gdb -q exec.exe
+(gdb) desc add * window -q
+Debugging of descendant * enabled (number 1).
+(gdb) set close
+(gdb) run
+Starting program: c:/emx/test/exec.exe
+[New thread 1]
+þendexample
+
+  Now type `þtt{run args a b c}' in the `þtt{exec.exe}' window.  This
+  will cause `þtt{exec.exe}' to start `þtt{args.exe}'.  GDB will display
+
+þexample
+[New process: 41 C:/EMX/TEST/ARGS.EXE]
+þendexample
+
+  and a new window will show up, running GDB:
+
+þexample
+0x138 in ?? ()
+(gdb)
+þendexample
+
+  Now, you can debug `þtt{args.exe}':
+
+þexample
+(gdb) b main
+Breakpoint 1 at 0x1007f: file args.c, line 11.
+(gdb) cont
+Continuing.
+[New thread 1]
+[Switching to thread 1]
+
+Breakpoint 1, main (argc=4, argv=0x282ffd4, envp=0x282fdc8) at args.c:11
+11        _envargs (&argc, &argv, "ARGS");
+(gdb) p argv[1]
+$1 = 0x282fff0 "a"
+(gdb) cont
+Continuing.
+[Thread terminated: 1]
+
+Program exited normally.
+(gdb) q
+þendexample
+
+  If the action `þtt{cont}' is specified for a descendant, you have to
+  start GDB manually to debug the descendant.  Use the `þtt{attach}'
+  command with the process ID of the descendant as argument:
+
+þexample
+[C:\EMX\TEST]gdb -q args.exe
+(gdb) attach 41
+Attaching to program `c:/emx/test/args.exe', process 41
+0x138 in ?? ()
+(gdb)
+þendexample
+
+  You can take the process ID from the output of the instance of GDB
+  debugging the parent process.  The `þtt{detach}' command detaches
+  GDB from the descendant, letting the descendant run without
+  debugging (as long as the instance of GDB debugging the parent
+  process lives).
+
+  Note that GDB's table of descendants applies to the first level of
+  descendants only; to debug a child process of a descendant process,
+  you have to issue another `þtt{descendant add}' command in the
+  second instance of GDB.  Child processes of descendants not defined
+  in the table of descendants cannot be debugged.
+
+  The `þtt{info descendants}' command lists the table of descendands;
+  for each descendant, a number, the path name or file name, the
+  action, and the GDB options are shown.
+
+  The `þtt{descendant clear}' command removes an entry of the table of
+  descendants.  You have to specify the number of the entry, as shown
+  by `þtt{info descendants}'.
+
+  To modify an entry of the table of descendants, just issue another
+  `þtt{descendant add}' command for the same file name or path name.
+
+
+þh3 Examining the heap
+
+  If the debuggee has been linked with the emx or GNU implementation
+  of malloc(), you can examine the heap with the `þtt{info heap}'
+  command.  That command will list all used and free blocks of the
+  heap.  You'll get more detailed information if you type `þtt{info
+  heap /v}'.  Moreover, you can type an argument which specifies the
+  address of the heap to examine.  If the address points to a
+  substructure of the heap, such as a block or a segment, that
+  substructure will be displayed.
+
+  For programs linked with -Zcrtdll, GDB does not know the address of
+  the heap.  Therefore, you have to use the `þtt{info heap}' command
+  with the address of the heap (this works with the emx implementation
+  of malloc() only):
+þenumerate
+þitem
+  Before starting the program, type
+þexample
+set show-dlls
+þendexample
+  to let GDB print information about DLLs.
+þitem
+  Start the program with the `þtt{run}' command.  GDB will show
+  the names and addresses of the DLLs.  You need the address of
+  the þtt{.data} object of emxlibcs.dll or emxlibcm.dll:
+þexample
+[Load DLL: C:\EMX\DLL\EMXLIBCM.DLL]
+[.text: 0x0e400000 - 0x0e419c10]
+[.data: 0x0e420000 - 0x0e425f90]
+[.bss:  0x0e425f90 - 0x0e428190]
+þendexample
+  In this example, the address of the þtt{.data} object is 0xe420000.
+þitem
+  Search the file þtt{\emx\etc\emxlibcs.map} (or
+  þtt{\emx\etc\emxlibcm.map}, depending on which DLL is used) for
+  the symbol þtt{_um_regular_heap}:
+þexample
+ 0002:00007CB4       _um_regular_heap
+þendexample
+  In this example, the offset we're looking for is 0x7cb4.
+þitem
+  Compute the address of the þtt{_um_regular_heap} variable by
+  adding the address of the þtt{.data} object and the offset
+  of the variable.  In the example, the address is 0xe427cb4.
+þitem
+  Display the value of the variable:
+þexample
+x/w 0xe427cb4
+þendexample
+  GDB responds with
+þexample
+0xe427cb4 <end+239105292>:      0x02970000
+þendexample
+  In this example, the address of the heap is 0x2970000.
+þitem
+  Use the `þtt{info heap}' command with the address of the heap:
+þexample
+info heap 0x2970000
+þendexample
+  All numbers in this recipe are samples.
+þendenumerate
+
+  If the debuggee has the _heapchk() function linked in, you can call
+  it from GDB to check the heap:
+
+þexample
+call _heapchk()
+þendexample
+
+  That function returns 0 if the heap is OK, 1 if the heap is empty
+  (uninitialized).  Other return values indicate heap corruption.  To
+  check the heap each time the program stops, use
+
+þexample
+display _heapchk()
+þendexample
+
+  _heapchk() works with the emx implementation of malloc() only.
+  Other malloc packages may support a similar function.
+
+þh3 Initialization file
+
+  The .gdbinit file has been renamed þtt{!gdbinit}.  To save typing,
+  you might want to create a file named þtt{!gdbinit} in the directory
+  where you're debugging.  Here's an example of a þtt{!gdbinit} file:
+
+þexample
+file myprog.exe
+set arg -o test.out test.inp
+b main
+set close on
+run
+set switch off
+þendexample
+
+þh3 DUEL
+
+  Michael Golan's DUEL debugging language has been added to GDB.
+  You'll find detailed instructions in þtt{\emx\doc\duel.man}.  Note
+  that GDB has not been modified to require `þtt{##}' for comments,
+  therefore you have to use alternate names for two DUEL operators:
+  Use `þtt{%/}' instead of `þtt{#/}', and `þtt{%%}' instead of
+  `þtt{#}'.
+
+
+þh3 GDBRX -- use REXX in GDB
+þlabel GDBRX
+
+  The `þtt{rexx}' command of GDB invokes the OS/2 REXX interpreter.
+  The argument of the `þtt{rexx}' command is interpreted as a REXX
+  program.  `þtt{rx}' is an alias for the `þtt{rexx}' command.
+  Important: use single quotes instead of double quotes in REXX
+  commands as GDB treats double quotes specially.  Example:
+
+þexample
+(gdb) rx say 'Hello World!'
+Hello World!
+þendexample
+
+  Once the REXX interpreter has been invoked, the default subcommand
+  handler is GDBRX.  This means that any commands REXX doesn't
+  understand get passed back to GDB for processing.  Any output from
+  GDB gets passed back to REXX through the standard result variable
+  þtt{RC}.  Example:
+
+þexample
+(gdb) rx do i = 2 to 4; 'p 'i; say rc; end
+$1 = 2
+$2 = 3
+$3 = 4
+þendexample
+
+  This is where the real power of the REXX command lies.  It makes it
+  really easy to hack together quick and dirty debugging functions.
+  For instance, þtt{\emx\bin\logargs.cmd} is a REXX program that logs
+  all parameters used in calls to a given function.  You invoke it
+  with
+
+þexample
+(gdb) rx call logargs
+þendexample
+
+  þtt{logargs.cmd} assumes that you have loaded the program, and have
+  breaked somewhere in it (since it starts off with a
+  `þtt{continue}').
+
+  When you run it you get something like this:
+
+þexample
+cd \emx\test
+gdb version.exe
+(gdb) b main
+(gdb) set sw off
+(gdb) set cl on
+(gdb) run
+(gdb) rx call logargs
+logargs 1.1
+Enter function name:
+bit
+Running...
+þendexample
+
+  And you end up with a very useful þtt{logargs.txt} file:
+
+þexample
+*** logargs 1.1 --- 20:02:33 02 Jul 1993 ***
+s=0x100b7 "VCPI     ", n=1
+s=0x100c1 "XMS      ", n=2
+s=0x100cb "VDISK 3.3", n=4
+s=0x100d5 "DESQview ", n=8
+s=0x100df "287      ", n=16
+s=0x100e9 "387      ", n=32
+s=0x100f3 "OS/2 2.x ", n=512
+s=0x100fd "-t       ", n=1024
+s=0x10107 "-ac      ", n=2048
+þendexample
+
+  where each line represents the parameters passed to þtt{bit()}.
+
+  When analyzing þtt{RC}, note that newlines are represented by two
+  characters, CR and LF.
+
+
+þh2 Hints
+
+  To debug an .exe file which doesn't have a symbol table use
+  the symbol table from the a.out file and type
+
+þexample
+gdb -e myprog.exe -s myprog
+þendexample
+
+  You can do post-mortem debugging by using the þtt{core} file written
+  by emx when a program aborts.
+
+  You can use the following redirection specifications with `þtt{set
+  args}':
+
+þlist
+þitem þtt{<}þpa{FILENAME}
+
+    Redirect the file named þpa{FILENAME} to standard input
+
+þitem þtt{>}þpa{FILENAME}
+
+    Redirect standard output to the file named þpa{FILENAME},
+    overwriting
+
+þitem þtt{>>}þpa{FILENAME}
+
+    Redirect standard output to the file named þpa{FILENAME},
+    appending
+
+þendlist
+
+  You can prepend a handle number (0 to 9) to such a redirection
+  specification; for instance
+
+þtypewriter
+  2>þpa{FILENAME}
+þendtypewriter
+
+  redirects standard error to þpa{FILENAME}.  Use quotation marks to
+  include `þtt{<}', `þtt{>}', spaces, or TABs in arguments.  Use
+  backslashes to escape quotation marks.
+
+  Example:
+
+þexample
+set args "first arg" "second arg" <input >output 2>error
+þendexample
+
+
+þh1 GAS -- assembling
+þlabel GAS
+þindex GAS
+þindex assembler
+þkeyword GAS
+
+  GAS is the GNU assembler.  The executable file name of GAS is
+  as.exe. The GNU assembler preprocessor, GASP, is also
+  available. Usually, GAS is called by þhpt{GCC}. See the GAS and GASP
+  manuals for details.
+
+  This port of GAS supports two additional command line options:
+
+þdescription
+
+þitem -Zomf
+
+    Call emxomf to convert the output file to OMF.  This option is
+    used for creating .obj files.
+
+þitem -Zstrip
+
+    Pass the -s option to emxomf.  This option is used with -Zomf 
+    to omit debugging information.
+
+þenddescription
+
+
+þh1 ld -- linking
+þlabel ld
+þindex ld
+þindex linker
+þkeyword ld
+
+  ld is the GNU linker.
+
+  If the output file has an .exe or .dll extension, þhpt{emxbind} will
+  automatically be called to bind emxl.exe and the temporary a.out
+  file into an .exe or .dll file.  See þtt{/emx/gnu/binutils.old/ld.c} and
+  the description of þhpt{emxomfld} for command line options.  ld is
+  usually called only by GCC, not from the command line.
+
+  The -s option (strip symbols) is passed on to emxbind.  If ld
+  doesn't call emxbind, ld will strip the symbol table.
+  Unfortunately, ld doesn't correctly strip the symbol table.
+
+  This port of ld supports several additional command line options:
+
+þdescription
+
+þitem -R
+
+  The -R option is used for creating relocatable executable files.  -R
+  is automatically set if the output file has a .dll extension.  -R is
+  also automatically set if an import definition of type þhpt{(I2)} is
+  referenced.  This is used to import functions from dynamic link
+  libraries.  If you link with import definitions of type (I1), you
+  have to manually supply the -R option.
+
+þitem -Zexe
+
+  If the -Zexe option is present, ld deletes the output file (whose
+  name is given on the command line) and, after linking, calls emxbind
+  to create an .exe file (.exe is appended to the name of the output
+  file) After calling emxbind, ld creates an empty output file
+  (without .exe).  This feature is used for minimizing changes to
+  Unix-style makefiles.  See also the þhpt{-Zexe} option of þhpt{GCC}
+  and þhpt{emxomfld}.  The output file name must not have an extension
+  if -Zexe is used.
+
+þitem -Zmap
+
+  Let emxbind create a .map file.  The name of the .map file will be
+  derived from the output file name, the default extension is .map.
+  To specify the name of the .map file, use þsy{-Zmap=<map_file>}.
+
+þitem -Zstack
+
+  The -Zstack option is passed down to emxbind to set the stack size
+  for OS/2 programs.
+
+þitem -Zno-demangle
+
+  Don't demangle C++ symbols in error messages.
+
+þitem -Zdemangle-proto
+
+  Include parameters and qualifiers in demangled C++ symbols in error
+  messages.
+
+þenddescription
+
+  If a file name with .def extension is given on the ld command line,
+  it will be passed as module definition file (-d option) to emxbind.
+  If there is no .def file on the command line and the output file is
+  a .dll file, the -d option without argument is passed to emxbind;
+  emxbind will use the name of the output file (with .def extension)
+  for the module definition file.
+
+  If a file name with .res extension is given on the ld command line,
+  it will be passed as resource file (-r option) to emxbind.
+
+  Note that the sequence of .o and .a files and -l options is
+  essential.  crt0.o or dll0.o must come first.  Libraries are
+  considered only once, that is, if a library references symbols
+  defined in another library, the former one must be used before the
+  latter one.  If library lib1.a uses library lib2.a, which in turn
+  uses library lib1.a, you have to use þtt{-llib1 -llib2 -llib1}.
+
+
+þh1 ranlib
+þindex ranlib
+þkeyword ranlib
+
+  þbf{ranlib} is not available.  Use the þtt{s} command of þbf{ar}
+  instead.
+
+
+þh1 strip -- removing the symbol table
+þlabel strip
+þindex strip
+þkeyword strip
+
+  þbf{strip} is used to delete symbols from an a.out file.  It cannot
+  be applied to bound .exe files.  See þtt{/emx/gnu/binutils.old/strip.c}
+  for command line options.  See also the þhpt{emxbind} (-s command
+  and the -s option of the -b command).
+
+
+þh1 info -- browsing info files
+þlabel info
+þindex info
+þkeyword info
+
+  Before using þbf{info}, you have to install termcap.  This is done by
+  setting the TERM environment variable and one of the following
+  environment variables: INIT, EMXETC, TERMCAP.  Here's an example:
+
+þexample
+set term=mono
+set termcap=c:/emx/etc/termcap.dat
+þendexample
+
+  Then, you have to set the INFOPATH environment variable.  It's a
+  list of directories, separated by semicolons.  The þtt{/emx/info}
+  directory should be included.  Example:
+
+þexample
+set infopath=.;c:/emx/info
+þendexample
+
+  If the INFOPATH environment variable is not set, the following list
+  of directories will be used:
+
+þexample
+.;/emx/info;/emacs/info
+þendexample
+
+  After setting all the environment variables, you can run info by
+  typing
+
+þexample
+info
+þendexample
+
+  Type þtt{?} to get a list of keys.
+
+
+þh1 makeinfo -- creating info files
+þlabel makeinfo
+þindex makeinfo
+þkeyword makeinfo
+
+  makeinfo creates info files from texinfo files.  Type makeinfo to
+  get a list of options.  There's also texinfo documentation available
+  for makeinfo.
+
+  When splitting files, makeinfo uses the extensions þtt{i01},
+  þtt{i02}, ..., þtt{i99}.
+
+
+þh1 texindex -- creating the index for a printed manual
+þlabel texindex
+þindex texindex
+þkeyword texindex
+
+  texindex sorts the index for typesetting a texinfo file with
+  þbf{TeX}.  To compile a texinfo file under OS/2, simply move to the
+  directory where the source file resides and enter
+
+þtypewriter
+  texi2dvi þpa{FILENAME}
+þendtypewriter
+
+  where þpa{FILENAME} is the name of the source file.  Example:
+
+þexample
+cd \emx\gnu\texinfo
+texi2dvi texi.tex
+þendexample
+
+  þbf{texi2dvi} is a REXX procedure which calls þbf{TeX} and texindex.
+  See the first two statements of þtt{/emx/bin/texi2dvi.cmd} for
+  customization.
+
+
+þh1 termcap -- terminal capabilities
+þlabel termcap
+þindex termcap
+þkeyword termcap
+
+  For using termcap, you have to put termcap.dat in the current
+  working directory, into directory /emx/etc on the current drive, or
+  into a directory listed in the INIT or EMXETC environment
+  variables.  You can also set the TERMCAP environment variable to
+  contain the absolute path name of termcap.dat.  If the TERM
+  environment variable isn't set, ansi will be used (þtt{ansi.sys}
+  required).  Otherwise, the terminal given in the TERM environment
+  variable will be used.  I recommend using þtt{mono}.  See
+  termcap.dat for details.
+
+  To link a program with the GNU termcap library, specify -ltermcap on
+  the GCC command line.  Read the license in þtt{/emx/doc/COPYING}!
+
+  Alternatively, the BSD termcap library is available.  See
+  þtt{emxbsd.doc} and þtt{emxbsd.inf} for details.
+
+þh1 readline
+þlabel readline
+þindex readline
+þkeyword readline
+
+  The standard þbf{Emacs}/þbf{readline} key bindings are used with the
+  following exceptions and additions:
+
+þexample
+BS, C-H         rubout
+HOME            beg_of_line
+END             end_of_line
+UP              get_previous_history
+DOWN            get_next_history
+LEFT            backward
+RIGHT           forward
+PAGEUP          beginning_of_history
+PAGEDOWN        end_of_history
+DELETE          delete
+C-LEFT          backward_word
+C-RIGHT         forward_word
+C-HOME          backward_kill_line
+C-END           kill_line
+þendexample
+
+  The readline library source comes with the GDB source files.
+
+
+þh1 GPPDEMID -- an identifier manipulation DLL for G++
+þlabel GPPDEMID
+þi1 GPPDEMID
+þkeyword GPPDEMID
+
+  GPPDEMID (þtt{/emx/dll/gppdemid.dll}) is a dynamic link library
+  which demangles symbols mangled by the G++ compiler.  This DLL is
+  used by LINK386 to demangle symbols to make error messages more
+  readable when linking C++ programs.  LINK386 is told about the name
+  of the DLL by a special record inserted into the .obj files by
+  þhpt{emxomf}.
+
+  GPPDEMID is subject to the GNU Library General Public License, see
+  þtt{/emx/doc/COPYING.LIB} for details.  The source code for GPPDEMID
+  can be found in the þtt{gnusrc.zip} archive.
+
+
+þh1 Known problems
+þlabel Known problems
+
+þitemize
+
+þitem
+
+  gcc.exe cannot pass more than 24 (temporary) files derived by
+  the GCC command from source files to the linker
+
+þitem
+
+  If GDB fails under OS/2 with an error message like
+
+þexample
+DosDebug error: 00000135
+þendexample
+
+  stop any screen savers you are running.  If that does not help, use
+  the -E emx option:
+
+þexample
+set emxopt=-E
+þendexample
+
+  and run GDB from a full-screen command prompt.
+
+þenditemize
+
+þtext
+
+--------------------------- END OF EMXGNU.DOC ------------------------------
+þendtext

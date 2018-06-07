@@ -1,0 +1,40 @@
+# This submakefile is included when a module needs to build a library.
+# For a list of additional variables that can be defined prior to including
+# this submakefile see build.txt.
+
+# for opt builds we have our own install rules
+ifeq ($(findstring prof,$(.TKIND)),)
+ifneq ($(findstring aout,$(.TKIND)),)
+ifeq ($(MODE),opt)
+.NOINST := 1
+endif
+endif
+endif
+
+include common.smak
+
+libs: $(.MODULE)
+
+# The rule for building an archive
+ifneq ($(findstring aout,$(.TKIND)),)
+$(eval $(call def_lib_ar))
+else
+$(eval $(call def_lib))
+endif
+
+# Rule for stripping debug info.
+ifdef .NOINST
+INS.FILES += $(INS)$(.INSDIR)$(.TARGET)
+$(INS)$(.INSDIR)$(.TARGET): $.$(.TARG)
+	objcopy --strip-debug $< $@
+	
+INS.FILES += $(INS)$(.INSDIR)dbg/$(.TARGET)
+$(INS)$(.INSDIR)dbg/$(.TARGET): $.$(.TARG)
+	mkdir -p $(INS)$(.INSDIR)dbg
+	$(call CP,$<,$@)
+endif	
+
+include mkomflib.smak
+include comend.smak
+.NOINST :=
+

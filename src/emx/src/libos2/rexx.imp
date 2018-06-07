@@ -1,0 +1,8 @@
+;
+; rexx.imp
+;
+RexxStart               rexx       1 9
+RexxVariablePool        rexx       2 1
+RexxSetHalt             rexx       3 2
+RexxSetTrace            rexx       4 2
+RexxResetTrace          rexx       5 2

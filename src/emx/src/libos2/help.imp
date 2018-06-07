@@ -1,0 +1,24 @@
+;
+; help.imp
+;
+DdfBeginList                    helpmgr  82 4
+DdfBitmap                       helpmgr  88 3
+DdfEndList                      helpmgr  84 1
+DdfHyperText                    helpmgr  81 4
+DdfInform                       helpmgr  79 3
+DdfInitialize                   helpmgr  74 3
+DdfListItem                     helpmgr  83 3
+DdfMetafile                     helpmgr  86 3
+DdfPara                         helpmgr  75 1
+DdfSetColor                     helpmgr  78 3
+DdfSetFont                      helpmgr  87 4
+DdfSetFontStyle                 helpmgr  80 2
+DdfSetFormat                    helpmgr  76 2
+DdfSetTextAlign                 helpmgr  77 2
+DdfText                         helpmgr  85 2
+WinAssociateHelpInstance        helpmgr  54 2
+WinCreateHelpInstance           helpmgr  51 2
+WinCreateHelpTable              helpmgr  56 2
+WinDestroyHelpInstance          helpmgr  52 1
+WinLoadHelpTable                helpmgr  55 3
+WinQueryHelpInstance            helpmgr  53 1

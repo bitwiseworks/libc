@@ -1,0 +1,210 @@
+********************************************************************************
+
+                       The Modular Building System (MoBuS)
+
+********************************************************************************
+
+
+The goal of the build system
+----------------------------
+
+MoBuS was projected with several goals in mind:
+
+- Simplicity of use. Most makefile magic should go in a few relatively
+  complex central makefiles, simplifying the 'end-user' makefiles.
+  In fact, the build system is simple enough for use without even
+  looking into these docs.
+
+- Universality. This makefile system can be easily used in any projects,
+  just by copying root makefiles and creating a few .smak files.
+
+- Flexibility. Simplicity should not make impossible to write complex
+  building rules, especially since our primary goal is the OS/2 C runtime,
+  which is a very complex thing per se.
+
+- Modularity. New building modules should be added and old removed without
+  even having to touch the root makefiles. The build system should adapt
+  automatically to every change.
+
+- Multi-option. The ability to build same file with several sets of
+  options (e.g. -Zmt and -pg), which implies a separate output directory for
+  every flavour of output files.
+
+- Portability. This is a secondary target, though the build subsystem can
+  be easily used in other operating systems (a few modifications still have
+  to be made first, e.g. including a platform-specific .smak file which
+  would set up every platform-specific aspect).
+
+
+Glossary of terms used in MoBuS
+-------------------------------
+
+target - a particular executable, library and so on.
+
+module - a set of targets, unified by a common functionality
+  (example: targets emxomf.exe, emxomfar.exe, emxomfld.exe,
+  emxaout.exe, listomf.exe are parts of module emxomf).
+
+persistent variable - a make variable that does not change its value
+  radically (e.g. some persistent variables can be appended to but never
+  assigned a totally different value). For example CFLAGS is a persistent
+  variable; submakefiles could append something to CFLAGS (which is a bad
+  idea anyways since it will unpredictably affect all modules) but this
+  doesn't change its contents radically.
+
+local variable - a temporary variable used in some section of makefile
+  and then can be reused for anything other. For easier reading such
+  variables are prefixed by '.', e.g. ".LOCAL" is a local variable,
+  while "LOCAL" is a persistent variable. When you reference local
+  variables it is highly advised to use the ':=' assignment rather
+  than '=' since when using ':=' the assigned value is expanded
+  immediately.
+
+builder - a special submakefile that defines all the rules required
+  to build some target. Their name starts with 'mk', for example mkexe.smak
+  prepares everything needed to build a .exe target and so on.
+
+
+Using MoBuS
+-----------
+
+Every time you start 'make', MoBuS searches all subdirectories for files
+ending with '.smak' (smak stands for 'Sub-Makefile': I have chosen .smak
+instead of .mak because EM already used .mak extension for his makefiles
+and they would conflict with MoBuS).
+
+Every submakefile defines a number of special variables that control the
+build process for a specific target. After they are given values, you usually
+include one of the builders (we'll list them later) that prepares
+everything required for the actual building. Most of these variables are
+cleared to avoid their value to be incidentally passed to another submakefile
+(which is almost certainly not what you want). If you don't want this to happen,
+you can assign any value to the special variable .TKEEP. Here is the full list
+of variables that control the build process:
+
+.INSDIR - (optional) directory inside the installation tree for targets.
+  For example, it could be 'bin/' (without quotes), or 'lib/st/' and so on.
+  This variable is NOT cleared after the inclusion of builders since
+  you may want many targets to be placed in the same install directory,
+  and you would have to redefine .INSDIR before every target.
+
+.MODULE - The name of current module. As explained above, a module can consist
+  of many submakefiles, and is a minimal build unit.
+
+.MDESC - (optional) module description. This is displayed when you type
+  'make help' in the module list section.
+
+.MDEP - (optional) module dependencies. This is useful if current module
+  requires another module to be built first (e.g. a library). It usually
+  contains the name of another module (e.g. .MDEP := os2).
+
+.TARGET - The name of target (e.g. executable or library file name without dir).
+  For example: .TARGET := myfile.exe
+
+.TKIND - (optional) The kind of target. It can consist of up to three
+  components, the first one defines the object file format (omf or aout,
+  if not defined defaults to omf), the second can be 'prof' to build in
+  profiling mode.
+  Example: .TKIND := omf prof
+
+.TKVAR - (optional) The variant of target. This is handy if one need to build
+  the same sources several times with different flags.
+  Exampel: .TKVAR := tcpipv4
+
+.TDEP - Dependencies for target (not built from a source file). For example,
+  this could be a library built in another module, or a pre-compiled library.
+  A special sequence @O@ in $(.TDEP) is replaced with the base directory for
+  object files (for example, out/dbg/aout-st-prof/).
+
+.TSRC - The list of source files for this target. They should never be
+  absolute paths, since object file names are created by prefixing source
+  file directory with output directory (e.g. src/emxbind/emxbind.c will be
+  compiled to $(OUT)src/emxbind/emxbind.o).
+
+.TCF - The C compiler flags for C files listed in .TSRC.
+.TCF.srcfile - You can define some specific C compiler flags for just one
+  source file (for example .TCF.src/emx/ld/ld.c=-D__SOMETHING)
+
+.TSF - Assembler flags for all .s files listed in .TSRC
+.TSF{.srcfile} - Assembler (.s) flags for GAS for a specific source file.
+
+.TAF - Assembler (MASM or ML) flags for all .asm files listed in .TSRC
+.TAF{.srcfile} - Assembler flags for a specific .asm file listed in .TSRC.
+
+.TLDF - Target-specific linker flags (for linked targets such as .exe
+  and .dll files).
+
+.TKEEP - If defined, all .XXX variables will be not undefined. This can be
+  used if you want to share some of the .XXX variables between several targets
+  (for example .TSRC). WARNING: Take care they accidentaly to not be passed
+  to another submakefile!
+
+After you assign values to above liste variables, you can include one of the
+following builders:
+
+mkexe.smak - this builder treats .TARGET as a executable. It defines all
+  rules required for building all object files and then linking them together
+  to form a executable.
+
+mklib.smak - this builder creates a library. It defines all rules required
+  for building all object files and then runs the librarian which binds all
+  object files together in a single library. Besides, if the file format is
+  a.out, it also defines a target called '$(.MODULE)@omf' (e.g. for module
+  zzz it also defines a module called zzz@omf) which will build the OMF
+  library from its a.out counterpart by using emxomf.
+
+Here is a simple example of a submakefile that will build a simple helloworld
+executable:
+
+--------8<--------8<--------8<--------8<--------8<--------
+# $Id: build.txt 885 2003-12-08 05:42:10Z bird $
+
+.MODULE := helloworld
+.MDESC  := Build a helloworld executable
+.INSDIR := bin/
+
+.TARGET := helloworld.exe
+.TSRC   := $(wildcard src/helloworld/*.c)
+include mkexe.smak
+--------8<--------8<--------8<--------8<--------8<--------
+
+
+Understanding build system
+--------------------------
+
+First of all, it would be nice to have handy the GNU Make manual before
+starting to look into the makefiles. They use complex expressions, and it
+would be hard to understand them without knowing how GNU Make works.
+
+The core of the build system are: the root Makefile and several .smak files
+The root makefile does the following:
+
+- Defines the build environment (tools, flags and so on)
+- Searches for all submakefiles (.smak files) and includes them.
+- Defines the rule for displaying a help (when you run make without
+  arguments).
+- Defines the rule for re-building the 'build rules file'. The later
+  is a collection of rules of the traditional form:
+
+  sometarget: somesource
+	commands-to-execute
+
+  and is placed in a auto-built .smak files in the output directory.
+- Defines the rule for auto-creating output directories. The
+  submakefiles appends the output directories they need to the
+  variable TARGDIRS.
+- Defines the install: target which should create a complete
+  distribution tree.
+
+The base directory for output files is assigned to the variable OUT.
+In general, directory names through the makefiles have a forward slash
+appended (first, for easy visual separation of directory names and second,
+for simpler usage, e.g. $(OUT)myfile.o rather than $(OUT)/myfile.o).
+
+Every target can be of a specific 'kind', e.g. to require a specific
+pre-defined set of compiler flags. When compiling multiple kinds of object
+files from a single source file they are put under different output directories
+(e.g. single-threaded OMF object files go into $(OUT)/omf-st/ directory while
+multi-threaded a.out object files with profiling go into $(OUT)/aout-prof/
+directory). This way, you can have several targets that are built from the
+same source files with different compilation options.

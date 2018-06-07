@@ -1,0 +1,28 @@
+# $Id: config.gmk 1428 2004-05-03 01:27:29Z bird $
+#
+# Helper makescript for updating one instance of configure.
+#
+# InnoTek Systemberatung GmbHconfidential
+#
+# Copyright (c) 2003 InnoTek Systemberatung GmbH
+# Author: knut st. osmundsen <bird@anduin.net>
+#
+# All Rights Reserved
+#
+
+.PHONY: all	remove clean rerun refresh
+all: refresh
+
+remove:
+	rm -f configure config.log config.cache config.status
+
+rerun: remove configure
+				
+refresh: configure
+
+clean: remove
+	
+configure: configure.in $(PATH_TOP)/config.gmk
+	WANT_AUTOCONF_VER="2.13" $(SH) $(UNIXROOT)/usr/bin/autoconf
+	
+	

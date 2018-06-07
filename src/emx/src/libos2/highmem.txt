@@ -1,0 +1,140 @@
+/** $Id: highmem.txt 810 2003-10-06 00:55:10Z bird $ */
+
+Private notes about highmemory support in LIBC.
+
+LIBC and most others assume stack to be in low memory.
+LIBC have two strategies of ensuring that buffers for API usage is thunked
+correctly:
+    1) Manualy ensuring it where the API is called.
+    2) API wrappers, 'Safe'-prefixed wrappers. This means the we must
+       include the wrapper header and link with the wrapper lib.
+
+
+This is the list of Dos APIs which officially support high memory in Aurora
+and later kernels:
+    DosAcknowledgeSignalException
+    DosAddMuxWaitSem
+    DosCloseEventSem
+    DosCloseMutexSem
+    DosCloseMuxWaitSem
+    DosCopy
+    DosCreateDir
+    DosCreateEventSem
+    DosCreateMutexSem
+    DosCreateMuxWaitSem
+    DosCreateNPipe
+    DosCreateQueue
+    DosCreateThread2
+    DosDelete
+    DosDeleteDir
+    DosDeleteMuxWaitSem
+    DosEnterMustComplete
+    DosExecPgm
+    DosExitMustComplete
+    DosFindFirst
+    DosFindNext
+    DosFreeMem
+    DosGetNamedSharedMem
+    DosGiveSharedMem
+    DosLoadModule
+    DosMove
+    DosOpen
+    DosOpenEventSem
+    DosOpenMutexSem
+    DosOpenMutexWaitSem
+    DosPhysicalDisk
+    DosPostEventSem
+    DosQueryCurrentDir
+    DosQueryCurrentDisk
+    DosQueryEventSem
+    DosQueryFSAttach
+    DosQueryFSInfo
+    DosQueryFileInfo
+    DosQueryMem
+    DosQueryModuleHandle
+    DosQueryModuleName
+    DosQueryMutexSem
+    DosQueryMuxWaitSem
+    DosQueryNPHState
+    DosQueryPageUsage
+    DosQueryPathInfo
+    DosRaiseException
+    DosRead
+    DosReadQueue
+    DosReleaseMutexSem
+    DosRequestMutexSem
+    DosResetEventSem
+    DosScanEnv
+    DosSearchPath
+    DosSendSignalException
+    DosSetCurrentDir
+    DosSetExceptionHandler
+    DosSetFileInfo
+    DosSetFileLocks
+    DosSetMem
+    DosSetPathInfo
+    DosSetRelMaxFH
+    DosSetSignalExceptionFocus
+    DosSubAllocMem
+    DosSubFreeMem
+    DosSubSetMem
+    DosSubUnsetMem
+    DosUnsetExceptionHandler
+    DosUnwindException
+    DosWaitEventSem
+    DosWaitMuxWaitSem
+    DosWrite
+
+Note that devices (like /DEV/CON) doesn't like high memory.
+Also note that DosOpenL doesn't support high memory even if DosOpen does.
+
+
+One should be supicious of any APIs which deals with memory and isn't
+listed above. However we find that the following APIs seems to be safe:
+    DosGetDateTime
+    DosSetFilePtr
+    DosSetFilePtrL
+    DosQueryProcAddr
+
+
+
+Regarding the other APIs there are no guarantees. Some sources claim the Win*
+and Gpi* to be pretty safe. Regarding the Uni* api we have to try it. TCP/IP
+APIs are know to not accept high memory.
+
+LIBC is currently using some APIs which may (in theory) cause trouble.
+For the Dos API:
+   doscalls.110 (DosForceDelete)    - verified, made wrapper.   LIBC uses wrapper.
+   doscalls.224 (DosQueryHType)     - verified, made wrapper.   LIBC uses stack.
+   doscalls.239 (DosCreatePipe)     - verified, made wrapper.   LIBC uses wrapper.
+   doscalls.245 (DosQueryNPHState)  - ???, made wrapper.        LIBC uses stack.
+   doscalls.253 (DosWaitNPipe)      - verified, made wrapper    LIBC uses static data.
+   doscalls.256 (DosSetFilePtr)     - seems safe, made wrapper. LIBC uses stack.
+   doscalls.260 (DosDupHandle)      - verified, made wrapper.   LIBC uses stack.
+   doscalls.xxx (DosOpenL)          - verified, made wrapper.   LIBC uses stack.
+   doscalls.276 (DosQueryFHState)   - verified, made wrapper.   LIBC uses stack.
+   doscalls.280 (DosWaitChild)      - ???, made wrapper.        LIBC uses stack.
+   doscalls.291 (DosQueryCp)        - ???.                      LIBC uses stack.
+   doscalls.292 (DosSetDateTime)    - verified, made wrapper.   LIBC uses stack.
+   doscalls.311 (DosCreateThread)   - ???.                      LIBC uses stack.
+   doscalls.321 (DosQueryProcAddr)  - seems safe                LIBC uses static data.
+   doscalls.348 (DosQuerySysInfo)   - seems safe                LIBC uses static data.
+   doscalls.372 (DosEnumAttribute)  - ???.                      LIBC uses stack.
+   nls.5        (DosQueryCtryInfo)  - ???.                      LIBC uses stack.
+
+For the Uni API:
+   libuni.20 (UniCreateLocaleObject)
+   libuni.29 (UniQueryLocaleInfo)
+   libuni.30 (UniQueryLocaleItem)
+   libuni.35 (UniStrcoll)
+   libuni.40 (UniStrlen)
+   libuni.42 (UniStrncmp)
+   libuni.53 (UniStrxfrm)
+   libuni.67 (UniMapCtryToLocale)
+   uconv.1 (UniCreateUconvObject)
+   uconv.10 (UniMapCpToUcsCp)
+   uconv.2 (UniUconvToUcs)
+   uconv.3 (UniUconvFromUcs)
+   uconv.7 (UniQueryUconvObject)
+
+Until proven elsewise we'll assume the Uni API to be safe.

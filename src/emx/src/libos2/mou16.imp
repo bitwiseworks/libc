@@ -1,0 +1,30 @@
+;
+; Mou16.imp
+;
+Mou16Close                      moucalls   9 F
+Mou16DeRegister                 moucalls  14 F
+Mou16DrawPtr                    moucalls  26 F
+Mou16FlushQue                   moucalls   7 F
+Mou16GetDevStatus               moucalls  22 F
+Mou16GetEventMask               moucalls  15 F
+Mou16GetHotKey                  moucalls   4 F
+Mou16GetNumButtons              moucalls   8 F
+Mou16GetNumMickeys              moucalls   3 F
+Mou16GetNumQueEl                moucalls  13 F
+Mou16GetPtrPos                  moucalls  19 F
+Mou16GetPtrShape                moucalls   1 F
+Mou16GetScaleFact               moucalls   6 F
+Mou16GetThreshold               moucalls  29 F
+Mou16InitReal                   moucalls  27 F
+Mou16Open                       moucalls  17 F
+Mou16ReadEventQue               moucalls  20 F
+Mou16Register                   moucalls  24 F
+Mou16RemovePtr                  moucalls  18 F
+Mou16SetDevStatus               moucalls  25 F
+Mou16SetEventMask               moucalls  16 F
+Mou16SetHotKey                  moucalls  10 F
+Mou16SetPtrPos                  moucalls  21 F
+Mou16SetPtrShape                moucalls   2 F
+Mou16SetScaleFact               moucalls  11 F
+Mou16SetThreshold               moucalls  30 F
+Mou16Synch                      moucalls  23 F

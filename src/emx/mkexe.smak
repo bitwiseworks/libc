@@ -1,0 +1,34 @@
+# This submakefile is included when a module needs to build a executable.
+# For a list of additional variables that can be defined prior to including
+# this submakefile see build.txt.
+
+include common.smak
+
+tools: $(.MODULE)
+
+# Linking rule
+$(eval $(call def_link_exe))
+
+# Add unstripped copy.					
+ifeq ($(MODE),opt)
+ifdef .TARGET
+ifneq ($(.TARGET),$(.TARGET:.exe=.dbg))
+INS.FILES += $(INS)$(.INSDIR)$(.TARGET:.exe=.dbg)
+$(INS)$(.INSDIR)$(.TARGET:.exe=.dbg): $.$(.TARG:.exe=.dbg)
+	$(call CP,$<,$@)
+endif	
+endif	
+endif				
+
+# don't install map file - unstripped is enough.
+## Map file.
+#ifdef .TARGET
+#ifneq ($(.TARGET),$(.TARGET:.exe=.map))
+#INS.FILES += $(INS)$(.INSDIR)$(.TARGET:.exe=.map)
+#$(INS)$(.INSDIR)$(.TARGET:.exe=.map): $.$(.TARG:.exe=.map)
+#	$(call CP,$<,$@)
+#endif
+#endif
+
+				
+include comend.smak

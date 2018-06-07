@@ -1,0 +1,167 @@
+þtext
+===============================================================================
+emxbsd.doc        emx 0.9d     BSD LIBRARIES INFORMATION            21-Dec-1998
+===============================================================================
+þendtext
+
+þtitle BSD Libraries Information
+
+þformat bold emx
+
+þformat tty bsd.a bsd.lib curses.a curses.lib termcap.a termcap.lib
+þformat tty db.a db.lib btermcap.a btermcap.lib
+þformat tty -lbsd -lcurses -ltermcap -lbtermcap -ldb
+þformat tty heapsort() random() strsep() dbopen()
+
+þif text
+þh= Table of Contents
+þtoc
+þendif
+
+
+þh1 Introduction to BSD Libraries Information
+þipf
+:font facename=Helv size=24x14.:hp2.BSD Libraries Information
+:ehp2.
+:font facename=default size=0x0.
+:p.
+þendipf
+
+  BSD curses has been ported to emx by Kai Uwe Rommel.
+
+  As BSD curses has a few bugs, you might want to use PD curses
+  instead:
+
+þexample
+ftp-os2.cdrom.com: /pub/os2/dev16/pdcurs21.zip
+ftp.leo.org:       /pub/comp/os/os2/libraries/pdcurs21.zip
+þendexample
+
+  The BSD database library provides B-tree and hashing access methods
+  for files.
+
+  The emx C library is complemented by the BSD C library: The
+  heapsort(), random() and strsep() functions are in the libraries
+  bsd.a and bsd.lib.
+
+þipfminitoc
+
+þh1 bsd.a and bsd.lib
+þindex bsd.a
+þindex bsd.lib
+þindex heapsort()
+þindex initstate()
+þindex random()
+þindex setstate()
+þindex srandom()
+þindex strsep()
+þkeyword bsd.a
+þkeyword bsd.lib
+þkeyword heapsort()
+þkeyword initstate()
+þkeyword random()
+þkeyword setstate()
+þkeyword srandom()
+þkeyword strsep()
+
+  bsd.a and bsd.lib contain the following functions:
+
+þexample
+heapsort()
+initstate()
+random()
+setstate()
+srandom()
+strsep()
+þendexample
+
+  Use -lbsd to link with this library.  You have to obey the BSD
+  license, see þtt{/emx/doc/COPYING.BSD}.
+
+  You'll find manual pages in þtt{/emx/bsd/man}.
+
+
+þh1 btermcap.a and btermcap.lib
+þindex btermcap.a
+þindex btermcap.lib
+þkeyword btermcap.a
+þkeyword btermcap.lib
+
+  The BSD termcap library provides functions for using display
+  terminals in a terminal-independent manner.  You have to obey the
+  BSD license, see þtt{/emx/doc/COPYING.BSD}.
+
+  See þtt{/emx/bsd/man/termcap.3} and þtt{/emx/bsd/man/termcap.5} for
+  more information on BSD termcap.
+
+  emx comes with both the GNU and the BSD termcap libraries.  By
+  default, the GNU termcap library is used.  To switch to the BSD
+  termcap library, replace `þtt{gnu}' in þtt{/emx/include/termcap.h}
+  with `þtt{bsd}' and use -lbtermcap instead of -ltermcap.
+
+þh1 curses.a and curses.lib
+þindex curses.a
+þindex curses.lib
+þkeyword curses.a
+þkeyword curses.lib
+
+  The BSD curses library provides functions for updating screens.  You
+  have to obey the BSD license, see þtt{/emx/doc/COPYING.BSD}.  In
+  addition to curses.a or curses.lib (-lcurses), you have to link with
+  a termcap library.  You can use either the BSD termcap library
+  (-lbtermcap) or the GNU termcap library (-ltermcap).  If you use the
+  GNU termcap library, you have to obey the GNU General Public
+  License, see þtt{/emx/doc/COPYING}.
+
+  See þtt{/emx/bsd/man/curses.3} for a short list of library
+  functions.  See the the files in þtt{/emx/bsd/curses/doc} for a
+  complete manual (you might want to use þtt{groff} for formatting).
+
+  Use `þtt{-lcurses -lbtermcap}' for linking programs that use BSD
+  curses.
+
+  Here's how to compile and run a sample program:
+
+þtypewriter
+cd \emx\samples þbreak
+copy \emx\bsd\curses\doc\twinkle1.c þbreak
+[þsl{use an editor to remove the first 33 lines of twinkle1.c}] þbreak
+gcc twinkle1.c -lcurses -lbtermcap
+twinkle1
+þendtypewriter
+
+  Note: þtt{twinkle1.c} is the only complete program in
+  þtt{/emx/bsd/curses/doc}.
+
+þh1 db.a and db.lib
+þindex db.a
+þindex db.lib
+þindex dbopen()
+
+  The BSD database library provides B-tree and hashing access methods
+  for files.  Note that this version of that library is obsolete and
+  has some bugs which cannot be fixed without changing the file
+  formats.
+
+  Use the dbopen() function to open or create a database
+  file.  See þtt{dbopen.3}, þtt{btree.3}, þtt{hash.3}, þtt{recno.3},
+  and þtt{mpool.3} in þtt{/emx/bsd/man} for details.  Use the -ldb
+  option to link with the BSD database library.  You have to obey the
+  BSD license, see þtt{/emx/doc/COPYING.BSD}.
+
+  Here's how to compile and run a sample program:
+
+þexample
+cd \emx\samples
+dmake wordref.exe
+wordref                       -- Show how to run the sample program
+wordref add \emx\doc\*.doc    -- This will take quite a while and 6 MByte
+wordref find database
+þendexample
+
+  Type `þtt{wordref clear}' to delete the database.
+
+þtext
+
+--------------------------- END OF EMXBSD.DOC ------------------------------
+þendtext

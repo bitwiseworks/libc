@@ -1,0 +1,6 @@
+;
+; win-data.imp
+;
+KbdPacket                       pmwin  174 ?
+_KbdPacket                      pmwin  174 ?
+

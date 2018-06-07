@@ -1,0 +1,45 @@
+# This submakefile is included from mklib.smak and mkimplib.smak to define
+# the rules required for building an OMF variant from the a.out library.
+
+# The rule for building the OMF variant of library from a.out format
+ifneq ($(findstring aout,$(.TKIND)),)
+
+# Remove the .a suffix from library name and append .lib instead
+.TARGET := $(patsubst %.a,%.lib,$(.TARGET))
+
+# Replace 'aout' with 'omf' in .TKIND
+.TKIND := $(subst aout,omf,$(.TKIND))
+
+# Compute the new output file directory
+ifdef .TKVAR
+.TKIND.DIR := $(subst $(SPACE),-,$(.TKIND))/$(.TKVAR)/
+else
+.TKIND.DIR := $(subst $(SPACE),-,$(.TKIND))/
+endif
+
+# Compute the name of target file to build
+.TARG@OMF := $(.TKIND.DIR)$(.TARGET)
+
+# The rule for building the xxx@omf variant of target
+.PHONY: $(.MODULE)@omf
+
+# Add this module to the list of all modules
+MODULES += $(.MODULE)@omf
+# ... and to the list of libraries
+libs: $(.MODULE)@omf
+
+INS.FILES += $(INS)$(.INSDIR)$(.TARGET)
+$(INS)$(.INSDIR)$(.TARGET): $.$(.TARG@OMF)
+	$(call CP,$<,$@)
+
+.DIRS@OMF := $(dir $.$(.TARG@OMF))
+
+TARGDIRS += $(.DIRS@OMF)
+
+$(.MODULE)@omf: $(.MODULE) $(.DIRS@OMF) $.$(.TARG@OMF)
+
+# Add a dependency rule to help make
+# (avoids that dumb 'dunno how to make' message)
+$.$(.TARG@OMF): $.$(.TARG)
+
+endif # neq ($(findstring aout,$(.TKIND)),)

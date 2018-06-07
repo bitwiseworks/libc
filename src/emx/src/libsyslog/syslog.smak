@@ -1,0 +1,40 @@
+# This is the top-level submakefile for building EMX C runtime library
+include comend.smak
+
+.MODULE	:= libsyslog
+.MDESC	:= syslog library.
+.MDEP   := emxomf
+
+.TARGET	:= libsyslog_p.a
+.TKIND	:= aout prof
+.TSRC	:= src/libsyslog/syslog.c
+.TCF    := -I$.
+.INSDIR	= lib/
+.TKEEP	:= 1
+include mklib.smak
+include mkomflib.smak
+
+.TARGET	:= libsyslog.a
+.TKIND	:= aout
+.TKEEP	:= 1
+include mklib.smak
+include mkomflib.smak
+
+						
+.TKVAR	:= tcpipv4
+.TARGET	:= libsyslog_p.a
+.TKIND	:= aout prof
+.TSRC	:= src/libsyslog/syslog.c
+.TCF    := -I$. -DTCPV40HDRS
+.INSDIR	:= lib/tcpipv4/
+.TKEEP	:= 1
+include mklib.smak
+include mkomflib.smak
+
+.TARGET	:= libsyslog.a
+.TKIND	:= aout
+include mklib.smak
+include mkomflib.smak
+
+# Forget temporary variables
+include comend.smak

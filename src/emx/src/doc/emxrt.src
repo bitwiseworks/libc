@@ -1,0 +1,1531 @@
+þtext
+===============================================================================
+emxrt.doc    emx 0.9d FIX 04     USER'S GUIDE TO THE EMX RUNTIME    20-Mar-2001
+===============================================================================
+                                     Copyright (c) 1990-2001 by Eberhard Mattes
+þendtext
+
+
+þtitle User's Guide to the emx Runtime
+
+þformat bold emx emxbind emxstack emxupd emxuzdll termcap rsx
+
+þformat tty emx.exe emxl.exe emxbind.exe emx.dll emxio.dll emxwrap.dll
+þformat tty emxload.exe emxstack.exe emxrt.doc rsx.exe emxfpemu emxrt.zip
+þformat tty \emx\dll \emx\bin config.sys emxlibc.dll emxlibcm.dll emxlibcs.dll
+þformat tty cmd.exe emxrev
+þformat tty SET \emx\bin\emx.exe autoexec.bat termcap.dat himem.sys
+þformat tty unzip.exe
+þformat tty vdisk.sys SIGKILL SIGABRT abort() .dll LIBPATH BREAK=ON
+þformat tty DosKillThread select()
+
+þformat syntax -c -d -e -E -f -h# -K -m1 -m2 -m3 -n -o -O -p -q -x
+þformat syntax -r* -s<size> -t -t* -u<size> -v -I -V -X <size>
+þformat syntax <source_file> <target_path> <old_file> <zip_file> <dll_dir>
+
+þformat abbrev etc.
+
+
+þif text
+þh= Table of Contents
+þtoc
+þendif
+
+
+þh1 Introduction to the User's Guide to the emx Runtime
+þipf
+:font facename=Helv size=24x14.:hp2.User's Guide to the emx Runtime
+:ehp2.
+:p.
+:font facename=Helv size=16x10.      Copyright (c) 1990-1996 by Eberhard Mattes
+:font facename=default size=0x0.
+:p.
+þendipf
+
+  This is the documentation for the emx runtime package.  The emx
+  runtime is an environment for 32-bit programs under OS/2 2.x, OS/2
+  3.x (OS/2, in short), MS-DOS, and PC-DOS (DOS, in short) on machines
+  with a 386 CPU (or one of its successors).
+
+þif text
+
+  Under OS/2, you can view the þtt{.inf} version of this document by
+  typing
+
+þexample
+view \emx\book\emxrt
+þendexample
+
+  If you add þtt{\emx\book} to the BOOKSHELF environment variable, you
+  can type
+
+þexample
+view emxrt
+þendexample
+
+  to view that on-line book.
+
+þendif
+
+þipfminitoc
+
+þh2 Hardware requirements
+þlabel Hardware requirements
+
+  emx requires an 80386 CPU (80386DX, 80386SX, i486, or later)
+
+þh2 Files included in the emx runtime package
+þlabel Files included in the emx runtime package
+
+  The emx runtime package includes the following files:
+
+þverbatim
+  \emx\bin\emx.exe              emx runtime for DOS
+  \emx\bin\emxbind.exe          Tool for modifying emx programs (DOS and OS/2)
+  \emx\bin\emxfpemu             Emulator for numeric coprocessor (DOS)
+  \emx\bin\emxl.exe             emx loader (used by emxbind)
+  \emx\bin\emxload.exe          Server for keeping OS/2 programs in memory
+  \emx\bin\emxrev.cmd           Tool for displaying emx revisions (OS/2)
+  \emx\bin\emxstack.exe         Tool for fixing the stack size of old programs
+  \emx\bin\emxupd.exe           Tool for updating a DLL which is in use
+  \emx\bin\emxuzdll.cmd         Unpack DLLs and install them with emxupd.exe
+  \emx\book\emxrt.inf           The text you are looking at (VIEW version)
+  \emx\dll\emx.dll              emx runtime for OS/2
+  \emx\dll\emxio.dll            Hardware port I/O under OS/2
+  \emx\dll\emxlibc.dll          Forwarder DLL to emxlibcm.dll (OS/2)
+  \emx\dll\emxlibcm.dll         Multithread C library (OS/2)
+  \emx\dll\emxlibcs.dll         Single-thread C library (OS/2)
+  \emx\dll\emxwrap.dll          Interface to 16-bit OS/2 functions (OS/2)
+  \emx\doc\COPYING              GNU General Public License
+  \emx\doc\COPYING.EMX          emx copyright information
+  \emx\doc\emxrt.doc            The text you are looking at (text version)
+  \emx\etc\termcap.dat          Terminal data base for termcap-based programs
+  \emx\etc\emclibcm.map         Map file for emxlibcm.dll
+  \emx\etc\emclibcm.tdf         Trace definition file for emxlibm.dll
+  \emx\etc\emclibcs.map         Map file for emxlibcs.dll
+  \emx\etc\emclibcs.tdf         Trace definition file for emxlibs.dll
+  \emx\etc\trc00f8.tff          Trace format file for emxlibcs.dll
+  \emx\etc\trc00f9.tff          Trace format file for emxlibcm.dll
+þendverbatim
+
+  The þtt{.map}, þtt{.tdf}, and þtt{.tff} files are used for
+  debugging.  They are included in emxrt.zip to keep them in sync with
+  the DLLs.
+
+þh1 License
+
+  emx is free software; you can redistribute it and/or modify it under
+  the terms of the GNU General Public License as published by the Free
+  Software Foundation; either version 2, or (at your option) any later
+  version.
+
+  emx is distributed in the hope that it will be useful, but WITHOUT
+  ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+  or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public
+  License for more details.
+
+  You should have received a copy of the GNU General Public License
+  along with emx; see the file COPYING.  If not, write to the
+  Free Software Foundation, 59 Temple Place - Suite 330,
+  Boston, MA 02111-1307, USA.
+
+  See þtt{\emx\doc\COPYING.EMX} and þtt{\emx\doc\COPYING} for details.
+
+  Please note that source code for parts of the contents of
+  þtt{emxrt.zip} is contained in þtt{emxfix04.zip}.
+
+þh1 Installing the emx runtime package under OS/2
+
+þipfminitoc
+
+þh2 Summary for impatient OS/2 users
+þlabel Summary for impatient OS/2 users
+
+
+þenumerate
+
+þitem
+
+  If you are using Siegfried Hanisch's ScreenSaver, either upgrade to
+  version 2.6 or disable ScreenSaver
+
+þitem
+
+  Add \emx\dll to LIBPATH (always use the latest copy of the .dll files!)
+
+þitem
+
+  Add \emx\bin to PATH
+
+þitem
+
+  Reboot
+
+þendenumerate
+
+
+þh2 Detailed instructions for OS/2 users
+þlabel Detailed instructions for OS/2 users
+þlabel LIBPATH
+
+  emx does not work with OS/2 1.x and in DOS mode of OS/2.
+
+  Before changing config.sys, make a backup copy of that file!
+
+  emx 0.9c and later breaks some versions of Siegfried Hanisch's
+  ScreenSaver.  Either upgrade to version 2.6 or disable ScreenSaver
+  before installing emx 0.9c or later.  Otherwise, your system will
+  freeze.
+
+  The emx runtime is implemented as a set of dynamic link libraries
+  under OS/2:
+
+þdescription
+þitem emx.dll
+
+    emx run-time support for OS/2
+
+þitem emxio.dll
+
+    access to hardware ports for emx programs under OS/2
+
+þitem emxlibc.dll
+
+    forwarder DLL to emxlibcm.dll for existing applications that use
+    emxlibc.dll (which has been renamed to emxlibcm.dll)
+
+þitem emxlibcm.dll
+
+    multithread emx C library
+
+þitem emxlibcs.dll
+
+    single-thread emx C library
+
+þitem emxwrap.dll
+
+    32-bit wrappers for 16-bit OS/2 API functions
+
+þenddescription
+
+  OS/2 looks for dynamic link libraries in the directories listed in
+  the LIBPATH statement of your config.sys file.  Note that LIBPATH is
+  not an environment variable!
+
+  At any time, at most one version of a dynamic link library is
+  loaded.  If there are different versions of a dynamic link library
+  in the directories listed in the LIBPATH statement, the first one
+  listed is loaded.  If you already have installed the emx dynamic
+  link libraries, you should be careful to use the latest revision of
+  those dynamic link libraries.  Newer emx dynamic link libraries work
+  with older emx programs (however, you may have to apply
+  þhpt{emxstack}), but newer emx programs don't work with older emx
+  dynamic link libraries.  To find out about already installed emx
+  dynamic link libraries, type
+
+þexample
+cd \emx\bin
+emxrev
+þendexample
+
+  If no emx dynamic link libraries are installed, no output is
+  produced.  If there are emx dynamic link libraries installed, the
+  names and revision numbers are displayed, for instance
+
+þexample
+EMX : revision = 30
+EMXIO : revision = 30
+EMXLIBC : revision = 30
+EMXLIBCM : revision = 30
+EMXLIBCS : revision = 30
+EMXWRAP : revision = 30
+þendexample
+
+  Only directories listed in the LIBPATH statement are searched.  To
+  find out the revision numbers of the dynamic link libraries of this
+  package, type
+
+þexample
+emxrev -d c:\emx\dll
+þendexample
+
+  if you have put the emx runtime package on drive C.  After running
+  emxrev, you should quit the command processor by typing
+
+þexample
+exit
+þendexample
+
+  to release the dynamic link libraries (they have been loaded by
+  cmd.exe as emxrev is a REXX procedure).  Otherwise, you cannot
+  rename, overwrite, or delete those files.  This also happens if one
+  of the emx dynamic link libraries is currently used by a program.
+  If you get error message þtt{SYS0032}, or the message
+
+þexample
+error:  cannot create emx/dll/emx.dll
+þendexample
+
+  from þtt{unzip} when unpacking emxrt.zip, use
+
+þexample
+pstat /L
+þendexample
+
+  to find out about the dynamic link libraries used by the programs
+  currently running.  Terminate all the programs using emx.dll,
+  emxio.dll, emxlibc.dll, emxlibcm.dll, emxlibcs.dll, or emxwrap.dll.
+  The command
+
+þexample
+emxload -qw
+þendexample
+
+  will unload programs kept in memory by emxload.exe.
+
+  If that doesn't help, use emxuzdll to install the emx DLLs: Create a
+  temporary directory and run emxuzdll in that directory, giving the
+  path name of emxrt.zip and the path name of the emx DLL directory on
+  the command line:
+
+þexample
+mkdir \emxtmp
+chdir \emxtmp
+emxuzdll a:\emxrt.zip c:\emx\dll
+chdir ..
+rmdir emxtmp
+þendexample
+
+  This will replace the DLLs in þtt{c:\emx\dll} with the DLLs in
+  emxrt.zip even if the DLLs are in use.  The new versions of the DLLs
+  become active as soon as the last process referencing them is
+  terminated, or on the next reboot.  Therefore, you should reboot
+  after running emxuzdll, otherwise you won't know if and when the new
+  versions become active.  (Actually, you don't need a temporary
+  directory, any directory not containing any DLL files will do.)
+
+  Either copy the latest revisions of the emx dynamic link libraries
+  (that is, those with the highest revision numbers) to a directory
+  directory listed in the LIBPATH statement of config.sys or, better,
+  modify the LIBPATH statement to include the directory where the
+  latest revisions of the emx dynamic link libraries can be found.
+
+  The directories of the LIBPATH statement are separated by
+  semicolons.  To add þtt{c:\emx\dll} to the LIBPATH statement, append
+  a semicolon -- if there is not yet a semicolon -- to the end of the
+  line of config.sys that starts with
+
+þexample
+LIBPATH=
+þendexample
+
+  Then, type the absolute name of the directory.  Example:
+
+þexample
+LIBPATH=.;C:\OS2\DLL;C:\OS2\MDOS;C:\;C:\OS2\APPS\DLL;D:\EMX\DLL
+þendexample
+
+  Optionally, you can append a semicolon at the end.
+
+  Next, modify the line of config.sys starting with
+
+þexample
+SET PATH=
+þendexample
+
+  to include the \emx\bin directory.  For instance, change
+
+þexample
+SET PATH=C:\OS2;C:\OS2\SYSTEM;C:\OS2\MDOS\WINOS2;C:\OS2\INSTALL;
+C:\;C:\OS2\MDOS;C:\OS2\APPS
+þendexample
+
+  to
+
+þexample
+SET PATH=C:\OS2;C:\OS2\SYSTEM;C:\OS2\MDOS\WINOS2;C:\OS2\INSTALL;
+C:\;C:\OS2\MDOS;C:\OS2\APPS;D:\EMX\BIN
+þendexample
+
+  As with LIBPATH, you have to put a semicolon between the path names
+  and a trailing semicolon is optional.  Note that the last two
+  examples are shown in two lines; in config.sys, however, the
+  complete SET statement must be put into one line.
+
+  You might want to add þtt{\emx\book} to the BOOKSHELF environment
+  variable to simplify viewing the on-line documentation.  For
+  instance, change the line
+
+þexample
+SET BOOKSHELF=C:\OS2\BOOK;
+þendexample
+
+  of your config.sys file to
+
+þexample
+SET BOOKSHELF=C:\OS2\BOOK;C:\EMX\BOOK
+þendexample
+
+  as with PATH, you have to put a semicolon between the path names
+  and a trailing semicolon is optional.
+
+  Now, you should reboot to activate the changes to config.sys.  After
+  booting, run
+
+þexample
+emxrev
+þendexample
+
+  to verify that the latest revision of emx is now active.
+
+  If OS/2 says
+
+þexample
+SYS1804: The system cannot find the file EMX.
+þendexample
+
+  when running an emx program, you have not correctly set the LIBPATH
+  statement of config.sys.  See above for details.
+
+  When running an old program (which assumes that emx.dll creates a
+  stack object if the stack size is too small), you will get an error
+  message like
+
+þexample
+emx.dll: Stack size too small.  Run
+  emxstack -f D:\BIN\PROGRAM.EXE
+and try again.
+þendexample
+
+  Run þhpt{emxstack} as indicated by the error message to fix the
+  stack size of the program.  If you can't (because you don't have
+  write permission for the file), type
+
+þexample
+set emxopt=-I
+þendexample
+
+  to make emx.dll ignore the problem.  However, the program will
+  probably crash due to insufficient stack size.  Using the -I option
+  is not recommended!
+
+þh1 Installing the emx runtime package under DOS
+
+þipfminitoc
+
+þh2 Summary for impatient DOS users
+þlabel Summary for impatient DOS users
+
+þenumerate
+þitem
+
+  Add \emx\bin to PATH or set EMX to point to \emx\bin\emx.exe
+
+þitem
+
+  If you are using a memory manager which implements DPMI, enable VCPI
+
+þitem
+
+  Remove BREAK=ON from config.sys
+
+þitem
+
+  Reboot
+
+þendenumerate
+
+
+þh2 Detailed instructions for DOS users
+þlabel Detailed instructions for DOS users
+
+  emx programs for DOS come in two flavours: those which load emx.exe
+  from a separate file and those which have the emx runtime emx.exe
+  integrated in the executable file of the application program.
+
+  Before changing autoexec.bat and config.sys, make a backup copy of
+  these files!
+
+  If you want to use a program which loads emx.exe, you have to put
+  emx.exe into a directory which is listed in your PATH environment
+  variable or you have to change the PATH environment variable (in
+  autoexec.bat) to include the directory in which emx.exe can be
+  found.  For instance, if your autoexec.bat file contains the line
+
+þexample
+path c:\dos;d:\bin
+þendexample
+
+  you have installed the emx runtime on drive D, you should modify
+  that line to read
+
+þexample
+path c:\dos;d:\bin;d:\emx\bin
+þendexample
+
+  You have to put a semicolon between the path names.
+
+  Alternatively, you can set an environment variable which directly
+  points to the emx.exe executable.  If you use this method, your
+  program can locate emx.exe more quickly.  If you have installed the
+  emx runtime on drive D:, you should add the following line to your
+  autoexec.bat file:
+
+þexample
+set emx=d:\emx\bin\emx.exe
+þendexample
+
+  Note that a directory name is not sufficient -- you have to type the
+  complete path name of the emx.exe file.
+
+  Programs of the second flavour, having emx.exe integrated, don't
+  require \emx\bin added to the PATH environment variable or the EMX
+  environment variable being set.  The program itself, however, may
+  need changes to your autoexec.bat file.  See the documentation
+  accompanying the program.  The following steps are required for both
+  flavours of emx programs.
+
+  If you are using a memory manager (such as QEMM or EMM386 or 386max)
+  which implements DPMI (DOS Protected Mode Interface), you have to
+  change the invokation of that memory manager to enable VCPI as emx
+  does not support DPMI.  See the documentation of your memory for
+  details.  If your memory manager supports DPMI only (without VCPI),
+  you have to remove or disable the memory manager.  Alternatively,
+  you can use þhpt{rsx}, as indicated in section þref{rsx}.  emx
+  supports XMS and VCPI.
+
+  Examine your config.sys file: If there is a line
+
+þexample
+BREAK=ON
+þendexample
+
+  in it, you should remove it as it causes trouble with emx and lots
+  of other programs.
+
+  If and only if you are using an `Intel Inboard 386/PC' expansion
+  board in your 8088-based PC, add the following line to autoexec.bat
+  (it's very unlikely that you are using such an expansion board):
+
+þexample
+set emxopt=-m3
+þendexample
+
+  If the swap file (used to swap memory pages to disk when running out
+  of physical memory) should be in a specific directory or on a
+  specific disk drive, set the EMXTMP environment variable in
+  autoexec.bat.  Example:
+
+þexample
+set emxtmp=c:\tmp
+þendexample
+
+  Now, you should reboot to activate the changes to config.sys and
+  autoexec.bat.
+
+
+þh1 Environment variables (OS/2 and DOS)
+
+  The operation of emx and emx programs is controlled by several
+  environment variables.  You might have to set one or more of the
+  following environment variables:
+
+þdescription
+þitem INIT
+
+    used by termcap to find termcap.dat
+
+þitem TERM
+
+    used by termcap to define the terminal type
+
+þitem EMXETC
+
+    used by termcap to find termcap.dat
+
+þitem EMXOPT
+
+    emx options (see below)
+
+þitem EMXSHELL
+
+    overrides the COMSPEC environment variable.  You can use this to
+    run an alternate command processor (shell) from emx programs
+
+þitem EMXPATH
+
+    search path for programs (usually not relevant)
+
+þitem PATH
+
+    search path for program (used if EMXPATH fails)
+
+þitem TERMCAP
+
+    used by termcap to find termcap.dat
+
+þitem TZ
+
+    selects the timezone
+
+þenddescription
+
+þipfminitoc
+
+þh2 Setting the TZ environment variable
+
+    The TZ environment variable controls how to compute Coordinated
+    Universal Time (UTC aka GMT) from local time.  (Note that under
+    Unix, TZ is used for computing local time from UTC as UTC is used
+    for the system clock under Unix; under OS/2 and DOS, local time is
+    used for the system clock.)
+
+    The value of TZ has the following format:
+
+þindent
+    þsy{<TZ1>[<OFF>,[<TZ2>[,<SM>,<SW>,<SD>,<ST>,<EM>,<EW>,<ED>,<ET>,<SHIFT>]]]}
+þendindent
+
+    þsy{<TZ1>} is the three-letter name of the standard timezone.
+
+    þsy{<OFF>} is the offset to Coordinated Universal Time; positive
+    values are to the west of the Prime Meridian, negative values are
+    to the east of the Prime Meridian.  The offset can be specified as
+    hours, hours and minutes, or hours, minutes, and seconds.  Hours,
+    minutes, and seconds are separated by colons.  If þsy{<OFF>} is
+    not specified, an offset of 0 will be used (this may change in the
+    future).
+
+    þsy{<TZ2>} is the three-letter name of the summer timezone
+    (daylight saving time).  If þsy{<TZ2>} is not specified, daylight
+    saving time does not apply.  If þsy{<TZ2>} is specified, daylight
+    saving time does apply; the remainder of the TZ's value specifies
+    when and how to change to and back from daylight saving time.
+    þsy{<SM>} through þsy{<ST>} define, in current local time, when to
+    switch from standard time to daylight saving time, þsy{<EM>}
+    through þsy{<ET>} define, in current local time, when to switch
+    from daylight saving time to standard time.  (On the southern
+    hemisphere, the end date precedes the start date.)  þsy{<SHIFT>} is
+    the amount of change in seconds.
+
+    þsy{<SM>} specifies the month (1 through 12) of the change.
+    þsy{<SW>} specifies the week of the change; if this value is zero,
+    þsy{<SD>} specifies the day of month (1 through 31).  If þsy{<SW>}
+    is positive (1 through 4), the change occurs on weekday þsy{<SD>}
+    (0=Sunday through 6=Saturday) of the þsy{<SW>}th week of the
+    specified month.  The first week of a month starts on the first
+    Sunday of the month.  If þsy{<SW>} is negative (-1 through -4),
+    the change occurs on weekday þsy{<SD>} (0=Sunday through
+    6=Saturday) of the -þsy{<SW>}th week of the specified month,
+    counted from the end of the month (that is, -1 specifies the last
+    week of the month).  The last week of a month starts on the last
+    Sunday of the month.  þsy{<ST>} specifies the time of the change,
+    in seconds.  Note that þsy{<ST>} is specified in local standard
+    time and þsy{<ET>} is specified in local daylight saving time.
+    Example:
+
+þexample
+CET-1CED,3,-1,0,7200,10,-1,0,10800,3600
+þendexample
+
+    In this example, the name of the standard time zone is þtt{CET},
+    the name of the summer time zone is CED.  Daylight saving time
+    starts at 2:00 on the last Sunday of March and ends at 3:00 on the
+    last Sunday of October.  Time changes by one hour in daylight
+    saving time.
+
+    If no characters follow þsy{<TZ2>}, the rule
+    `þtt{,4,1,0,3600,10,-1,0,7200,3600}' will be used: Daylight saving
+    time starts at 1:00 on the first Sunday of April and ends at 2:00
+    on the last Sunday of October.  Time changes by one hour in
+    daylight saving time.
+
+þh2 Environment variables (DOS)
+þlabel Environment variables (DOS)
+
+þdescription
+þitem EMX
+
+    path name of emx.exe, used by programs which are bound with
+    emxl.exe (the emx loader) instead of emx.exe.  Set EMX to speed up
+    loading of emx.exe or to load a specific version of emx.exe
+
+þitem EMXTMP
+
+    directory for the swap file
+
+þitem TMP
+
+    used if EMXTMP is not set
+
+þenddescription
+
+
+þh1 DOS Notes
+
+þipfminitoc
+
+þh2 General notes
+
+þitemize
+þitem
+
+  emx requires DOS 3.0 or later
+
+þitem
+
+  emx does not support DPMI
+
+þitem
+
+  emx does not support DESQview without VCPI (use QEMM-386 with DESQview)
+
+þitem
+
+  If emx doesn't work under DESQview (especially if it displays the
+  message
+
+þexample
+Nonmaskable interrupt (NMI)
+þendexample
+
+  either set the protection level to 0 or use the þtt{WATCHDOG=0}
+  option of QEMM-386.
+
+þitem
+
+  emx supports VCPI
+
+þitem
+
+  emx supports XMS.  Do not use emx with himem.sys 2.06 or earlier.
+
+þitem
+
+  emx checks for XMS version number 2.00 or later and for XMS driver
+  revision 2.06 or later, as older himem.sys drivers don't work
+  correctly.  You can override this check by using the þhpt{-O} emx
+  option (for drivers using a different revision numbering scheme),
+  but emx may not work with your XMS driver, anyway.  Actually, emx
+  has not been tested with himem.sys 2.05; 2.04 fails, 2.06 works.
+
+þitem
+
+  emx supports vdisk.sys 3.3 and later and most other RAM disk drivers
+
+þitem
+
+  emx uses (or tries to use) all available memory, whether
+  conventional, extended, or expanded memory.  If there isn't enough
+  memory, emx will swap to disk.  The swap file will be created in the
+  directory given by the EMXTMP environment variable.  If EMXTMP is
+  not set, TMP will be used.  If both variables are not set, the swap
+  file will be created in the root directory of the current drive.
+
+þitem
+
+  If a program uses floating point instructions and no numeric
+  coprocessor (387) is installed, emx tries to load the FPU (floating
+  point unit) emulator emxfpemu.  That file is first sought in the
+  directory from which emx.exe was loaded (this does not apply if
+  emx.exe is bound to the executable), then in the current working
+  directory and the directories listed in the EMXPATH and PATH
+  environment variables.  If emxfpemu cannot be found, the program
+  will be aborted by signal SIGFPE.
+
+þenditemize
+
+
+þh2 Emergency exit
+
+  If the computer freezes while running emx, try hitting Ctrl-Break
+  five times in one scond.  That will terminate emx (and all emx
+  processes run by that instance of emx) unless it is blocked in a DOS
+  call.  If blocked in a DOS call, emx will terminate after return
+  from that DOS call.
+
+
+þh2 Using rsx instead of emx
+þlabel rsx
+
+  rsx is a DPMI-compliant DOS extender which is more or less
+  compatible to emx.  Moreover, rsx contains a floating point
+  emulator.  rsx is free software and has been written by Rainer
+  Schnittker.  As of this writing, rsx is assumed to be available for
+  anonymous ftp as
+
+þexample
+ftp.uni-bielefeld.de: /pub/systems/msdos/misc/rsx510.zip
+ftp.leo.org:          /pub/comp/os/os2/leo/gnu/emx+gcc/contrib/rsx510.zip
+þendexample
+
+  If the emx loader emxl.exe finds a DPMI server but no VCPI server,
+  it tries to run rsx.exe instead of emx.exe.  The RSX environment
+  variable will be used instead of the EMX environment variable for
+  locating rsx.exe.
+
+  To load rsx.exe instead of emx.exe even if there is a DPMI server
+  and a VCPI server (for instance if you need the floating point
+  emulation of rsx), set the EMX environment variable to point to
+  rsx.exe.  Note that rsx needs a DPMI server.
+
+þh1 emx options
+
+  You can customize emx by setting the EMXOPT environment variable.
+  This environment variable contains a list of options, similar to
+  command line options.  The options must be separated by at least one
+  blank.  Example:
+
+þexample
+set emxopt=-c -h40
+þendexample
+
+þipfminitoc
+
+þh2 emx options (OS/2)
+þlabel emx options (OS/2)
+
+þdescription
+þitem -c
+
+    Disable core dumps caused by signals and exceptions
+
+þitem -h#
+
+    Set OS/2 file handle limit to þsy{#}.  The number þsy{#} must be
+    between 10 and 65536
+
+þitem -n
+
+    Suppress popups for exceptions.  As emx.dll displays an
+    appropriate error message and dumps core, popups are not required
+
+þitem -q
+
+    All command line arguments passed to child processes will be
+    quoted unconditionally, that is, wildcard expansion and response
+    files won't work in child processes of processes for which the -q
+    option is in effect
+
+þitem -r*
+
+    Prepend drive letter þsy{*} to absolute path names.  If a path
+    name starts with þtt{/} but does not start with þtt{//},
+    þtt{/dev/} or þtt{/pipe/}, þsy{*} followed by a colon will be
+    prepended.  If þsy{-rd} has been given, the file name
+    þtt{\mydir\abc} will be translated to þtt{d:\mydir\abc}.  Note:
+    this option can cause unexpected effects
+
+þitem -t*
+
+    Truncate file names to 8.3 format.  Each part of a pathname is
+    truncated to 8.3 format by taking the first 8 characters before
+    the dot and the first 3 characters after the dot.  This is useful
+    to compile programs on a FAT filesystem with minimal changes.
+
+    Without argument, -t enables truncation on all drives and for UNC
+    pathnames.
+
+    The -t option takes an optional argument, listing the names of the
+    drives on which file names should be truncated.  The special drive
+    name `þtt{/}' controls whether to truncate UNC pathnames.  With
+    `þtt{-tc/}', for instance, file names on drive C and UNC pathnames
+    will be truncated.
+
+    If the argument of the -t option is `þtt{-}', truncation is
+    disabled for all drives and for UNC pathnames.  This is the
+    default setting.  If the argument starts with `þtt{-}', truncation
+    is disabled on all drives listed.  With `þtt{-t -t-d}', for instance,
+    UNC pathnames and file names on all drives except
+    drive D will be truncated.
+
+þitem -x
+
+    Don't suppress wildcard expansion and response files if the `MKS
+    Korn shell' method of passing command line arguments is used
+
+þitem -E
+
+    Run debuggee in same session (window) as debugger
+
+þitem -I
+
+    Don't complain about programs having too small a stack size.
+    Without the -I option, emx.dll displays an error message for those
+    programs, telling how to run þhpt{emxstack} to fix the stack size.
+    With the -I option, the program is run despite of the problem.
+    However, the program will probably crash due to insufficient stack
+    size.  Using the -I option is not recommended!
+
+þitem -K
+
+    Don't use DosKillThread.  Due to bugs in OS/2, DosKillThread may
+    cause problems.  emx.dll automatically avoids using DosKillThread
+    for OS/2 2.1 and older.  For OS/2 2.11 and later, you can use the
+    -K option to disable usage of DosKillThread.  Currently,
+    DosKillThread is not used by emx.dll and this option does not have
+    any effect.
+
+þenddescription
+
+
+þh2 emx options (DOS)
+þlabel emx options (DOS)
+
+þdescription
+
+þitem -c
+
+    Disable core dumps caused by signals and exceptions
+
+þitem -d
+
+    Don't use extended memory
+
+þitem -e
+
+    Redirect the standard error handle (2) to standard output (1)
+
+þitem -h#
+
+    Set DOS file handle limit to þsy{#}.  The number þsy{#} must be
+    between 10 and 65536.  This option is ignored for DOS versions
+    earlier than 3.30.  This option does not change the emx limit for
+    the number of files per process -- that limit is always 40
+
+þitem -m1
+
+    Running on Fujitsu FMR70 (not implemented yet)
+
+þitem -m2
+
+    Running on NEC PC-98 (not implemented yet)
+
+þitem -m3
+
+    Running on Intel Inboard 386/PC
+
+þitem -o
+
+    Send the register dump of an exception to stdout.  Without -o, the
+    register dump is sent to the CON device.  You need -o for
+    redirecting the register dump to a file.
+
+    emx now creates a core dump file (named `þtt{core}') instead of a
+    register dump.  Please keep that file in case the author of the
+    program needs it for debugging.
+
+þitem -q
+
+    All command line arguments passed to child processes will be
+    quoted unconditionally, that is, wildcard expansion and response
+    files won't work in child processes of processes for which the -q
+    option is in effect
+
+þitem -r*
+
+    Prepend drive letter þsy{*} to absolute path names.  If a path
+    name starts with þtt{/} but does not start with þtt{//},
+    þtt{/dev/} or þtt{/pipe/}, þsy{*} followed by a colon will be
+    prepended.  If þsy{-rd} has been given, the file name
+    þtt{\mydir\abc} will be translated to þtt{d:\mydir\abc}.  Note:
+    this option can cause unexpected effects
+
+þitem -t*
+
+    Truncate file names to 8.3 format.  Each part of a pathname is
+    truncated to 8.3 format by taking the first 8 characters before
+    the dot and the first 3 characters after the dot.  This is useful
+    to compile programs on a FAT filesystem with minimal changes.
+
+    Without argument, -t enables truncation on all drives and for UNC
+    pathnames.
+
+    The -t option takes an optional argument, listing the names of the
+    drives on which file names should be truncated.  The special drive
+    name `þtt{/}' controls whether to truncate UNC pathnames.  With
+    `þtt{-tc/}', for instance, file names on drive C and UNC pathnames
+    will be truncated.
+
+    If the argument of the -t option is `þtt{-}', truncation is
+    disabled for all drives and for UNC pathnames.  This is the
+    default setting.  If the argument starts with `þtt{-}', truncation
+    is disabled on all drives listed.  With `þtt{-t -t-d}', for instance,
+    UNC pathnames and file names on all drives except
+    drive D will be truncated.
+
+þitem -E
+
+    Don't check for 387 coprocessor.  Assume no coprocessor is present
+
+þitem -O
+þlabel -O
+
+    Override XMS version check.  By default, emx checks for XMS
+    version number 2.00 or later and for XMS driver revision 2.06 or
+    later, as older himem.sys drivers don't work correctly.  You can
+    override this check by giving the -O option (for drivers using a
+    different revision numbering scheme), but emx may not work with
+    your XMS driver, anyway.  Actually, emx has not been tested with
+    himem.sys 2.05; 2.04 fails, 2.06 works
+
+þitem -V
+
+    Display emx version.  On program start, the emx version will be
+    displayed
+
+þitem -X
+
+    Disable usage of XMS memory.  Usage of XMS memory with VCPI is a
+    new feature of emx.  If this happens to cause trouble, use the -X
+    option.
+
+þenddescription
+
+
+þh1 The emxstack tool
+þlabel emxstack
+
+    The emxstack tool is used for displaying and fixing the stack
+    size.  Old programs assume that emx.dll allocates a stack object
+    if the stack size is too small.  As emx.dll no longer does this,
+    the stack size of the programs must be fixed.
+
+þindent
+  þsy{emxstack <command> [<options>] <file>...}
+þendindent
+
+    The following commands are available:
+
+þlist
+
+þitem -c
+
+    Check whether the stack size should be fixed.  For each file, if
+    the stack size is too small, a message will be displayed.  If the
+    stack size is big enough, no message will be displayed.
+
+þitem -d
+
+    Display the stack size.  For each file, the stack size in KByte
+    will be displayed.
+
+þitem -f
+
+    Fix the stack size.  For each file, the stack size is fixed if it
+    is too small.
+
+þitem -s<size>
+
+    Set the stack size.  For each file, the stack size is set to
+    <size> KByte.
+
+þitem -u<size>
+
+    Update the stack size.  For each file, the stack size is set to
+    <size> KByte if it less than <size> KByte.  If the stack size is
+    not less than <size> KByte, the stack size won't be changed.
+
+þendlist
+
+    The following options are available:
+
+þlist
+
+þitem -p
+
+    Act on all files in the PATH.  The command is applied to each file
+    in a directory listed in the PATH environment variable.  No file
+    names must be given on the command line.
+
+þitem -q
+
+    Be quiet.  No messages will be displayed.  However, error messages
+    won't be suppressed.
+
+þitem -v
+
+    Be verbose.  Display additional messages.
+
+þendlist
+
+    Example:
+
+þexample
+emxstack -f *.exe
+þendexample
+
+
+þh1 The emxupd tool
+þlabel emxupd
+
+    The emxupd tool can replace (and delete) DLLs which are currently
+    in use.  (It can do so for EXE files also.)  The old version of
+    the DLL stays in memory and in use for programs which currently
+    use it until all applications which use that DLL terminate.  Then,
+    the new DLL will be used.  Rebooting also switches to the new DLL.
+
+þipfminitoc
+
+þh2 Replacing a DLL
+
+    To replace a DLL, type
+
+þindent
+  þsy{emxupd <source_file> <target_path>}
+þendindent
+
+    This command copies <source_file> to the directory or file
+    <target_path>.  Examples:
+
+þexample
+emxupd c:\tmp\emx.dll c:\emx\dll
+þendexample
+
+    This command copies þtt{c:\tmp\emx.dll} to þtt{c:\emx\dll\emx.dll}.
+
+þexample
+emxupd abc.dll d:\dll\new.dll
+þendexample
+
+    This command copies þtt{abc.dll} to þtt{d:\dll\new.dll}.
+
+þh2 Deleting a DLL
+
+    To delete a DLL, type
+
+þindent
+  þsy{emxupd -d <old_file>}
+þendindent
+
+    where <old_file> is the path name of the DLL to delete.
+
+þh2 Unpacking DLLs from a ZIP file and installing them with emxupd
+
+    To unpack all DLLs from a ZIP file and install them in a directory
+    with emxupd, replacing DLLs even if they are in use, type
+
+þindent
+  þsy{emxuzdll <zip_file> <dll_dir>}
+þendindent
+
+    where <zip_file> is the path name of the ZIP file to unpack the
+    DLLs from and <dll_dir> is the directory where all the DLLs of the
+    ZIP file should be put.  emxuzdll can be used only if there are no
+    DLL files in the current directory.
+
+þh1 Troubleshooting
+
+    This section shows how to solve common problems involving the emx
+    runtime.
+
+þipfminitoc
+
+þh2 Warning message `WARNING: emx 0.9d or later required'
+
+    If this message appears, an out-of-date version of emx.dll is
+    active.  Make sure that the latest version of emx.dll is in a
+    directory pointed to by the LIBPATH statement in your config.sys
+    file.  Use
+
+þexample
+emxrev -p c:\config.sys
+þendexample
+
+    to list all emx dynamic link libraries reachable by the LIBPATH
+    statement of þtt{c:\config.sys} (use the drive letter of your boot
+    drive instead of þtt{c:}).  To simplify things, you should keep
+    only one version of each DLL.  Older programs work with newer emx
+    DLLs, but not vice versa.
+
+þh2 unzip.exe says `cannot create emx/dll/emx.dll'
+
+    This happens when you try to unpack emxrt.zip while a program is
+    active which uses emx.dll.  Terminate all programs which use
+    emx.dll and try again.  If you run emxrev, the command interpreter
+    keeps emx.dll loaded until terminated.  Therefore, you should
+    close all OS/2 windows and full-screen sessions in which you have
+    run emxrev.  All this also applies to emxlibcm.dll etc.
+
+þh2 emx.dll cannot be deleted, renamed or overwritten
+
+    See the previous problem.
+
+þh2 Error message `SYS1804: The system cannot find the file EMX.'
+
+    You have not correctly set the þhpt{LIBPATH} statement of
+    config.sys, therefore emx.dll could not be found.
+
+þh2 Error message `rsx not found, DPMI not supported by emx'
+
+    The current version of emx cannot use DPMI.  Therefore, the loader
+    tried to use rsx instead, but couldn't find rsx.  Remedy: install
+    þhpt{rsx} or end the DPMI server (MS Windows).
+
+þh2 Error message `emx.dll: Stack size too small...'
+
+    You tried to run an old program (which assumes that emx.dll
+    creates a stack object if the stack size is too small).
+
+    Run þhpt{emxstack} as indicated by the error message to fix the
+    stack size of the program.  If you can't (because you don't have
+    write permission for the file), type
+
+þexample
+set emxopt=-I
+þendexample
+
+  to make emx.dll ignore the problem.  However, the program will
+  probably crash due to insufficient stack size.  Using the -I option
+  is not recommended!
+
+þh2 DOS message `Sector not found'
+
+  DOS seems to display that message if a file is opened twice (perhaps
+  one handle for reading, one for writing).  For instance, this
+  happens when GCC runs out of temporary files.  Look for files named
+  like þtt{cca00002}, þtt{ccz00002} etc. (the digits may vary) in your
+  temporary directory and delete them.
+
+þh1 emx messages
+
+þipfminitoc
+
+þh2 emx messages (OS/2)
+
+þlist
+
+þitem þtt{core dumped}
+
+    The program cannot continue due to a fatal error (exception).  An
+    image of the program's memory has been written to a file named
+    `þtt{core}'.  Please keep that file in case the author of the
+    program needs it for debugging.
+
+þitem þtt{emx.dll: Stack size too small...}
+
+    You tried to run an old program (which assumes that emx.dll
+    creates a stack object if the stack size is too small).  You
+    should run þhpt{emxstack} to fix the stack size.
+
+þitem þtt{Invalid option in EMXOPT}
+
+    An option in the EMXOPT environement variable is not understood by
+    emx.
+
+þitem þtt{Invalid syscall function code}
+
+    The program run by emx has called an invalid system function.
+    Most likely, you're using an emx.dll which is out of date.
+
+þitem þtt{WARNING: emx 0.9d or later required}
+
+    The program requires emx.dll 0.9d or later.  However, an older
+    version of emx.dll is active.  Make sure that the latest version
+    of emx.dll is in a directory pointed to by the LIBPATH statement
+    in your config.sys file.  Use
+
+þexample
+emxrev -p c:\config.sys
+þendexample
+
+    to list all emx dynamic link libraries reachable by the LIBPATH
+    statement of þtt{c:\config.sys} (use the drive letter of your boot
+    drive instead of þtt{c:}).  To simplify things, you should keep
+    only one version of each DLL.  Older programs work with newer emx
+    DLLs, but not vice versa.
+
+þendlist
+
+
+þh2 emx messages (DOS)
+
+þlist
+þitem þtt{Abnormal program termination}
+
+    The program received the SIGABRT signal.  The abort() function was
+    called or SIGABRT was raised.
+
+þitem þtt{Bad environment}
+
+    The program name could not be found in the environment segment or
+    the environment segment is longer than 32768 bytes.  This should
+    not happen in practice.
+
+þitem þtt{Cannot create swap file}
+
+    The swap file could not be created.  Remedy: make sure the swap
+    file can be created in the directory given by the EMXTMP (or TMP)
+    environment variable.  If EMXTMP and TMP are not set, emx will
+    create the swap file in the root directory of the current drive.
+
+þitem þtt{Cannot enable A20}
+
+    emx tried to enable address line A20 and failed.  Remedy: contact
+    the author.
+
+þitem þtt{Cannot enable A20 via XMS}
+
+    emx tried to enable address line A20 by calling the XMS driver.
+    Unfortunately, A20 couldn't be enabled.  Remedy: unknown.
+
+þitem þtt{Cannot open program file}
+
+    The program file given on the emx command line could not be found
+    or opened.  Remedy: type the correct file name.  (This should not
+    happen with bound programs.)
+
+þitem þtt{Cannot read program file}
+
+    An error occured while reading the program file.  Remedy: make
+    sure the program file given on the emx command line is valid (this
+    does not apply to bound programs).  Maybe some other program
+    accesses that file.
+
+þitem þtt{core dumped}
+
+    The program cannot continue due to a fatal error (exception).  An
+    image of the program's memory has been written to a file named
+    `þtt{core}'.  Please keep that file in case the author of the
+    program needs it for debugging.
+
+þitem þtt{DPMI not supported}
+
+    The current version of emx cannot use DPMI.  Maybe some future
+    version will do.  Remedy: end the DPMI server (MS Windows) or use
+    þhpt{rsx}.
+
+þitem þtt{emx not found}
+
+    The emx loader (emxl.exe) failed to find emx.exe.  Make sure that
+    emx.exe is in a directory listed in the PATH environment variable.
+    Alternatively, you can set the EMX environment variable to the
+    complete path name of emx.exe.
+
+þitem þtt{Exception ...}
+
+    The program run by emx tried to do something which is considered
+    illegal by the processor or by emx.  Remedy: report to the
+    supplier of the program.
+
+þitem þtt{Illegal moucall function}
+
+    The program run by emx has called an invalid system function.
+    Remedy: report to the supplier of the program.
+
+þitem þtt{Illegal syscall function}
+
+    The program run by emx has called an invalid system function.
+    Remedy: report to the supplier of the program.
+
+þitem þtt{Illegal viocall function}
+
+    The program run by emx has called an invalid system function.
+    Remedy: report to the supplier of the program.
+
+þitem þtt{Invalid arguments for DOS function }þsl{xx}
+
+    The program run by emx has used invalid arguments for a system
+    function.  Remedy: report to the supplier of the program.
+
+þitem þtt{Invalid emx option}
+
+    An option in EMXOPT or set by emxbind is not understood by emx.
+    Remedy: check EMXOPT.  Use þtt{emxbind -i} to display the options
+    set by emxbind.
+
+þitem þtt{Invalid program file}
+
+    The program file given on the emx command line (or bound to emx)
+    is corrupt.  Remedy: reload the program from diskette.  If this
+    doesn't help you should contact the supplier of the program.
+
+þitem þtt{Invalid special function code: }þsl{xx}
+
+    The program run by emx has called an invalid system function.
+    Remedy: report to the supplier of the program.
+
+þitem þtt{Linear address space exhausted}
+
+    The program run by emx uses far too much memory.  Remedy: complain
+    to the author.
+
+þitem þtt{Nonmaskable interrupt (NMI) at }þsl{xxxx}þtt{:}þsl{yyyyyyyy}
+
+    A nonmaskable interrupt occured.  Maybe this is due to a memory
+    error.  Remedy: if you are using DESQview, either set the
+    protection level to 0 or use the þtt{WATCHDOG=0} option of
+    QEMM-386.  Otherwise, run a program for testing memory.
+
+þitem þtt{Out of memory}
+
+    There isn't enough memory for running emx.  Remedy: remove some
+    drivers and/or resident programs.  Or add memory to your machine.
+
+þitem þtt{Out of stacks}
+
+    emx ran out of local stacks.  Remedy: complain to the author.
+
+þitem þtt{Out of memory or swap space}
+
+    emx cannot write to the swap file because the disk is full.
+    Remedy: make sure there is enough space on the drive used for the
+    swap file.  Use the EMXTMP (or TMP) environment variable to tell
+    emx where to create the swap file.  If neither EMXTMP nor TMP is
+    set, emx will create the swap file in the root directory of the
+    current drive.
+
+þitem þtt{Out of swap space}
+
+    emx cannot write to the swap file because the disk is full.
+    Remedy: make sure there is enough space on the drive used for the
+    swap file.  Use the EMXTMP (or TMP) environment variable to tell
+    emx where to create the swap file.  If neither EMXTMP nor TMP is
+    set, emx will create the swap file in the root directory of the
+    current drive.
+
+þitem þtt{Process terminated by SIGINT}
+
+    You have stopped the program by hitting Ctrl-C or Ctrl-Break.
+
+þitem þtt{Process terminated by SIG...}
+
+    The program has been stopped due to a signal or exception.
+    Usually, this indicates a fatal error in the program.
+
+þitem þtt{Program aborted}
+
+    You have aborted the program by answering `Abort' after a critical
+    error had occured.
+
+þitem þtt{rsx not found, DPMI not supported by emx}
+
+    The current version of emx cannot use DPMI.  Therefore, the loader
+    tried to use rsx instead, but couldn't find rsx.  Remedy: install
+    þhpt{rsx} or end the DPMI server (MS Windows).
+
+þitem þtt{Swap file I/O error}
+
+    emx couldn't read or write the swap file.
+
+þitem þtt{This program does not run in DOS mode of OS/2}
+
+    DOS emulation of OS/2 doesn't support emx.  Remedy: boot DOS or
+    run the program in a OS/2 window
+
+þitem þtt{This program requires an 80386 CPU}
+
+    You need an 80386DX, 80386SX, i486 or later CPU for running emx.
+    Remedy: get another computer.
+
+þitem þtt{This program requires DOS 3.0 or later}
+
+    If emx is bound with an application program into one executable,
+    DOS 3.0 or later is required for execution.
+
+þitem þtt{Too many processes}
+
+    emx supports up to 4 processes.  You tried to start 5 or more
+    processes.
+
+þitem þtt{Unexpected interrupt}
+
+    This cannot happen.  Remedy: report to the author.
+
+þitem þtt{Unsupported VDISK.SYS version}
+
+    emx doesn't support the vdisk.sys device driver you are using.
+    Remedy: remove VDISK.SYS or use a different version.  emx should
+    work with vdisk.sys 3.3 or later.
+
+þitem þtt{Unsupported XMS version}
+
+    emx requires himem.sys 2.06 or later (older versions are too
+    buggy).  Remedy: get a newer himem.sys.  If you are not using
+    himem.sys, use the þhpt{-O} option of emx and tell the author
+    whether this works or not.
+
+þitem þtt{Unusable interrupt vector mappings set by VCPI server}
+
+    The configuration of the VCPI server (EMS driver) is illegal.
+    Remedy: read the manual of the EMS driver.
+
+þitem þtt{Use emxbind}
+
+    You tried to run emxl.exe, which doesn't make sense.  emxl.exe is
+    designed to be bound into an executable file by emxbind.
+
+þitem þtt{Virtual mode not supported without VCPI}
+
+    A VCPI server is required to run emx if the CPU is in virtual
+    mode.  You will get this message if you're using an EMS driver (EMS
+    emulator) which doesn't support VCPI or if you have disabled EMS.
+    Remedy: remove the EMS driver, use an EMS driver which supports
+    VCPI or enable EMS if it has been disabled (for instance, remove
+    the þtt{NOEMS} keyword from the command line of the EMS driver).
+
+þitem þtt{Wrong emx version}
+
+    The version of emx.exe does not match the version the program was
+    compiled for.  Remedy: use the copy of emx.exe that comes with the
+    program.  If you are using different programs which need different
+    versions of emx.exe, use the EMX environment variable to set the
+    path name of the correct version of emx.exe before running a
+    program which requires a version different from the default
+    emx.exe.  You can also use þtt{emxbind -u} to put the correct
+    version of emx.exe into the executable files.
+
+þendlist
+
+
+þh1 Obtaining the complete emx package
+
+  emx is available for anonymous ftp on
+
+þexample
+ftp.leo.org:          /pub/comp/os/os2/leo/gnu/emx+gcc/
+ftp-os2.cdrom.com:    /pub/os2/emx09d/
+ftp-os2.nmsu.edu:     /pub/os2/dev/emx/v0.9d/
+þendexample
+
+
+þh1 The author of emx
+
+The author of emx is
+
+þif ipf
+
+þindent
+  Eberhard Mattes þbreak
+  Teckstraáe 81 þbreak
+  D-71696 M”glingen þbreak
+  Germany
+þendindent
+
+þelse
+
+þexample
+Eberhard Mattes
+Teckstrasse 81                                      (TeX: Teckstra\ss e)
+D-71696 Moeglingen                                  (TeX: M\"oglingen)
+Germany
+þendexample
+
+þendif
+
+  Internet E-Mail:
+
+þindent
+  þtt{mattes@azu.informatik.uni-stuttgart.de}  (subject to change) þbreak
+  þtt{mattes@windhager.de}
+þendindent
+
+  No telephone calls please!  It must be stressed that the author does
+  not reply to letters if you don't include return postage
+  (international postal reply coupon if you are outside Germany) and a
+  self-addressed envelope.
+
+þtext
+
+--------------------------- END OF EMXRT.DOC --------------------------------
+þendtext

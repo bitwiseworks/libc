@@ -1,0 +1,4 @@
+TARGET=emptycpp
+TARGET_SRCEXT=cpp
+NOLINKING=1
+include common.gmk

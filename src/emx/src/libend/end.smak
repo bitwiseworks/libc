@@ -1,0 +1,9 @@
+.MODULE	:= libend
+.MDESC	:= The C runtime library that should be linked last
+
+.TARGET	:= libend.lib
+.TKIND	:= omf
+.TSRC.386 := $(wildcard src/libend/386/*.asm)
+.TSRC	:= $(.TSRC.$(CPU))
+.INSDIR	= lib/
+include mklib.smak

@@ -1,0 +1,14 @@
+.MODULE	:= innidmdll
+.MDESC	:= Demangler DLL for the IBM Linkers.
+.INSDIR	:= lib/
+.MDEP	:=
+
+.TARGET	:= innidm.dll
+.TKIND	:= $(TOOLFMT)
+.TSRC	:= src/innidmdll/innidmdll.c src/innidmdll/innidmdllthunks.asm
+.TCF	:= $(CFLAGS.DEF.VERSION)
+.TLDF	:= -liberty
+.TDEP	:=
+.TDEF	:= src/innidmdll/innidmdll.def
+include mkdll.smak
+

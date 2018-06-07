@@ -1,0 +1,751 @@
+/* pmgdb.rc
+   Copyright (c) 1996-1998 Eberhard Mattes
+
+This file is part of pmgdb.
+
+pmgdb is free software; you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation; either version 2, or (at your option)
+any later version.
+
+pmgdb is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with pmgdb; see the file COPYING.  If not, write to
+the Free Software Foundation, 59 Temple Place - Suite 330,
+Boston, MA 02111-1307, USA.  */
+
+
+#include <os2.h>
+#include "pmgdb.h"
+#include "help.h"
+
+MENU ID_COMMAND_WINDOW
+BEGIN
+    SUBMENU "~File",                       IDM_FILEMENU
+    BEGIN
+        MENUITEM "Open ~program file...",  IDM_OPEN_EXEC
+        MENUITEM "Open ~core file...",     IDM_OPEN_CORE
+        MENUITEM "Open ~source file...",   IDM_OPEN_SOURCE
+        MENUITEM "S~tartup...",            IDM_STARTUP
+        MENUITEM "~Restart",               IDM_RESTART
+        MENUITEM "~Where",                 IDM_WHERE
+        MENUITEM "E~xit\tF3",              IDM_EXIT
+    END
+    SUBMENU "~Edit",                       IDM_EDITMENU
+    BEGIN
+        MENUITEM "~Complete\tTab",         IDM_COMPLETE
+        MENUITEM "~History...\tLeft",      IDM_HISTORY
+    END
+    SUBMENU "~Run",                        IDM_RUNMENU, , MIA_DISABLED
+    BEGIN
+        MENUITEM "~Go\tCtrl+G",            IDM_GO
+        MENUITEM "Step ~over\tCtrl+O",     IDM_STEPOVER
+        MENUITEM "Step ~into\tCtrl+I",     IDM_STEPINTO
+        MENUITEM "~Finish\tCtrl+F",        IDM_FINISH
+        MENUITEM SEPARATOR
+        MENUITEM "Insn step over",         IDM_ISTEPOVER
+        MENUITEM "Insn step into",         IDM_ISTEPINTO
+    END
+    SUBMENU "~Breakpoints",                IDM_BRKPTMENU
+    BEGIN
+        MENUITEM "On ~line...",            IDM_BRKPT_LINE
+        MENUITEM SEPARATOR
+        MENUITEM "L~ist",                  IDM_BRKPT_LIST
+    END
+    SUBMENU "~Options",                    IDM_OPTIONSMENU
+    BEGIN
+        MENUITEM "~PM debugging mode...",  IDM_PMDEBUGMODE
+        MENUITEM "~Annotate",              IDM_ANNOTATE
+        MENUITEM "~Font...",               IDM_FONT
+    END
+    SUBMENU "~Windows",                    IDM_WINMENU
+    BEGIN
+        MENUITEM "~Source files",          IDM_WIN_SRCS
+        MENUITEM "~Breakpoints",           IDM_WIN_BRK
+        MENUITEM "~Display",               IDM_WIN_DSP
+        MENUITEM "~Threads",               IDM_WIN_THR
+        MENUITEM "~Register",              IDM_WIN_REG
+    END
+    SUBMENU "~Help",                       IDM_HELPMENU
+    BEGIN
+        MENUITEM "~Help for help",         IDM_HELP_HELP
+        MENUITEM "~Extended help",         IDM_HELP_EXT, MIS_HELP
+        MENUITEM "~Keys help",             IDM_HELP_KEYS,
+        MENUITEM "Help ~index",            IDM_HELP_INDEX
+        MENUITEM "Help ~contents",         IDM_HELP_CONTENTS
+        MENUITEM SEPARATOR
+        MENUITEM "~Tutorial",              IDM_TUTORIAL
+        MENUITEM SEPARATOR
+        MENUITEM "~About...",              IDM_ABOUT
+    END
+END
+
+ACCELTABLE ID_COMMAND_WINDOW
+BEGIN
+  VK_F3,   IDM_EXIT,      VIRTUALKEY
+  VK_TAB,  IDM_COMPLETE,  VIRTUALKEY
+  VK_LEFT, IDM_HISTORY,   VIRTUALKEY
+  "f",     IDM_FINISH,    CHAR, CONTROL
+  "g",     IDM_GO,        CHAR, CONTROL
+  "i",     IDM_STEPINTO,  CHAR, CONTROL
+  "o",     IDM_STEPOVER,  CHAR, CONTROL
+END
+
+
+MENU ID_SOURCE_WINDOW
+BEGIN
+    SUBMENU "~File",                       IDM_FILEMENU
+    BEGIN
+        MENUITEM "~Open source file...",   IDM_OPEN_SOURCE
+        MENUITEM "~Restart",               IDM_RESTART
+        MENUITEM "~Where",                 IDM_WHERE
+        MENUITEM "E~xit\tF3",              IDM_EXIT
+    END
+    SUBMENU "~View",                       IDM_VIEWMENU
+    BEGIN
+        MENUITEM "~Find...\tCtrl+F",       IDM_FIND
+        MENUITEM "Find ~next\tCtrl+N",     IDM_FINDNEXT
+        MENUITEM "Find ~previous\tCtrl+P", IDM_FINDPREV
+        MENUITEM SEPARATOR
+        MENUITEM "~Go to line...",         IDM_GOTO
+    END
+    SUBMENU "~Run",                        IDM_RUNMENU, , MIA_DISABLED
+    BEGIN
+        MENUITEM "~Go\tG",                 IDM_GO
+        MENUITEM "Step ~over\tO",          IDM_STEPOVER
+        MENUITEM "Step ~into\tI",          IDM_STEPINTO
+        MENUITEM "~Finish\tF",             IDM_FINISH
+        MENUITEM "~Until\tU",              IDM_UNTIL
+        MENUITEM "~Jump\tJ",               IDM_JUMP
+        MENUITEM SEPARATOR
+        MENUITEM "Insn step over",         IDM_ISTEPOVER
+        MENUITEM "Insn step into",         IDM_ISTEPINTO
+    END
+    SUBMENU "~Breakpoints",                IDM_BRKPTMENU
+    BEGIN
+        MENUITEM "On ~line...",            IDM_BRKPT_LINE
+        MENUITEM SEPARATOR
+        MENUITEM "L~ist",                  IDM_BRKPT_LIST
+    END
+    SUBMENU "~Display",                    IDM_DSPMENU
+    BEGIN
+        MENUITEM "Add...\tCtrl+D",         IDM_DSP_ADD
+        MENUITEM SEPARATOR
+        MENUITEM "~Show",                  IDM_DSP_SHOW
+    END
+    SUBMENU "~Options",                    IDM_OPTIONSMENU
+    BEGIN
+        MENUITEM "~PM debugging mode...",  IDM_PMDEBUGMODE
+    END
+    SUBMENU "~Windows",                    IDM_WINMENU
+    BEGIN
+        MENUITEM "~Command",               IDM_WIN_CMD
+        MENUITEM "~Source files",          IDM_WIN_SRCS
+        MENUITEM "~Breakpoints",           IDM_WIN_BRK
+        MENUITEM "~Display",               IDM_WIN_DSP
+        MENUITEM "~Threads",               IDM_WIN_THR
+        MENUITEM "~Register",              IDM_WIN_REG
+    END
+    SUBMENU "~Help",                       IDM_HELPMENU
+    BEGIN
+        MENUITEM "~Help for help",         IDM_HELP_HELP
+        MENUITEM "~Extended help",         IDM_HELP_EXT, MIS_HELP
+        MENUITEM "~Keys help",             IDM_HELP_KEYS,
+        MENUITEM "Help ~index",            IDM_HELP_INDEX
+        MENUITEM "Help ~contents",         IDM_HELP_CONTENTS
+    END
+END
+
+
+ACCELTABLE ID_SOURCE_WINDOW
+BEGIN
+  VK_F3,  IDM_EXIT,      VIRTUALKEY
+  "f",    IDM_FINISH,    CHAR
+  "g",    IDM_GO,        CHAR
+  "i",    IDM_STEPINTO,  CHAR
+  "j",    IDM_JUMP,      CHAR
+  "o",    IDM_STEPOVER,  CHAR
+  "u",    IDM_UNTIL,     CHAR
+  "d",    IDM_DSP_ADD,   CHAR, CONTROL
+  "f",    IDM_FIND,      CHAR, CONTROL  /* TODO: IDM_FIND vs. IDM_FINISH */
+  "g",    IDM_GO,        CHAR, CONTROL
+  "i",    IDM_STEPINTO,  CHAR, CONTROL
+  "n",    IDM_FINDNEXT,  CHAR, CONTROL
+  "o",    IDM_STEPOVER,  CHAR, CONTROL
+  "p",    IDM_FINDPREV,  CHAR, CONTROL
+END
+
+
+MENU ID_BREAKPOINTS_WINDOW
+BEGIN
+    SUBMENU "~File",                       IDM_FILEMENU
+    BEGIN
+        MENUITEM "E~xit\tF3",              IDM_EXIT
+    END
+    SUBMENU "~Edit",                       IDM_EDITMENU
+    BEGIN
+        MENUITEM "~Modify...",             IDM_MODIFY
+        MENUITEM "~Enable",                IDM_ENABLE
+        MENUITEM "~Disable",               IDM_DISABLE
+        MENUITEM SEPARATOR
+        MENUITEM "De~lete\tDel",           IDM_DELETE
+    END
+    SUBMENU "~Breakpoints",                IDM_BRKPTMENU
+    BEGIN
+        MENUITEM "On ~line...",            IDM_BRKPT_LINE
+        MENUITEM SEPARATOR
+        MENUITEM "~Refresh",               IDM_REFRESH
+    END
+    SUBMENU "~Windows",                    IDM_WINMENU
+    BEGIN
+        MENUITEM "~Command",               IDM_WIN_CMD
+        MENUITEM "~Source files",          IDM_WIN_SRCS
+        MENUITEM "~Display",               IDM_WIN_DSP
+        MENUITEM "~Threads",               IDM_WIN_THR
+        MENUITEM "~Register",              IDM_WIN_REG
+    END
+    SUBMENU "~Help",                       IDM_HELPMENU
+    BEGIN
+        MENUITEM "~Help for help",         IDM_HELP_HELP
+        MENUITEM "~Extended help",         IDM_HELP_EXT, MIS_HELP
+        MENUITEM "~Keys help",             IDM_HELP_KEYS,
+        MENUITEM "Help ~index",            IDM_HELP_INDEX
+        MENUITEM "Help ~contents",         IDM_HELP_CONTENTS
+    END
+END
+
+
+ACCELTABLE ID_BREAKPOINTS_WINDOW
+BEGIN
+  VK_F3,     IDM_EXIT,      VIRTUALKEY
+  VK_DELETE, IDM_DELETE,    VIRTUALKEY
+END
+
+
+MENU ID_DISPLAY_WINDOW
+BEGIN
+    SUBMENU "~File",                       IDM_FILEMENU
+    BEGIN
+        MENUITEM "E~xit\tF3",              IDM_EXIT
+    END
+    SUBMENU "~Edit",                       IDM_EDITMENU
+    BEGIN
+        MENUITEM "~Add...",                IDM_ADD
+        MENUITEM SEPARATOR
+        MENUITEM "~Modify...",             IDM_MODIFY
+        MENUITEM "~Enable",                IDM_ENABLE
+        MENUITEM "~Disable",               IDM_DISABLE
+        SUBMENU "~Format",                 IDM_REPMENU
+        BEGIN                              
+            MENUITEM "~Signed decimal",    IDM_REP_DEC_S
+            MENUITEM "~Unsigned decimal",  IDM_REP_DEC_U
+            MENUITEM "~Hexadecimal",       IDM_REP_HEX
+            MENUITEM "~Octal",             IDM_REP_OCT
+            MENUITEM "~Binary",            IDM_REP_BIN
+            MENUITEM "~Character",         IDM_REP_CHR
+            MENUITEM "~Address",           IDM_REP_ADR
+            MENUITEM "~Floating point",    IDM_REP_FLT
+            MENUITEM "St~ring",            IDM_REP_STR
+            MENUITEM "~Instruction",       IDM_REP_INS
+        END
+        MENUITEM "De~lete\tDel",           IDM_DELETE
+        MENUITEM SEPARATOR
+        MENUITEM "Dereference",            IDM_DEREFERENCE
+        MENUITEM SEPARATOR
+        MENUITEM "Enable all",             IDM_ENABLE_ALL
+        MENUITEM "Disable all",            IDM_DISABLE_ALL
+        MENUITEM "Delete all",             IDM_DELETE_ALL
+    END
+    SUBMENU "~Windows",                    IDM_WINMENU
+    BEGIN
+        MENUITEM "~Command",               IDM_WIN_CMD
+        MENUITEM "~Source files",          IDM_WIN_SRCS
+        MENUITEM "~Breakpoints",           IDM_WIN_BRK
+        MENUITEM "~Threads",               IDM_WIN_THR
+        MENUITEM "~Register",              IDM_WIN_REG
+    END
+    SUBMENU "~Help",                       IDM_HELPMENU
+    BEGIN
+        MENUITEM "~Help for help",         IDM_HELP_HELP
+        MENUITEM "~Extended help",         IDM_HELP_EXT, MIS_HELP
+        MENUITEM "~Keys help",             IDM_HELP_KEYS,
+        MENUITEM "Help ~index",            IDM_HELP_INDEX
+        MENUITEM "Help ~contents",         IDM_HELP_CONTENTS
+    END
+END
+
+
+ACCELTABLE ID_DISPLAY_WINDOW
+BEGIN
+  VK_F3,     IDM_EXIT,      VIRTUALKEY
+  VK_DELETE, IDM_DELETE,    VIRTUALKEY
+END
+
+
+MENU ID_THREADS_WINDOW
+BEGIN
+    SUBMENU "~File",                       IDM_FILEMENU
+    BEGIN
+        MENUITEM "E~xit\tF3",              IDM_EXIT
+    END
+    SUBMENU "~Edit",                       IDM_EDITMENU
+    BEGIN
+        MENUITEM "~Enable (thaw)",         IDM_ENABLE
+        MENUITEM "~Disable (freeze)",      IDM_DISABLE
+        MENUITEM "~Switch to",             IDM_SWITCH
+    END
+    SUBMENU "~Windows",                    IDM_WINMENU
+    BEGIN
+        MENUITEM "~Command",               IDM_WIN_CMD
+        MENUITEM "~Source files",          IDM_WIN_SRCS
+        MENUITEM "~Breakpoints",           IDM_WIN_BRK
+        MENUITEM "~Display",               IDM_WIN_DSP
+        MENUITEM "~Register",              IDM_WIN_REG
+    END
+END
+
+
+ACCELTABLE ID_THREADS_WINDOW
+BEGIN
+  VK_F3,  IDM_EXIT,      VIRTUALKEY
+END
+
+
+MENU ID_SOURCE_FILES_WINDOW
+BEGIN
+    SUBMENU "~File",                       IDM_FILEMENU
+    BEGIN
+        MENUITEM "E~xit\tF3",              IDM_EXIT
+    END
+    SUBMENU "~Windows",                    IDM_WINMENU
+    BEGIN
+        MENUITEM "~Command",               IDM_WIN_CMD
+        MENUITEM "~Breakpoints",           IDM_WIN_BRK
+        MENUITEM "~Display",               IDM_WIN_DSP
+        MENUITEM "~Threads",               IDM_WIN_THR
+        MENUITEM "~Register",              IDM_WIN_REG
+    END
+    SUBMENU "~Help",                       IDM_HELPMENU
+    BEGIN
+        MENUITEM "~Help for help",         IDM_HELP_HELP
+        MENUITEM "~Extended help",         IDM_HELP_EXT, MIS_HELP
+        MENUITEM "~Keys help",             IDM_HELP_KEYS,
+        MENUITEM "Help ~index",            IDM_HELP_INDEX
+        MENUITEM "Help ~contents",         IDM_HELP_CONTENTS
+    END
+END
+
+
+ACCELTABLE ID_SOURCE_FILES_WINDOW
+BEGIN
+  VK_F3,  IDM_EXIT,      VIRTUALKEY
+END
+
+
+MENU ID_REGISTER_WINDOW
+BEGIN
+    SUBMENU "~File",                       IDM_FILEMENU
+    BEGIN
+        MENUITEM "E~xit\tF3",              IDM_EXIT
+    END
+    SUBMENU "~View",                       IDM_VIEWMENU
+    BEGIN
+        MENUITEM "~Refresh",               IDM_REFRESH
+    END
+    SUBMENU "~Windows",                    IDM_WINMENU
+    BEGIN
+        MENUITEM "~Command",               IDM_WIN_CMD
+        MENUITEM "~Source files",          IDM_WIN_SRCS
+        MENUITEM "~Breakpoints",           IDM_WIN_BRK
+        MENUITEM "~Display",               IDM_WIN_DSP
+        MENUITEM "~Threads",               IDM_WIN_THR
+    END
+END
+
+
+ACCELTABLE ID_REGISTER_WINDOW
+BEGIN
+  VK_F3,  IDM_EXIT,      VIRTUALKEY
+END
+
+
+DLGTEMPLATE IDD_PMDEBUGMODE
+BEGIN
+    DIALOG "PM debugging mode", IDD_PMDEBUGMODE, 32, 32, 240, 68, , FCF_TITLEBAR | FCF_SYSMENU
+    BEGIN
+        CONTROL  "~Synchronous mode",    IDC_SYNC,  10,  30, 100, 12, WC_BUTTON, WS_VISIBLE | BS_AUTOCHECKBOX | WS_TABSTOP | WS_GROUP
+        DEFPUSHBUTTON "~OK",               DID_OK,  10,   8,  40, 16, WS_TABSTOP | WS_GROUP
+        CONTROL       "Cancel",        DID_CANCEL,  60,   8,  40, 16, WC_BUTTON, WS_VISIBLE | BS_PUSHBUTTON | WS_TABSTOP
+        CONTROL       "Help",            IDC_HELP, 110,   8,  40, 16, WC_BUTTON, WS_VISIBLE | BS_PUSHBUTTON | WS_TABSTOP | BS_HELP | BS_NOPOINTERFOCUS
+    END
+END
+
+
+DLGTEMPLATE IDD_BRKPT_LINE
+BEGIN
+    DIALOG "Line Breakpoint", IDD_BRKPT_LINE, 32, 32, 230, 120, , FCF_TITLEBAR | FCF_SYSMENU
+    BEGIN
+        CONTROL "Location",                     0,   4,  80, 222, 34, WC_STATIC, WS_VISIBLE | SS_GROUPBOX | DT_MNEMONIC
+        CONTROL "~Source file:",                0,  10,  96,  60,  8, WC_STATIC, WS_VISIBLE | SS_TEXT | DT_LEFT | DT_MNEMONIC
+        CONTROL "",                    IDC_SOURCE,  68,  52,  72, 53, WC_COMBOBOX, WS_VISIBLE | CBS_DROPDOWN | WS_TABSTOP | WS_GROUP
+        CONTROL "~Line:",                       0,  10,  84,  60,  8, WC_STATIC, WS_VISIBLE | SS_TEXT | DT_LEFT | DT_MNEMONIC
+        CONTROL "",                    IDC_LINENO,  70,  84,  40,  8, WC_ENTRYFIELD, WS_VISIBLE | ES_AUTOSCROLL | ES_MARGIN | WS_TABSTOP | WS_GROUP
+        CONTROL "Options",                      0,   4,  30, 222, 48, WC_STATIC, WS_VISIBLE | SS_GROUPBOX | DT_MNEMONIC
+        CONTROL "~Ignore count:",               0,  10,  60,  60,  8, WC_STATIC, WS_VISIBLE | SS_TEXT | DT_LEFT | DT_MNEMONIC
+        CONTROL "",                    IDC_IGNORE,  70,  60,  40,  8, WC_ENTRYFIELD, WS_VISIBLE | ES_AUTOSCROLL | ES_MARGIN | WS_TABSTOP | WS_GROUP
+        CONTROL "~Condition:",                  0,  10,  46,  60,  8, WC_STATIC, WS_VISIBLE | SS_TEXT | DT_LEFT | DT_MNEMONIC
+        CONTROL "",                 IDC_CONDITION,  70,  46, 148,  8, WC_ENTRYFIELD, WS_VISIBLE | ES_AUTOSCROLL | ES_MARGIN | WS_TABSTOP | WS_GROUP
+        CONTROL  "~Enable",            IDC_ENABLE,  10,  32, 100, 12, WC_BUTTON, WS_VISIBLE | BS_AUTOCHECKBOX | WS_TABSTOP | WS_GROUP
+        CONTROL "~Disposition:",                0, 120,  34,  60,  8, WC_STATIC, WS_VISIBLE | SS_TEXT | DT_LEFT | DT_MNEMONIC
+        CONTROL "",               IDC_DISPOSITION, 178, -10,  40, 53, WC_COMBOBOX, WS_VISIBLE | CBS_DROPDOWNLIST | WS_TABSTOP | WS_GROUP
+        DEFPUSHBUTTON "~OK",               DID_OK,  10,   8,  40, 16, WS_TABSTOP | WS_GROUP
+        CONTROL       "Cancel",        DID_CANCEL,  60,   8,  40, 16, WC_BUTTON, WS_VISIBLE | BS_PUSHBUTTON | WS_TABSTOP
+        CONTROL       "Help",            IDC_HELP, 110,   8,  40, 16, WC_BUTTON, WS_VISIBLE | BS_PUSHBUTTON | WS_TABSTOP | BS_HELP | BS_NOPOINTERFOCUS
+    END
+END
+
+
+DLGTEMPLATE IDD_STARTUP
+BEGIN
+    DIALOG "Startup", IDD_STARTUP, 32, 32, 240, 68, , FCF_TITLEBAR | FCF_SYSMENU
+    BEGIN
+        CONTROL "~Arguments:",                           0,  10,  44,  60,  8, WC_STATIC, WS_VISIBLE | SS_TEXT | DT_LEFT | DT_MNEMONIC
+        CONTROL "",                               IDC_ARGS,  70,  44, 160,  8, WC_ENTRYFIELD, WS_VISIBLE | ES_AUTOSCROLL | ES_MARGIN | WS_TABSTOP | WS_GROUP
+        CONTROL  "~Close window after exit", IDC_CLOSE_WIN,  10,  30, 200, 12, WC_BUTTON, WS_VISIBLE | BS_AUTOCHECKBOX | WS_TABSTOP | WS_GROUP
+        DEFPUSHBUTTON "~OK",                        DID_OK,  10,   8,  40, 16, WS_TABSTOP | WS_GROUP
+        CONTROL       "~Run",                      IDC_RUN,  60,   8,  40, 16, WC_BUTTON, WS_VISIBLE | BS_PUSHBUTTON | WS_TABSTOP
+        CONTROL       "Cancel",                 DID_CANCEL, 110,   8,  40, 16, WC_BUTTON, WS_VISIBLE | BS_PUSHBUTTON | WS_TABSTOP
+        CONTROL       "Help",                     IDC_HELP, 160,   8,  40, 16, WC_BUTTON, WS_VISIBLE | BS_PUSHBUTTON | WS_TABSTOP | BS_HELP | BS_NOPOINTERFOCUS
+    END
+END
+
+
+DLGTEMPLATE IDD_DISPLAY
+BEGIN
+    DIALOG "Display", IDD_DISPLAY, 32, 32, 240, 88, , FCF_TITLEBAR | FCF_SYSMENU
+    BEGIN
+        CONTROL "E~xpression:",                          0,  10,  68,  60,  8, WC_STATIC, WS_VISIBLE | SS_TEXT | DT_LEFT | DT_MNEMONIC
+        CONTROL "",                               IDC_EXPR,  70,  68, 160,  8, WC_ENTRYFIELD, WS_VISIBLE | ES_AUTOSCROLL | ES_MARGIN | WS_TABSTOP | WS_GROUP
+        CONTROL "~Format:",                              0,  10,  56,  60,  8, WC_STATIC, WS_VISIBLE | SS_TEXT | DT_LEFT | DT_MNEMONIC
+        CONTROL "",                             IDC_FORMAT,  68,  12,  72, 53, WC_COMBOBOX, WS_VISIBLE | CBS_DROPDOWNLIST | WS_TABSTOP | WS_GROUP
+        CONTROL "~Count:",                               0,  10,  44,  60,  8, WC_STATIC, WS_VISIBLE | SS_TEXT | DT_LEFT | DT_MNEMONIC
+        CONTROL "",                              IDC_COUNT,  68,  43,  40,  8, WC_SPINBUTTON, WS_VISIBLE | SPBS_MASTER | SPBS_NUMERICONLY | SPBS_JUSTRIGHT | SPBS_FASTSPIN | WS_TABSTOP | WS_GROUP
+        CONTROL  "~Enable",                     IDC_ENABLE,  10,  30, 200, 12, WC_BUTTON, WS_VISIBLE | BS_AUTOCHECKBOX | WS_TABSTOP | WS_GROUP
+        DEFPUSHBUTTON "~OK",                        DID_OK,  10,   8,  40, 16, WS_TABSTOP | WS_GROUP
+        CONTROL       "Cancel",                 DID_CANCEL,  60,   8,  40, 16, WC_BUTTON, WS_VISIBLE | BS_PUSHBUTTON | WS_TABSTOP
+        CONTROL       "Help",                     IDC_HELP, 110,   8,  40, 16, WC_BUTTON, WS_VISIBLE | BS_PUSHBUTTON | WS_TABSTOP | BS_HELP | BS_NOPOINTERFOCUS
+    END
+END
+
+
+DLGTEMPLATE IDD_GOTO
+BEGIN
+    DIALOG "Go to line", IDD_GOTO, 32, 32, 240, 56, , FCF_TITLEBAR | FCF_SYSMENU
+    BEGIN
+        CONTROL "~Line:",                       0,  10,  30,  60,  8, WC_STATIC, WS_VISIBLE | SS_TEXT | DT_LEFT | DT_MNEMONIC
+        CONTROL "",                    IDC_LINENO,  70,  30,  40,  8, WC_ENTRYFIELD, WS_VISIBLE | ES_AUTOSCROLL | ES_MARGIN | WS_TABSTOP | WS_GROUP
+        DEFPUSHBUTTON "~OK",               DID_OK,  10,   8,  40, 16, WS_TABSTOP | WS_GROUP
+        CONTROL       "Cancel",        DID_CANCEL,  60,   8,  40, 16, WC_BUTTON, WS_VISIBLE | BS_PUSHBUTTON | WS_TABSTOP
+        CONTROL       "Help",            IDC_HELP, 110,   8,  40, 16, WC_BUTTON, WS_VISIBLE | BS_PUSHBUTTON | WS_TABSTOP | BS_HELP | BS_NOPOINTERFOCUS
+    END
+END
+
+
+DLGTEMPLATE IDD_FIND
+BEGIN
+    DIALOG "Find", IDD_FIND, 32, 32, 240, 56, , FCF_TITLEBAR | FCF_SYSMENU
+    BEGIN
+        CONTROL "~Regexp:",                     0,  10,  30,  60,  8, WC_STATIC, WS_VISIBLE | SS_TEXT | DT_LEFT | DT_MNEMONIC
+        CONTROL "",                    IDC_STRING,  70,  30,  40,  8, WC_ENTRYFIELD, WS_VISIBLE | ES_AUTOSCROLL | ES_MARGIN | WS_TABSTOP | WS_GROUP
+        DEFPUSHBUTTON "~OK",               DID_OK,  10,   8,  40, 16, WS_TABSTOP | WS_GROUP
+        CONTROL       "Cancel",        DID_CANCEL,  60,   8,  40, 16, WC_BUTTON, WS_VISIBLE | BS_PUSHBUTTON | WS_TABSTOP
+        CONTROL       "Help",            IDC_HELP, 110,   8,  40, 16, WC_BUTTON, WS_VISIBLE | BS_PUSHBUTTON | WS_TABSTOP | BS_HELP | BS_NOPOINTERFOCUS
+    END
+END
+
+
+DLGTEMPLATE IDD_ABOUT
+BEGIN
+    DIALOG "About pmgdb", IDD_ABOUT, 32, 32, 240, 140, , FCF_TITLEBAR | FCF_SYSMENU
+    BEGIN
+        CTEXT   "pmgdb 0.9d",                                                    0, 10, 116, 220, 8
+        CTEXT   "Copyright (C) 1996-1998"                                        0, 10,  88, 220, 8
+        CTEXT   "by Eberhard Mattes"                                             0, 10,  80, 220, 8
+        LTEXT   "pmgdb comes with ABSOLUTELY NO WARRANTY. For details see file"  0, 10,  60, 220, 8
+        PRESPARAMS PP_FONTNAMESIZE, "8.Helv"
+        LTEXT   "`COPYING' that should have come with this program."             0, 10,  52, 220, 8
+        PRESPARAMS PP_FONTNAMESIZE, "8.Helv"
+        LTEXT   "pmgdb is free software, and you are welcome to redistribute it" 0, 10,  44, 220, 8
+        PRESPARAMS PP_FONTNAMESIZE, "8.Helv"
+        LTEXT   "under certain conditions. See the file `COPYING' for details."  0, 10,  36, 220, 8
+        PRESPARAMS PP_FONTNAMESIZE, "8.Helv"
+        DEFPUSHBUTTON "~OK",               DID_OK,  10,   8,  40, 16, WS_TABSTOP | WS_GROUP
+        CONTROL       "Help",            IDC_HELP,  60,   8,  40, 16, WC_BUTTON, WS_VISIBLE | BS_PUSHBUTTON | WS_TABSTOP | BS_HELP | BS_NOPOINTERFOCUS
+    END
+END
+
+
+DLGTEMPLATE IDD_HISTORY
+BEGIN
+    DIALOG "Command history", IDD_HISTORY, 32, 32, 240, 100, , FCF_TITLEBAR | FCF_SYSMENU
+    BEGIN
+        CONTROL "",                      IDC_LIST,  10,  30, 220, 64, WC_COMBOBOX, WS_VISIBLE | CBS_SIMPLE | WS_TABSTOP | WS_GROUP
+        DEFPUSHBUTTON "~OK",               DID_OK,  10,   8,  40, 16, WS_TABSTOP | WS_GROUP
+        CONTROL       "Cancel",        DID_CANCEL,  60,   8,  40, 16, WC_BUTTON, WS_VISIBLE | BS_PUSHBUTTON | WS_TABSTOP
+        CONTROL       "Help",            IDC_HELP, 110,   8,  40, 16, WC_BUTTON, WS_VISIBLE | BS_PUSHBUTTON | WS_TABSTOP | BS_HELP | BS_NOPOINTERFOCUS
+    END
+END
+
+
+HELPSUBTABLE ID_COMMAND_WINDOW
+BEGIN
+  HELPSUBITEM IDM_FILEMENU,     HPM_CMD_FILEMENU
+  HELPSUBITEM IDM_OPEN_EXEC,    HPM_CMD_OPEN_EXEC
+  HELPSUBITEM IDM_OPEN_CORE,    HPM_CMD_OPEN_CORE
+  HELPSUBITEM IDM_OPEN_SOURCE,  HPM_OPEN_SOURCE
+  HELPSUBITEM IDM_STARTUP,      HPM_CMD_STARTUP
+  HELPSUBITEM IDM_RESTART,      HPM_RESTART
+  HELPSUBITEM IDM_WHERE,        HPM_WHERE
+  HELPSUBITEM IDM_EXIT,         HPM_EXIT
+  HELPSUBITEM IDM_EDITMENU,     HPM_CMD_EDITMENU
+  HELPSUBITEM IDM_COMPLETE,     HPM_CMD_COMPLETE
+  HELPSUBITEM IDM_HISTORY,      HPM_CMD_HISTORY
+  HELPSUBITEM IDM_RUNMENU,      HPM_CMD_RUNMENU
+  HELPSUBITEM IDM_GO,           HPM_GO
+  HELPSUBITEM IDM_STEPOVER,     HPM_STEPOVER
+  HELPSUBITEM IDM_STEPINTO,     HPM_STEPINTO
+  HELPSUBITEM IDM_FINISH,       HPM_FINISH
+  HELPSUBITEM IDM_ISTEPOVER,    HPM_ISTEPOVER
+  HELPSUBITEM IDM_ISTEPINTO,    HPM_ISTEPINTO
+  HELPSUBITEM IDM_BRKPTMENU,    HPM_CMD_BRKPTMENU
+  HELPSUBITEM IDM_BRKPT_LINE,   HPM_BRKPT_LINE
+  HELPSUBITEM IDM_BRKPT_LIST,   HPM_BRKPT_LIST
+  HELPSUBITEM IDM_OPTIONSMENU,  HPM_CMD_OPTIONSMENU
+  HELPSUBITEM IDM_PMDEBUGMODE,  HPM_PMDEBUGMODE
+  HELPSUBITEM IDM_ANNOTATE,     HPM_CMD_ANNOTATE
+  HELPSUBITEM IDM_FONT,         HPM_CMD_FONT
+  HELPSUBITEM IDM_WINMENU,      HPM_CMD_WINMENU
+  HELPSUBITEM IDM_WIN_BRK,      HPM_WIN_BRK
+  HELPSUBITEM IDM_WIN_DSP,      HPM_WIN_DSP
+  HELPSUBITEM IDM_WIN_SRCS,     HPM_WIN_SRCS
+  HELPSUBITEM IDM_WIN_THR,      HPM_WIN_THR
+  HELPSUBITEM IDM_WIN_REG,      HPM_WIN_REG
+  HELPSUBITEM IDM_HELPMENU,     HPM_CMD_HELPMENU
+  HELPSUBITEM IDM_HELP_HELP,    HPM_HELP_HELP
+  HELPSUBITEM IDM_HELP_EXT,     HPM_HELP_EXT
+  HELPSUBITEM IDM_HELP_KEYS,    HPM_HELP_KEYS
+  HELPSUBITEM IDM_HELP_INDEX,   HPM_HELP_INDEX
+  HELPSUBITEM IDM_HELP_CONTENTS, HPM_HELP_CONTENTS
+  HELPSUBITEM IDM_ABOUT,        HPM_CMD_ABOUT
+END
+
+HELPSUBTABLE ID_SOURCE_WINDOW
+BEGIN
+  HELPSUBITEM IDM_FILEMENU,     HPM_SRC_FILEMENU
+  HELPSUBITEM IDM_OPEN_SOURCE,  HPM_OPEN_SOURCE
+  HELPSUBITEM IDM_RESTART,      HPM_RESTART
+  HELPSUBITEM IDM_WHERE,        HPM_WHERE
+  HELPSUBITEM IDM_EXIT,         HPM_EXIT
+  HELPSUBITEM IDM_VIEWMENU,     HPM_SRC_VIEWMENU
+  HELPSUBITEM IDM_FIND,         HPM_SRC_FIND
+  HELPSUBITEM IDM_FINDNEXT,     HPM_SRC_FINDNEXT
+  HELPSUBITEM IDM_FINDPREV,     HPM_SRC_FINDPREV
+  HELPSUBITEM IDM_GOTO,         HPM_SRC_GOTO
+  HELPSUBITEM IDM_RUNMENU,      HPM_SRC_RUNMENU
+  HELPSUBITEM IDM_STEPOVER,     HPM_STEPOVER
+  HELPSUBITEM IDM_STEPINTO,     HPM_STEPINTO
+  HELPSUBITEM IDM_FINISH,       HPM_FINISH
+  HELPSUBITEM IDM_ISTEPOVER,    HPM_ISTEPOVER
+  HELPSUBITEM IDM_ISTEPINTO,    HPM_ISTEPINTO
+  HELPSUBITEM IDM_UNTIL,        HPM_SRC_UNTIL
+  HELPSUBITEM IDM_JUMP,         HPM_SRC_JUMP
+  HELPSUBITEM IDM_BRKPTMENU,    HPM_SRC_BRKPTMENU
+  HELPSUBITEM IDM_BRKPT_LINE,   HPM_BRKPT_LINE
+  HELPSUBITEM IDM_BRKPT_LIST,   HPM_BRKPT_LIST
+  HELPSUBITEM IDM_DSPMENU,      HPM_SRC_DSPMENU
+  HELPSUBITEM IDM_DSP_ADD,      HPM_DSP_ADD
+  HELPSUBITEM IDM_DSP_SHOW,     HPM_SRC_DSP_SHOW
+  HELPSUBITEM IDM_OPTIONSMENU,  HPM_SRC_OPTIONSMENU
+  HELPSUBITEM IDM_PMDEBUGMODE,  HPM_PMDEBUGMODE
+  HELPSUBITEM IDM_WINMENU,      HPM_SRC_WINMENU
+  HELPSUBITEM IDM_WIN_BRK,      HPM_WIN_BRK
+  HELPSUBITEM IDM_WIN_CMD,      HPM_WIN_CMD
+  HELPSUBITEM IDM_WIN_DSP,      HPM_WIN_DSP
+  HELPSUBITEM IDM_WIN_SRCS,     HPM_WIN_SRCS
+  HELPSUBITEM IDM_WIN_THR,      HPM_WIN_THR
+  HELPSUBITEM IDM_WIN_REG,      HPM_WIN_REG
+  HELPSUBITEM IDM_HELPMENU,     HPM_SRC_HELPMENU
+  HELPSUBITEM IDM_HELP_HELP,    HPM_HELP_HELP
+  HELPSUBITEM IDM_HELP_EXT,     HPM_HELP_EXT
+  HELPSUBITEM IDM_HELP_KEYS,    HPM_HELP_KEYS
+  HELPSUBITEM IDM_HELP_INDEX,   HPM_HELP_INDEX
+  HELPSUBITEM IDM_HELP_CONTENTS, HPM_HELP_CONTENTS
+END
+
+HELPSUBTABLE ID_SOURCE_FILES_WINDOW
+BEGIN
+  HELPSUBITEM IDM_FILEMENU,     HPM_SRCS_FILEMENU
+  HELPSUBITEM IDM_EXIT,         HPM_EXIT
+  HELPSUBITEM IDM_WINMENU,      HPM_SRCS_WINMENU
+  HELPSUBITEM IDM_WIN_BRK,      HPM_WIN_BRK
+  HELPSUBITEM IDM_WIN_CMD,      HPM_WIN_CMD
+  HELPSUBITEM IDM_WIN_DSP,      HPM_WIN_DSP
+  HELPSUBITEM IDM_WIN_THR,      HPM_WIN_THR
+  HELPSUBITEM IDM_WIN_REG,      HPM_WIN_REG
+  HELPSUBITEM IDM_HELPMENU,     HPM_SRCS_HELPMENU
+  HELPSUBITEM IDM_HELP_HELP,    HPM_HELP_HELP
+  HELPSUBITEM IDM_HELP_EXT,     HPM_HELP_EXT
+  HELPSUBITEM IDM_HELP_KEYS,    HPM_HELP_KEYS
+  HELPSUBITEM IDM_HELP_INDEX,   HPM_HELP_INDEX
+  HELPSUBITEM IDM_HELP_CONTENTS, HPM_HELP_CONTENTS
+END
+
+HELPSUBTABLE ID_BREAKPOINTS_WINDOW
+BEGIN
+  HELPSUBITEM IDM_FILEMENU,     HPM_BRK_FILEMENU
+  HELPSUBITEM IDM_EXIT,         HPM_EXIT
+  HELPSUBITEM IDM_EDITMENU,     HPM_BRK_EDITMENU
+  HELPSUBITEM IDM_MODIFY,       HPM_BRK_MODIFY
+  HELPSUBITEM IDM_ENABLE,       HPM_BRK_ENABLE
+  HELPSUBITEM IDM_DISABLE,      HPM_BRK_DISABLE
+  HELPSUBITEM IDM_DELETE,       HPM_BRK_DELETE
+  HELPSUBITEM IDM_BRKPTMENU,    HPM_BRK_BRKPTMENU
+  HELPSUBITEM IDM_BRKPT_LINE,   HPM_BRKPT_LINE
+  HELPSUBITEM IDM_REFRESH,      HPM_BRK_REFRESH
+  HELPSUBITEM IDM_WINMENU,      HPM_BRK_WINMENU
+  HELPSUBITEM IDM_WIN_CMD,      HPM_WIN_CMD
+  HELPSUBITEM IDM_WIN_DSP,      HPM_WIN_DSP
+  HELPSUBITEM IDM_WIN_SRCS,     HPM_WIN_SRCS
+  HELPSUBITEM IDM_WIN_THR,      HPM_WIN_THR
+  HELPSUBITEM IDM_WIN_REG,      HPM_WIN_REG
+  HELPSUBITEM IDM_HELPMENU,     HPM_BRK_HELPMENU
+  HELPSUBITEM IDM_HELP_HELP,    HPM_HELP_HELP
+  HELPSUBITEM IDM_HELP_EXT,     HPM_HELP_EXT
+  HELPSUBITEM IDM_HELP_KEYS,    HPM_HELP_KEYS
+  HELPSUBITEM IDM_HELP_INDEX,   HPM_HELP_INDEX
+  HELPSUBITEM IDM_HELP_CONTENTS, HPM_HELP_CONTENTS
+END
+
+HELPSUBTABLE ID_DISPLAY_WINDOW
+BEGIN
+  HELPSUBITEM IDM_FILEMENU,     HPM_DSP_FILEMENU
+  HELPSUBITEM IDM_EXIT,         HPM_EXIT
+  HELPSUBITEM IDM_EDITMENU,     HPM_DSP_EDITMENU
+  HELPSUBITEM IDM_ADD,          HPM_DSP_ADD
+  HELPSUBITEM IDM_MODIFY,       HPM_DSP_MODIFY
+  HELPSUBITEM IDM_ENABLE,       HPM_DSP_ENABLE
+  HELPSUBITEM IDM_DISABLE,      HPM_DSP_DISABLE
+  HELPSUBITEM IDM_REPMENU,      HPM_DSP_FORMAT
+  HELPSUBITEM IDM_REP_DEC_S,    HPM_DSP_FORMAT
+  HELPSUBITEM IDM_REP_DEC_U,    HPM_DSP_FORMAT
+  HELPSUBITEM IDM_REP_HEX,      HPM_DSP_FORMAT
+  HELPSUBITEM IDM_REP_OCT,      HPM_DSP_FORMAT
+  HELPSUBITEM IDM_REP_BIN,      HPM_DSP_FORMAT
+  HELPSUBITEM IDM_REP_CHR,      HPM_DSP_FORMAT
+  HELPSUBITEM IDM_REP_ADR,      HPM_DSP_FORMAT
+  HELPSUBITEM IDM_REP_FLT,      HPM_DSP_FORMAT
+  HELPSUBITEM IDM_REP_STR,      HPM_DSP_FORMAT
+  HELPSUBITEM IDM_REP_INS,      HPM_DSP_FORMAT
+  HELPSUBITEM IDM_DELETE,       HPM_DSP_DELETE
+  HELPSUBITEM IDM_DEREFERENCE,  HPM_DSP_DEREFERENCE
+  HELPSUBITEM IDM_ENABLE_ALL,   HPM_DSP_ENABLE_ALL
+  HELPSUBITEM IDM_DISABLE_ALL,  HPM_DSP_DISABLE_ALL
+  HELPSUBITEM IDM_DELETE_ALL,   HPM_DSP_DELETE_ALL
+  HELPSUBITEM IDM_WINMENU,      HPM_DSP_WINMENU
+  HELPSUBITEM IDM_WIN_CMD,      HPM_WIN_CMD
+  HELPSUBITEM IDM_WIN_BRK,      HPM_WIN_BRK
+  HELPSUBITEM IDM_WIN_SRCS,     HPM_WIN_SRCS
+  HELPSUBITEM IDM_WIN_THR,      HPM_WIN_THR
+  HELPSUBITEM IDM_WIN_REG,      HPM_WIN_REG
+  HELPSUBITEM IDM_HELPMENU,     HPM_DSP_HELPMENU
+  HELPSUBITEM IDM_HELP_HELP,    HPM_HELP_HELP
+  HELPSUBITEM IDM_HELP_EXT,     HPM_HELP_EXT
+  HELPSUBITEM IDM_HELP_KEYS,    HPM_HELP_KEYS
+  HELPSUBITEM IDM_HELP_INDEX,   HPM_HELP_INDEX
+  HELPSUBITEM IDM_HELP_CONTENTS, HPM_HELP_CONTENTS
+END
+
+HELPSUBTABLE ID_THREADS_WINDOW
+BEGIN
+  HELPSUBITEM IDM_FILEMENU,     HPM_THR_FILEMENU
+  HELPSUBITEM IDM_EXIT,         HPM_EXIT
+  HELPSUBITEM IDM_EDITMENU,     HPM_THR_EDITMENU
+  HELPSUBITEM IDM_ENABLE,       HPM_THR_ENABLE
+  HELPSUBITEM IDM_DISABLE,      HPM_THR_DISABLE
+  HELPSUBITEM IDM_SWITCH,       HPM_THR_SWITCH
+  HELPSUBITEM IDM_WINMENU,      HPM_THR_WINMENU
+  HELPSUBITEM IDM_WIN_CMD,      HPM_WIN_CMD
+  HELPSUBITEM IDM_WIN_BRK,      HPM_WIN_BRK
+  HELPSUBITEM IDM_WIN_SRCS,     HPM_WIN_SRCS
+  HELPSUBITEM IDM_WIN_DSP,      HPM_WIN_DSP
+  HELPSUBITEM IDM_WIN_REG,      HPM_WIN_REG
+END
+
+HELPSUBTABLE ID_REGISTER_WINDOW
+BEGIN
+  HELPSUBITEM IDM_FILEMENU,     HPM_REG_FILEMENU
+  HELPSUBITEM IDM_EXIT,         HPM_EXIT
+  HELPSUBITEM IDM_VIEWMENU,     HPM_REG_VIEWMENU
+  HELPSUBITEM IDM_REFRESH,      HPM_REG_REFRESH
+  HELPSUBITEM IDM_WINMENU,      HPM_REG_WINMENU
+  HELPSUBITEM IDM_WIN_CMD,      HPM_WIN_CMD
+  HELPSUBITEM IDM_WIN_BRK,      HPM_WIN_BRK
+  HELPSUBITEM IDM_WIN_SRCS,     HPM_WIN_SRCS
+  HELPSUBITEM IDM_WIN_DSP,      HPM_WIN_DSP
+  HELPSUBITEM IDM_WIN_THR,      HPM_WIN_THR
+END
+
+HELPSUBTABLE IDD_PMDEBUGMODE
+BEGIN
+END
+
+HELPSUBTABLE IDD_BRKPT_LINE
+BEGIN
+END
+
+HELPSUBTABLE IDD_STARTUP
+BEGIN
+END
+
+HELPSUBTABLE IDD_DISPLAY
+BEGIN
+END
+
+HELPSUBTABLE IDD_GOTO
+BEGIN
+END
+
+HELPSUBTABLE IDD_ABOUT
+BEGIN
+END
+
+HELPSUBTABLE IDD_FIND
+BEGIN
+END
+
+HELPSUBTABLE IDD_HISTORY
+BEGIN
+END
+
+HELPTABLE HELP_TABLE
+BEGIN
+    HELPITEM ID_COMMAND_WINDOW,      ID_COMMAND_WINDOW,      HELP_CMD_WINDOW
+    HELPITEM ID_SOURCE_WINDOW,       ID_SOURCE_WINDOW,       HELP_SRC_WINDOW
+    HELPITEM ID_SOURCE_FILES_WINDOW, ID_SOURCE_FILES_WINDOW, HELP_SRCS_WINDOW
+    HELPITEM ID_BREAKPOINTS_WINDOW,  ID_BREAKPOINTS_WINDOW,  HELP_BRK_WINDOW
+    HELPITEM ID_DISPLAY_WINDOW,      ID_DISPLAY_WINDOW,      HELP_DSP_WINDOW
+    HELPITEM ID_THREADS_WINDOW,      ID_THREADS_WINDOW,      HELP_THR_WINDOW
+    HELPITEM ID_REGISTER_WINDOW,     ID_REGISTER_WINDOW,     HELP_REG_WINDOW
+    HELPITEM IDD_PMDEBUGMODE,        IDD_PMDEBUGMODE,        HPD_PMDEBUGMODE
+    HELPITEM IDD_BRKPT_LINE,         IDD_BRKPT_LINE,         HPD_BRKPT_LINE
+    HELPITEM IDD_STARTUP,            IDD_STARTUP,            HPD_STARTUP
+    HELPITEM IDD_DISPLAY,            IDD_DISPLAY,            HPD_DISPLAY
+    HELPITEM IDD_GOTO,               IDD_GOTO,               HPD_GOTO
+    HELPITEM IDD_ABOUT,              IDD_ABOUT,              HELP_GENERAL
+    HELPITEM IDD_FIND,               IDD_FIND,               HPD_FIND
+    HELPITEM IDD_HISTORY,            IDD_HISTORY,            HPD_HISTORY
+END

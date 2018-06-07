@@ -1,0 +1,32 @@
+;
+; rexxapi.imp
+;
+RexxAddMacro                    rexxapi   22 3
+RexxAddQueue                    rexxapi    3 ?
+RexxCallExit                    rexxapi   15 ?
+RexxCallFunction                rexxapi   21 ?
+RexxCallSubcom                  rexxapi   16 ?
+RexxClearMacroSpace             rexxapi   24 0
+RexxCreateQueue                 rexxapi    1 ?
+RexxDeleteQueue                 rexxapi    2 ?
+RexxDeregisterExit              rexxapi   13 2
+RexxDeregisterFunction          rexxapi   19 1
+RexxDeregisterSubcom            rexxapi    9 2
+RexxDropMacro                   rexxapi   23 1
+RexxExecuteMacroFunction        rexxapi   29 ?
+RexxLoadMacroSpace              rexxapi   25 3
+RexxLoadSubcom                  rexxapi   10 ?
+RexxPullQueue                   rexxapi    4 ?
+RexxQueryExit                   rexxapi   14 4
+RexxQueryFunction               rexxapi   20 1
+RexxQueryMacro                  rexxapi   26 2
+RexxQueryQueue                  rexxapi    5 ?
+RexxQuerySubcom                 rexxapi    8 4
+RexxRegisterExitDll             rexxapi   11 5
+RexxRegisterExitExe             rexxapi   12 3
+RexxRegisterFunctionDll         rexxapi   17 3
+RexxRegisterFunctionExe         rexxapi   18 2
+RexxRegisterSubcomDll           rexxapi    6 5
+RexxRegisterSubcomExe           rexxapi    7 3
+RexxReorderMacro                rexxapi   27 2
+RexxSaveMacroSpace              rexxapi   28 3

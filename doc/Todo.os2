@@ -1,0 +1,111 @@
+$Id: Todo.os2 2099 2005-06-28 13:05:20Z bird $
+
+This file contains some very rough lists of things to look into.
+Contributions are very much wanted on these topics.
+
+
+List of things to implement:
+    o vfork().
+    o pthread.
+	o Make fast string functions in assembly, in particular: strncpy
+	o stpncpy()
+	o getrusage()
+
+List of things to investigate (picked from configure runs):
+    o checking whether declaration is required for errno... no
+    o checking for POSIXized ISC... no
+    o checking for values.h... (cached) no
+    o checking for direct.h... no
+    o checking for mktemp... no
+    o checking for thread.h... no
+    o checking for pthread.h... no
+    o checking for atoq... no
+    o checking whether getrlimit is declared... no
+    o checking whether setrlimit is declared... no
+    o checking whether getrusage is declared... no
+    o checking for nl_types.h... (cached) no
+    o checking if gcc.exe static flag  works... (cached) no
+    o checking for working mmap... (cached) no
+    o checking for madvise... no
+    o checking for mprotect... no
+    o checking for ISO C99 support in <math.h>... no
+    o checking for ISO C99 support in <stdlib.h>... no
+    o checking for additional ISO C99 support in <wchar.h>... no
+    o checking for enabled ISO C99 support... no
+    o checking for endian.h... no
+    o checking for __builtin_sqrtf linkage... no
+    o checking for __builtin_cosf linkage... no
+    o checking for __builtin_sinf linkage... no
+    o checking for isinf declaration... no
+    o checking for _isinf declaration... no
+    o checking for finite declaration... no
+    o checking for _finite declaration... no
+    o checking for sincos declaration... no
+    o checking for _sincos declaration... no
+    o checking for fpclass declaration... no
+    o checking for _fpclass declaration... no
+    o checking for qfpclass declaration... no
+    o checking for _qfpclass declaration... no
+    o checking for float trig functions... no
+    o checking for float round functions... no
+    o checking for expf declaration... no
+    o checking for _expf declaration... no
+    o checking for isnanf declaration... no
+    o checking for _isnanf declaration... no
+    o checking for isinff declaration... no
+    o checking for _isinff declaration... no
+    o checking for atan2f declaration... no
+    o checking for _atan2f declaration... no
+    o checking for fabsf declaration... no
+    o checking for _fabsf declaration... no
+    o checking for fmodf declaration... no
+    o checking for _fmodf declaration... no
+    o checking for frexpf declaration... no
+    o checking for _frexpf declaration... no
+    o checking for hypotf declaration... no
+    o checking for _hypotf declaration... no
+    o checking for ldexpf declaration... no
+    o checking for _ldexpf declaration... no
+    o checking for logf declaration... no
+    o checking for _logf declaration... no
+    o checking for log10f declaration... no
+    o checking for _log10f declaration... no
+    o checking for modff declaration... no
+    o checking for _modff declaration... no
+    o checking for powf declaration... no
+    o checking for _powf declaration... no
+    o checking for sqrtf declaration... no
+    o checking for _sqrtf declaration... no
+    o checking for sincosf declaration... no
+    o checking for _sincosf declaration... no
+    o checking for finitef declaration... no
+    o checking for _finitef declaration... no
+    o checking for isnanl declaration... no
+    o checking for _isnanl declaration... no
+    o checking for isinfl declaration... no
+    o checking for _isinfl declaration... no
+    o checking for sincosl declaration... no
+    o checking for _sincosl declaration... no
+    o checking for finitel declaration... no
+    o checking for _finitel declaration... no
+    o checking for _float trig functions... no
+    o checking for _float round functions... no
+    o checking for nan... no
+    o checking for mbstate_t... no
+    o checking for wchar.h... no
+    o checking for wctype.h... no
+    o checking for shared libgcc... no
+    o checking for asprintf... no
+    o checking for vasprintf... no
+    o checking for mkstemps... no
+    o checking for sigsetmask... no
+    o checking for _doprnt... no
+    o
+    o
+    o
+    o
+    o
+    o
+    o
+    o
+    o

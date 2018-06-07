@@ -1,0 +1,35 @@
+# Define the version of the libc and toolkit
+
+# High part of version number
+VH = 0
+# Middle part of version number
+VM = 6
+# Low part of version number
+ifdef OFFICIAL_BIRD_VERSION
+VL = 6
+else
+VL = 6x
+endif
+
+# The name of this package
+PACKAGE = GNU C for OS/2 runtime and tools
+
+# Full version number
+VERSION = $(VH).$(VM).$(VL)
+
+# The flag for C compiler to pass the VERSION macro to preprocessor
+CFLAGS.DEF.VERSION = -DVERSION=\"$(VERSION)\"
+
+# INNOTEK_VERSION is normally defined in the environment by a toplevel makefile.
+ifndef INNOTEK_VERSION
+ifdef OFFICIAL_BIRD_VERSION
+export INNOTEK_VERSION        ?= (Bird Build $(shell date '+%Y-%m-%d %H:%M'))
+else
+export INNOTEK_VERSION        ?= (Non-Bird Build $(shell date '+%Y-%m-%d %H:%M'))
+endif
+endif
+CFLAGS.DEF.VERSION += '-DINNOTEK_VERSION=" $(INNOTEK_VERSION)"'
+
+# Copyright
+COPYRIGHT = Copyright (c) 2003-2005 InnoTek Systemberatung GmbH
+

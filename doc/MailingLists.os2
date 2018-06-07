@@ -1,0 +1,17 @@
+
+														
+ L I B C   m a i l i n g   l i s t
+ +-------------------------------+
+
+
+A mailing list for LIBC & GCC users has been created on netlabs.org.
+Bugs, user questions, development questions, new ticket notifications,
+patches, etc. can be posted on that list.
+
+Netlabs is using ezmlm, and the procedure for subscribing is simply to
+send a mail to libc-user-subscribe@netlabs.org.
+	
+The list can also be accessed using gmane:
+     http://dir.gmane.org/gmane.org.netlabs.libc.user
+
+

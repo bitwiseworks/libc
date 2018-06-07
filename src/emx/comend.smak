@@ -1,0 +1,21 @@
+# This submakefile is included from mk*.smak submakefiles to clean up local
+# variables after the target has been defined.
+
+# Clear local variables so that we don't incidentally
+# get a wrong value in a different module
+ifndef .TKEEP
+.OBJS :=
+.DIRS :=
+.TARG :=
+.TARGET :=
+.TKIND :=
+.TSRC :=
+.TSRC.386 :=
+.TLDF :=
+.TCF :=
+.TDEP :=
+.IMPS :=
+.TKVAR :=
+endif
+
+.TKEEP :=

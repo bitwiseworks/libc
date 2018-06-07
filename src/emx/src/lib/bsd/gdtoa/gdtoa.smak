@@ -1,0 +1,16 @@
+libc.TSRC += $(filter-out %arithchk.c,$(wildcard src/lib/bsd/gdtoa/*.c)) \
+	$(addprefix src/lib/bsd/gdtoa/glue/, machdep_ldisx.c _hdtoa.c _ldtoa.c glue.c)
+libc.TDEP +=
+
+# make everything depend on arith.h.
+$(filter-out %arithchk.c,$(wildcard src/lib/bsd/gdtoa/*.c)): $.arith.h
+
+# generate arith.h.
+$.arith.h: $.arithchk.exe
+	$< > $@
+	
+# build arith.h generator.
+$.arithchk.exe: src/lib/bsd/gdtoa/arithchk.c									
+	$(LD) -O2 $(CFLAGS:-Iinclude=) $(CFLAGS.dbg) $(LDFLAGS.dbg) $(LDFLAGS.aout) -o $@ $<
+
+include comend.smak

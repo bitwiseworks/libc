@@ -1,0 +1,37 @@
+# test more complex weak stuff. Both weak symbols and weak external symbols.
+TESTCASE= weak3
+O		= .o
+E		= .exe
+CC		= gcc
+CFLAGS  = #-Zomf
+LD		= gcc
+LDFLAGS	= $(CFLAGS) -Zmap
+
+EXEOBJS = $(TESTCASE)-main$(O) $(TESTCASE)-1$(O)
+	
+all: $(TESTCASE)$E
+
+check: $(TESTCASE)$E
+	$(TESTCASE)$E
+	
+install:	
+	
+clean distclean:
+	rm -f *$(TESTCASE)-*.obj *$(TESTCASE)-*.o \
+	      *$(TESTCASE)-*.lib *$(TESTCASE)-*.a \
+		  *$(TESTCASE).map $(TESTCASE)$E
+
+
+.SUFFIXES:
+.SUFFIXES: .s .c .o .obj
+.c$(O):
+	$(CC) -c $(CFLAGS) -o "$(@)" "$<"
+
+.s$(O):
+	$(CC) -c $(CFLAGS) -o "$(@)" "$<"
+
+	
+$(TESTCASE)$E: $(EXEOBJS) $(TESTCASE).gmk
+	if $(LD) $(LDFLAGS) -o "$@" $(EXEOBJS); then true; \
+	else	rm -f $@; false; \
+	fi

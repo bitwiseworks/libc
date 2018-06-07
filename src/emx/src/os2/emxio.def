@@ -1,0 +1,73 @@
+;
+; emxio.def
+;
+; Copyright (c) 1992-1998 by Eberhard Mattes
+;
+; This file is part of emx.
+;
+; emx is free software; you can redistribute it and/or modify it
+; under the terms of the GNU General Public License as published by
+; the Free Software Foundation; either version 2, or (at your option)
+; any later version.
+;
+; emx is distributed in the hope that it will be useful,
+; but WITHOUT ANY WARRANTY; without even the implied warranty of
+; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+; GNU General Public License for more details.
+;
+; You should have received a copy of the GNU General Public License
+; along with emx; see the file COPYING.  If not, write to
+; the Free Software Foundation, 59 Temple Place - Suite 330,
+; Boston, MA 02111-1307, USA.
+;
+; As special exception, emxio.dll can be distributed without source code
+; unless it has been changed.  If you modify emxio.dll, this exception
+; no longer applies and you must remove this paragraph from all source
+; files for emxio.dll.
+;
+
+LIBRARY EMXIO INITGLOBAL
+DESCRIPTION 'emxio.dll 0.9d -- Copyright (c) 1992-1998 by Eberhard Mattes'
+DATA
+   SHARED
+SEGMENTS
+  TEXT16 CLASS 'CODE' ALIAS
+  IOPL16 CLASS 'CODE' ALIAS IOPL
+EXPORTS
+  emx_inp8      = _emx_inp8      @1
+  emx_outp8     = _emx_outp8     @2
+  emx_inp16     = _emx_inp16     @3
+  emx_outp16    = _emx_outp16    @4
+  emx_inp32     = _emx_inp32     @5
+  emx_outp32    = _emx_outp32    @6
+  emx_inps8     = _emx_inps8     @7
+  emx_outps8    = _emx_outps8    @8
+  emx_outpt     = _emx_outpt     @9
+  emx_inps16    = _emx_inps16    @10
+  emx_outps16   = _emx_outps16   @11
+  emx_inps32    = _emx_inps32    @12
+  emx_outps32   = _emx_outps32   @13
+  emx_wait01    = _emx_wait01    @14
+  emx_wait10    = _emx_wait10    @15
+  emx_wait0     = _emx_wait0     @16
+  emx_wait1     = _emx_wait1     @17
+  emx_outps8dac = _emx_outps8dac @18
+  emx_revision  = _emx_revision  @128 RESIDENTNAME
+  ___inp8       = iopl_inp8      @192 0
+  ___outp8      = iopl_outp8     @193 0
+  ___inp16      = iopl_inp16     @194 0
+  ___outp16     = iopl_outp16    @195 0
+  ___inp32      = iopl_inp32     @196 0
+  ___outp32     = iopl_outp32    @197 0
+  ___inps8      = iopl_inps8     @198 0
+  ___outpt      = iopl_outpt     @199 0
+  ___outps8     = iopl_outps8    @200 0
+  ___inps16     = iopl_inps16    @201 0
+  ___outps16    = iopl_outps16   @202 0
+  ___inps32     = iopl_inps32    @203 0
+  ___outps32    = iopl_outps32   @204 0
+  ___wait01     = iopl_wait01    @205 0
+  ___wait10     = iopl_wait10    @206 0
+  ___wait0      = iopl_wait0     @207 0
+  ___wait1      = iopl_wait1     @208 0
+  ___outps8dac  = iopl_outps8dac @209 0

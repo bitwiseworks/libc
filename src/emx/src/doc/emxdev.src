@@ -1,0 +1,4551 @@
+þtext
+===============================================================================
+emxdev.doc        emx 0.9d     APPLICATION DEVELOPER'S GUIDE        21-Dec-1998
+===============================================================================
+                                     Copyright (c) 1990-1998 by Eberhard Mattes
+þendtext
+
+þtitle emx 0.9d Application Developer's Guide
+
+þformat bold emx emxbind emxcat emximp emxomf emxomfar emxomfld 0.8f 9.9c 0.9d
+þformat bold emxload emxrev listomf emxexp emxaout emxtsf updt dmake
+þformat bold GCC GCOV GDB ld nm rc objdump GPPDEMID gprof TRCUST TRACE TRACEFMT
+
+þformat tty .a .bak .def .dll .exe .imp .lib .map .o .obj .res .s .tsf
+þformat tty build.doc
+þformat tty os2.h os2emx.h os2tk.h emx.h
+þformat tty cmd.exe command.com
+þformat tty emx.exe emxd.exe emxl.exe emxload.exe emxomf.exe emxomfld.exe
+þformat tty emx.dll emxio.dll emxlibcm.dll emxlibcs.dll
+þformat tty emxwrap.dll gppdemid.dll
+þformat tty strip.exe gcc.exe cpp.exe cc1.exe cc1plus.exe cc1obj.exe
+þformat tty crt0.s crt0.o gcrt0.o
+þformat tty c_import.a os2.a c_static.a c_static.lib
+þformat tty c.lib c_app.lib c_dllemx.lib c_dllsys.lib c_import.lib
+þformat tty os2.lib emx.lib emx2.lib sys.lib gcc.lib
+þformat tty emxio crt0 dll0
+þformat tty myprog.exe himem.sys config.sys
+þformat tty test.dll test.exe test.def test.res test1.obj test2.obj
+þformat tty /emx/bin/emxl.exe
+þformat tty stdio.c iodata.c gmon.out
+þformat tty <ctype.h> <dirent.h> <float.h> <io.h> <locale.h> <malloc.h>
+þformat tty <math.h> <process.h> <pwd.h> <signal.h> <stdio.h>
+þformat tty <stdlib.h> <string.h> <strings.h> <sys/emxload.h> <sys/fmutex.h>
+þformat tty <termios.h> <time.h> <umalloc.h> <unistd.h>
+
+þformat tty -mprobe -T -nostdlib -lwrap -lc -los2 -pg -pn
+þformat tty -Zmap[=<map_file>] -Zsysv-signals -Zbsd-signals -Zmt -Zso -Zcrtdll
+þformat tty -Zdll -Zomf -Zmtd -Zmts -Zsys -Zexe -Zstack -Zlinker
+
+þformat tty O_BINARY P_DEBUG P_NOSESSION SIGQUIT SIGILL SIGCLD SIGTRAP
+þformat tty SIGABRT SIGEMT SIGFPE SIGBUS SIGSEGV SIGSYS SIG_ACK
+þformat tty c_lflag VEOF VEOL VMIN VTIME IDEFAULT
+þformat tty __MT__ __.SYMDEF __.IMPORT
+
+þformat tty alarm() brk() fork() exec*() exit() fdopen() fopen() freopen()
+þformat tty fseek() main() malloc() open() popen() sbrk() select() abort()
+þformat tty sleep() spawn*() strcpy() system() wait() memcpy() ftell()
+þformat tty _abspath() _beginthread() _core() _emx_16to32() _emx_32to16()
+þformat tty _fseek_hdr() _fsetmode() _fullpath() _memaccess() _portaccess()
+þformat tty _read_kbd() _seek_hdr() _sleep2() _tmalloc() _inp8()
+þformat tty _CRT_init() _CRT_term() _DLL_InitTerm() _errno()
+þformat tty __open()
+þformat tty _tp __os2_bad __os2dll _16_ #define #include errno
+þformat tty argc argv "b" stdin stdout stderr
+þformat tty _pascal _cdecl
+þformat tty _THUNK_FUNCTION _THUNK_PROLOG _THUNK_CALL _THUNK_CALLI _THUNK
+þformat tty _THUNK_PASCAL_*** _THUNK_C_*** _THUNK_*** _THUNK_C_FUNCTION
+
+þformat tty DosSelectSession _DosSelectSession DosCreateThread DosSetMaxFH
+þformat tty DosLoadModule DosQueryProcAddr DosKillThread
+
+þformat tty -a -b -c -d -e -f -g -i -k -l -m -n -o -p -q -r -s -t -u -v -w -x
+þformat tty -D -E -F -I -K -L -O -P -R -S -X
+þformat tty -ac -am -aw -ai -aim -aciw -bs
+þformat tty -m1 -m2 -m3 -s8 -rd -s524288 -s8192 -S1 -S2 -qw -uw
+
+þformat syntax -a* -h# -m# -r* -p# -s# -C# -S# -V -Z
+þformat syntax <emxbind_options> -c[<core_file>] -d<def_file> -E<dll>
+þformat syntax -r<res_file> -h<heap_size> -k<stack_size> <def_file> <dll>
+þformat syntax <emx>[.exe] <input_file> <output_file>[.exe] <emx_options>
+þformat syntax -c[<core_file>] -d[<def_file>] <res_file> <file> <dir> <drive>
+þformat syntax <output_file> <program_file> <emx> <page_size> <options>
+þformat syntax <core_file> <symbol> <default_lib> <source_file> <target_file>
+þformat syntax <library_file> <command> <emx_options> <program> <arguments>
+þformat syntax <internalname> =<internalname> <entryname> <ordinal> @<ordinal>
+þformat syntax <libraryname> <number> <initialization> <termination>
+þformat syntax <appname> <apptype> <input_file>.imp <input_file>.lib
+þformat syntax <output_file>.lib <output_file>.a <input_file>.def
+þformat syntax <idmdll> <dataseg> -m<limit> -s<limit> <libdir> <directory>
+þformat syntax <address> <range> <value> <register> <condition> <list>
+þformat syntax <response_file> <option> <map_file> -m<map_file>
+þformat syntax <tss_file> <dll_name> <level>
+þformat syntax LIBRARY INITGLOBAL INITINSTANCE TERMGLOBAL TERMINSTANCE
+þformat syntax NEWFILES LONGNAMES EXPORTS RESIDENTNAME DESCRIPTION NONAME
+þformat syntax NOTWINDOWCOMPAT WINDOWAPI WINDOWCOMPAT NAME STUB STACKSIZE
+
+þformat abbrev etc.
+
+þif text
+þh= Table of Contents
+þtoc
+þendif
+
+þh1 Introduction to the emx Application Developer's Guide
+þlabel introduction
+þipf
+:font facename=Helv size=24x14.:hp2.emx 0.9d APPLICATION DEVELOPER'S GUIDE
+:ehp2.
+:p.
+:font facename=Helv size=16x10.      Copyright (c) 1990-1998 by Eberhard Mattes
+:font facename=default size=0x0.
+:p.
+þendipf
+
+  This document describes how to use emx utilities to create programs
+  running under emx and how to create OS/2 programs with the emx
+  utilities.  In this document, OS/2 stands for OS/2 2.x and later.
+
+  The GNU utilities are described in þtt{/emx/doc/emxgnu.doc} and
+  þtt{/emx/book/emxgnu.inf}.
+
+  There are three methods for creating executable files:
+
+þdescription
+þitem (E1)
+
+        using þhpt{ld} and þhpt{emxbind}
+
+þitem (E2)
+
+        using þhpt{emxomf}, þhpt{emxomfld} and LINK386, the program
+        will use the emx.dll dynamic link library for performing
+        system calls
+
+þitem (E3)
+
+        using emxomf, emxomfld and LINK386, the program will be linked
+        with a system call library (creating a stand-alone application
+        or DLL)
+
+þenddescription
+
+  The assembler creates a Unix-style a.out object file (.o file).
+  When using method (E1), .o files created by the assembler are linked
+  by a Unix-style linker with Unix-style libraries (.a files) to
+  create a Unix-style a.out file.  Then, emxbind is used to turn this
+  file into an .exe file that can be executed under both OS/2 and
+  DOS.  Using method (E1) enables core dumps and þhpt{fork()}.
+  Moreover, programs created with method (E1) can be debugged using
+  þhpt{GDB}, the GNU debugger.  Programs created using method (E1) use
+  emx (emx.dll under OS/2, emx.exe under DOS) for system calls.
+
+  When using method (E2), the .o files created by the assembler are
+  converted to Object Module Format files (.obj files).  These files
+  are linked with the OS/2 linker LINK386.  The libraries are .lib
+  files.  emxomfld is a front end to LINK386 which converts the ld
+  command line to a LINK386 command line.  Programs created with
+  method (E2) cannot create core dumps, cannot call fork() and cannot
+  be debugged with GDB.  Method (E2) works only under OS/2 and creates
+  programs that work only under OS/2.  You can use IBM's IPMD and
+  SD386 debuggers to debug programs created with methods (E2) and
+  (E3).  Files created with method (E2) are usually smaller.  The
+  emx.dll dynamic link library is used for system calls.  The
+  þhpt{-Zomf} option of þhpt{GCC} selects method (E2).
+
+  When using method (E3), the program won't call the emx.dll dynamic
+  link library.  A system call library (emx emulator) is linked to the
+  program.  The system call library maps system calls to OS/2 API
+  calls.  Only a subset of the emx system calls is available with
+  method (E3).  For instance, the þhpt{general terminal interface} is
+  not available.  Functions which are not available or are limited
+  with method (E3) are marked [*] in the library reference.  Use a
+  þhpt{module definition file} and the þhpt{STACKSIZE statement} to
+  set the stack size.  Alternatively, you can use the þhpt{-Zstack}
+  option of GCC.  The default stack size is 0x8000 bytes.  Note that
+  the command line arguments and environment pointers are copied
+  to the stack on startup.
+
+  The following table summarizes the methods for creating executable
+  files.
+
+þverbatim
+  Method                         ³  (E1)        ³  (E2)       ³  (E3)
+  ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄ
+  GCC options                    ³              ³ -Zomf       ³ -Zomf -Zsys
+  Object file format             ³ a.out        ³ OMF         ³ OMF
+  Object file name extension     ³ .o           ³ .obj        ³ .obj
+  Library file name extension    ³ .a           ³ .lib        ³ .lib
+  Executable file format         ³ LX & a.out   ³ LX          ³ LX
+  Object files converted by      ³ N/A          ³ emxomf      ³ emxomf
+  Executable files converted by  ³ emxbind      ³ N/A         ³ N/A
+  Linker                         ³ ld           ³ LINK386     ³ LINK386
+  Librarian                      ³ ar           ³ emxomfar    ³ emxomfar
+  Minimal set of libraries       ³ c gcc        ³ c gcc       ³ c gcc
+                                 ³              ³ emx emx2    ³ sys os2
+  Methods for importing          ³ (I1) (I2)    ³ (I3)        ³ (I3)
+  Can link with OMF libraries    ³ NO (note 1)  ³ NO (note 1) ³ YES
+  Debugger                       ³ GDB          ³ IPMD, SD386 ³ IPMD, SD386
+  emx.dll required at run time   ³ YES          ³ YES         ³ NO
+  Library support                ³ +++          ³ ++          ³ +
+  Core dumps                     ³ YES          ³ NO          ³ NO
+  Size overhead                  ³ big          ³ none        ³ (note 2)
+  Programs run under DOS         ³ YES          ³ NO          ³ NO
+  Can create DLLs                ³ YES (note 3) ³ YES         ³ YES
+  EMXOPT environment variable    ³ YES          ³ YES         ³ NO
+  -Zmt supported                 ³ YES          ³ YES         ³ YES
+  -Zcrtdll supported             ³ YES          ³ YES         ³ NO
+þendverbatim
+
+þdescription
+þitem Note 1:
+
+  import libraries can be used after conversion with þhpt{emximp}
+
+þitem Note 2:
+
+  depends on the set of syscalls used by the program
+
+þitem Note 3:
+
+  not recommended unless you want to debug the DLL with GDB
+
+þenddescription
+
+  See also section `þhpt{Startup modules and libraries}' of
+  þtt{emxgnu.doc}.
+
+  Programs created with method (E1) or (E2) can use emxlibcm.dll or
+  emxlibcs.dll, dynamic link libraries containing the C library.  Use
+  the -Zcrtdll option to make a program that uses emxlibcm.dll
+  (multithread library) or emxlibcs.dll (single-thread library).
+  Programs which use emxlibcm.dll or emxlibcs.dll don't run under DOS.
+  For running the application, either emxlibcm.dll or emlibcs.dll
+  (depending on whether the application is a single-thread or
+  multithread program) and emx.dll are required.  There are three
+  advantages of using emxlibcm.dll and emxlibcs.dll:
+
+þitemize
+þitem
+    reduced executable size
+þitem
+    reduced memory requirements
+þitem
+    programs don't have to be re-linked when the C library is changed.
+þenditemize
+
+  Use -Zomf -Zcrtdll -lwrap -s to minimize the size of the executable
+  file.
+
+  Please note that you should change the name of emxlibcm.dll or
+  emxlibcs.dll if you want to distribute your program with modified
+  versions of those dynamic link libraries.
+
+  For using floating point arithmetic, a coprocessor is required
+  (80387 or i486).  All exceptions are masked, that is, computation
+  continues with +#INF, -#INF, +#NAN or -#NAN after an error.
+
+  A 387 coprocessor is not required for doing floating point
+  arithmetic under OS/2.  Under DOS, a 387 coprocessor (or i486)
+  is required for doing floating point arithmetic.
+
+  A core dump file will be written if a program is terminated by
+  signal SIGSEGV (protection violation), SIGILL (illegal instruction),
+  SIGABRT (abort()), SIGFPE (floating point exception), SIGTRAP
+  (breakpoint), SIGBUS, SIGEMT, SIGQUIT, or SIGSYS.  You can later
+  debug the program using the .exe file and the core dump file.  The
+  name of the core dump file is þtt{core}, and it is put into the
+  current working directory.  Use the -c emx option to suppress
+  writing a core dump file.  When linking a program using method (E2)
+  or (E3), core dump files are not written by that program.
+
+  OS/2 and DOS support both the forward slash and the backslash for
+  separating directories.  Unix utilities usually treat the backslash
+  character specially, therefore you should use the forward slash.
+  This document uses forward slash unless an OS/2 or DOS command is
+  shown (cmd.exe and command.com use backslashes).
+
+
+  File name extensions (the list is incomplete):
+
+þexample
+a                       Unix-style library (archive)
+bat                     DOS batch file
+c                       C source file
+cc                      C++ source file
+cmd                     OS/2 batch file
+cpp                     C++ source file
+cxx                     C++ source file
+def                     Module definition file
+doc                     Documentation file
+dll                     Dynamic link library
+dvi                     Device independent file, created by TeX
+exe                     Executable file
+h                       C include file (header file)
+i<digits>               Split GNU info file
+imp                     emx import list file
+inf                     GNU info file (use `info' for reading) or
+                        OS/2 on-line book (use `VIEW' for reading)
+lib                     OMF library
+m                       Objective C source file
+map                     Map file, created by LINK386 or emxbind
+o                       Object file (Unix style, a.out)
+obj                     Object file (OMF)
+rc                      Resource script file
+res                     Binary resource file
+s                       Assembler source file
+tex                     TeX (or texinfo) source file
+þendexample
+
+  Directories:
+
+þexample
+/emx                    Main directory, contains no files
+/emx/bin                Executable files and batch files
+/emx/dll                DLLs for OS/2
+/emx/doc                Documentation
+/emx/include            Header files (C language)
+/emx/lib                Libraries
+/emx/lib/mt             Multithread libraries
+/emx/lib/st             Single-thread libraries
+/emx/new                New .exe files created by the makebin batch file
+/emx/samples            Sample programs
+/emx/src                Source code
+/emx/test               Test programs
+þendexample
+
+þh1 Managing bound .exe files with emxbind
+þlabel emxbind
+þi1 emxbind
+þkeyword emxbind
+
+  The emxbind utility is used to create and modify bound .exe files
+  using method (E1).  The action to be performed is specified by a
+  command letter which looks like a command line option.
+
+þif ipf
+
+  The following emxbind commands are available:
+
+þdescription
+þitem -b
+
+    þhpt{Create an .exe file from an a.out file}
+
+þitem -s
+
+    þhpt{Change the type of an .exe file}
+
+þitem -x
+
+    þhpt{Extract the a.out file from a bound .exe file}
+
+þitem -a
+
+    þhpt{Change the emx options of a bound .exe file}
+
+þitem -i
+
+    þhpt{Display the emx options of a bound .exe file}
+
+þitem -u
+
+    þhpt{Update emx.exe in a bound .exe file}
+
+þitem -s
+
+    þhpt{Strip the symbol table from a bound .exe file}
+
+þenddescription
+þendif
+
+þh2 Creating an .exe file
+þlabel Create an .exe file from an a.out file
+þlabel -b command
+þi2 -b command
+
+  emxbind binds emx.exe and an emx executable file into one executable
+  file which runs both under OS/2 2.0 (or later) and DOS.
+
+þipfminitoc
+
+þh3 Important notes
+
+  The bound program does not run under DOS versions prior to 3.0.  emx
+  options cannot be put onto the command line; use EMXOPT instead.
+
+  Do not compress the bound executable with a program like TINYPROG,
+  PKLITE, or LZEXE, which makes the program uncompress itself when
+  started.
+
+  emx can be used for running bound .exe files created using the same
+  version of emx.  þhpt{spawn*()} and þhpt{exec*()} also work on bound
+  .exe files.
+
+  The GNU programs þhpt{GDB}, þbf{nm}, þbf{objdump} and þbf{size}
+  (but not þhpt{strip}) have been modified to work with bound .exe
+  files.
+
+  You can use the emx loader emxl.exe to save disk space.  When the
+  bound executable is run, emxl.exe will load emx.exe to run the
+  program.  There is a small speed penalty due to locating and loading
+  emx.exe.
+
+  If the EMX environment variable is set, emxl.exe first tries to load
+  the file specified by that variable.  Use
+
+þexample
+SET EMX=c:\emx\bin\emx.exe
+þendexample
+
+  to speed up locating emx.exe.  You can also use emxd.exe this way.
+
+  If the EMX environment variable is not set or the emx.exe file
+  specified by EMX could not be loaded, emxl.exe will try emx.exe in
+  the current working directory, then emx.exe in all directories
+  listed in the PATH environment variable.
+
+þh3 Invoking emxbind to create an .exe file
+
+  There are two ways to invoke emxbind to create an .exe file.  The
+  first one is used if you want to use the default emxl.exe:
+
+þindent
+  þsy{emxbind [-b] [<emxbind_options>] [-o <output_file>[.exe]]} þbreak
+  þsy{        <input_file> [<emx_options>]}
+þendindent
+
+  The second one is used if you want to specifiy the path name of the
+  emx executable (emxl.exe, emx.exe, or emxd.exe) to use:
+
+þindent
+  þsy{emxbind [-b] [<emxbind_options>]} þbreak
+  þsy{        <emx>[.exe] <input_file> [<output_file>[.exe]] [<emx_options>]}
+þendindent
+
+  The command line consists of the following elements:
+
+þlist
+þitem <emxbind_options>
+
+  The following options can be given to emxbind.  They must appear at
+  the beginning of the emxbind arguments.
+
+þdescription
+þitem -b (optional)
+
+    this emxbind command means `bind' and is the default.  If you want
+    to use the -s option (strip symbol table), -b cannot be omitted,
+    that is, you should type -bs (otherwise, emxbind would perform the
+    þhpt{-s command} described below)
+
+þitem -c[<core_file>]
+
+    combine an a.out file and a core dump file created for that a.out
+    file into one program.  This can be used to create a a program
+    with preloaded data.  Note that the .exe file will waste a lot of
+    disk space.  If you don't enter <core_file>, þtt{core} will be
+    used.  The core dump file must not contain multiple heap objects
+
+þitem -d[<def_file>]
+
+    read the module definition file <def_file>.  The default extension
+    is .def.  If <def_file> is omitted, <input_file> with .def
+    extension is used instead.  See section þref{module definition
+    files} for details on þhpt{module definition files}
+
+þitem -E<dll>
+
+    use <dll>þtt{.dll} instead of emx.dll.  This option is used for
+    referencing an alternate, renamed emx.dll.  If -E<dll> is not
+    used, emxbind takes the name of the DLL from the EMXBIND_DLL
+    environment variable.  For instance, to use þtt{myx.dll} instead
+    of emx.dll, use the following command:
+þexample
+set emxbind_dll=myx
+þendexample
+    If both -E<dll> and EMXBIND_DLL are not set, emxbind uses emx.dll
+
+þitem -f
+
+    set application type to `full screen'.  See also the þhpt{-e
+    command}
+
+þitem -h<heap_size>
+þlabel -h<heap_size> option of emxbind
+
+    set heap size for OS/2.  This is the space available for
+    allocation by þhpt{malloc()} and þhpt{_tmalloc()}.  For emx 0.9c
+    and later, the heap size specifies the size of the initial heap
+    object; malloc() may allocate additional heap objects so that the
+    total size of the heap is no longer limited by the size of the
+    initial heap object.  The number is given in decimal, octal or
+    hexadecimal, using C notation.  The heap size is specified in
+    megabytes (0 through 512).  The default value is 32.  For DOS, the
+    heap size is controlled by the þhpt{-s# emx option} (see section
+    þref{Using emx options})
+
+þitem -k<stack_size>
+þlabel -k<stack_size> option of emxbind
+
+    set the size of the stack object of the executable file.  The
+    number is given in decimal, octal or hexadecimal, using C
+    notation.  The stack size set by this option is used under OS/2.
+    The stack size is given in KByte, the default is 8192 (8 MByte).
+    The stack size must be between 20 and 524288 (512 MByte).  The
+    stack size should not be less than 32 KByte.  You should not use
+    -k without -b, as a -k command is planned for a future version of
+    emxbind
+
+þitem -m<map_file>
+
+    write the map file <map_file>.  The format is simular to that of
+    map files written by LINK386.  The default extension is
+    `þtt{map}'.
+
+þitem -p
+
+    set application type to `Presentation Manager'.  See also the
+    þhpt{-e command}
+
+þitem -q
+
+    don't display emxbind banner line
+
+þitem -r<res_file>
+
+    put resources from binary resource file <res_file> (no default
+    extension) into the .exe file.  Use þtt{rc -r} to create the
+    binary resource file.  Do not use rc to put the resources into the
+    .exe file
+
+þitem -s
+
+    strip symbols (requires -b).  You can also strip the symbol table
+    before creating the .exe file by calling
+þif ipf
+    þhpt{strip}
+þelse
+    strip.exe
+þendif
+    or after
+    creating the .exe file by using the þhpt{-s command} of emxbind
+
+þitem -v
+
+    display more information: list resources, display path name of
+    emxl.exe unless given on command line, display the statements in
+    the module definition file that are ignored
+
+þitem -w
+
+    set application type to `windowed' (default).  See also the
+    þhpt{-e command}
+
+þenddescription
+
+    Only one of the options -f, -p and -w can be used.  If none of
+    these options is used, the application type is taken from the NAME
+    statement of the module definition file (-d option).  If no module
+    definition file is used, -w is the default.
+
+þitem þsy{[-o <output_file>[.exe]]}
+
+    path name of the bound executable file.  The default extension is
+    .exe unless the LIBRARY statement is used in the module definition
+    file.  If LIBRARY is used in the module definition file (that is,
+    when you are creating a dynamic link library), the default
+    extension is .dll.  If the <output_file> parameter is omitted, the
+    <input_file> parameter will be used instead (do not specify an
+    extension for the input file to avoid overwriting the input
+    file!).  Moreover, the output file name (or <input_file>, if
+    <output_file> is omitted) sans directory part and extension is
+    used as module name for the .exe file unless a module name is
+    defined with a NAME or LIBRARY statement in the module definition
+    file.
+
+    The -o option can be used only if there is exactly one file name
+    (which is not the argument of an option) given
+
+þitem <emx> (optional if no <output_file> is given)
+
+    path name of emx (default extension: .exe), that is emx.exe,
+    emxd.exe or emxl.exe.  Using þtt{emxl.exe} is recommended.  If
+    this argument is omitted (in this case the <output_file> argument
+    must be omitted as well), the filename from the STUB statement of
+    the module definition file is used.  emxbind searches the
+    directories listed in the EMXPATH and PATH environment variables
+    for that file.  If no module definition file is used or if the
+    STUB statement isn't used, the file /emx/bin/emxl.exe will be
+    used.  If that file doesn't exist, emxbind searches the
+    directories listed in the EMXPATH and PATH environment variables
+    for emxl.exe.  If that fails, emxl.exe is taken from the current
+    working directory.  If the -v option is given, the path name of
+    emxl.exe will be displayed unless a STUB statement is present
+
+þitem <input_file>
+
+    path name of the a.out file to be read
+
+þitem <output_file> (optional)
+
+    path name of the bound executable file.  The default extension is
+    .exe unless the LIBRARY statement is used in the module definition
+    file.  If LIBRARY is used in the module definition file (that is,
+    when you are creating a dynamic link library), the default
+    extension is .dll.  If the <output_file> parameter is omitted, the
+    <input_file> parameter will be used instead (do not specify an
+    extension for the input file to avoid overwriting the input
+    file!).  Moreover, the output file name (or <input_file>, if
+    <output_file> is omitted) sans directory part and extension is
+    used as module name for the .exe file unless a module name is
+    defined with a NAME or LIBRARY statement in the module definition
+    file.
+
+    Use <output_file> instead of the -o option if you need to specify
+    <emx>
+
+þitem <emx_options> (optional)
+
+    emx options to be used when running the bound program.  These
+    options will be examined before those given in EMXOPT.  emxbind
+    does not completely check the validity of the options.  See
+þif ipf
+    þhpt{Using emx options}
+þelse
+    section þref{Using emx options}
+þendif
+    for details.
+
+þdescription
+þitem -a*
+        [DOS] Enable dangerous features
+
+þitem -c
+        Disable core dumps caused by signals and exceptions
+
+þitem -d
+        [DOS] Don't use extended memory
+
+þitem -e
+        [DOS] Redirect standard error to standard output
+
+þitem -h#
+        Set file handle limit
+
+þitem -n
+        [OS/2] Suppress exception popups
+
+þitem -o
+        [DOS] Send the register dump of an exception to stdout instead of
+        the þtt{CON} device
+
+þitem -p
+        [DOS] Don't use low memory (lower Megabyte)
+
+þitem -q
+        Quote all arguments passed to child processes
+
+þitem -s#
+        [DOS] Set stack size (KByte)
+
+þitem -t
+        Truncate file names to 8.3 format
+
+þitem -x
+        [OS/2] Don't suppress wildcard expansion and response files if the
+        `MKS Korn shell' method of passing command line arguments is
+        used
+
+þitem -C#
+        [DOS] Commit memory
+
+þitem -E
+        Run debuggee in same session
+
+þitem -K
+        Avoid using DosKillThread
+
+þitem -L
+        [DOS] Disable preloading of pages from the executable file
+
+þitem -Z
+        [DOS] Don't zero-fill pages.  This option is used for testing
+þenddescription
+þendlist
+
+þh3 Examples
+
+þexample
+emxbind \emx\bin\emxl myprog -s16384 -p
+þendexample
+
+  This example will bind þtt{myprog} and emxl.exe into myprog.exe.
+  The stack size will be set to 16384 KByte (under DOS) if this value
+  is not overridden by EMXOPT when myprog.exe is run.  The program
+  will be able to run DOS programs.  This example can be abbreviated
+  to
+
+þexample
+emxbind myprog -s16384 -p
+þendexample
+
+  To create an .exe file whose base name is different from the base
+  name of the a.out file, invoke emxbind this way:
+
+þexample
+emxbind \emx\bin\emxl myprog testprog -s16384 -p
+þendexample
+
+  This example will create þtt{testprog.exe}.  This example can be
+  abbreviated t6o
+
+þexample
+emxbind -o testprog myprog -s16384 -p
+þendexample
+
+
+þh2 Changing the type of an .exe file
+þlabel -e command
+þlabel Change the type of an .exe file
+þi2 -e command
+
+  You can change the application type after creating an .exe file with
+  emxbind.  For instance, this can be used after creating an .exe file
+  with GCC.  Exactly one of the options -f, -p and -w must be given.
+  Note that you can set the application type while creating an .exe
+  file with the -b command.
+
+  þbf{Usage:}
+
+þindent
+  þsy{emxbind -e <emxbind_options> <program_file>[.exe]}
+þendindent
+
+þlist
+þitem <emxbind_options>
+
+  The following options can be given to emxbind.  They must appear at
+  the beginning of the emxbind arguments.
+
+þdescription
+þitem -e
+
+    change the type of an .exe file
+
+þitem -f
+
+    set application type to `full screen'
+
+þitem -p
+
+    set application type to `Presentation Manager'
+
+þitem -q
+
+    don't display emxbind banner line
+
+þitem -w
+
+    set application type to `windowed'
+
+þenddescription
+
+    Exactly one of the options -f, -p and -w must be given.
+
+þitem <program_file>
+
+    path name of the bound .exe file to be changed.  The default
+    extension is .exe
+
+þendlist
+
+  Example:
+
+þexample
+gcc -o myprog.exe myprog.c
+emxbind -ep myprog
+þendexample
+
+  Alternatively, you can create a file named myprog.def containing
+
+þexample
+NAME WINDOWAPI
+þendexample
+
+  and invoke GCC with the following command line:
+
+þexample
+gcc -o myprog.exe myprog.def
+þendexample
+
+þh2 Extracting the a.out file from a bound .exe file
+þlabel Extract the a.out file from a bound .exe file
+þi2 -x command
+
+  þbf{Usage:}
+
+þindent
+  þsy{emxbind -x [<emxbind_options>] <input_file>[.exe] <output_file>}
+þendindent
+
+þlist
+þitem <emxbind_options>
+
+  The following options can be given to emxbind.  They must appear at
+  the beginning of the emxbind arguments.
+
+þdescription
+þitem -q
+
+    don't display emxbind banner line
+
+þitem -x
+
+    extract a.out file
+
+þenddescription
+
+þitem <input_file>
+
+    path name of a bound .exe file to be read.  The default extension
+    is .exe
+
+þitem <output_file>
+
+    path name of the a.out file to be created
+
+þendlist
+
+  After extracting the a.out file from an .exe file which was created
+  using a core dump file, you should not use that file for creating an
+  .exe file.  Use the -u command if you want to replace emx.exe,
+  emxl.exe or emxd.exe contained in a bound .exe file.
+
+  The relocation information is removed by emxbind while binding an
+  .exe file.  Therefore, the a.out file extracted from a bound .exe
+  file does not include relocation information.  This applies to
+  dynamic link libraries and a.out files linked with the -R option of
+  þhpt{ld}.  Import information will be lost.
+
+þh2 Displaying and changing the emx options of a bound .exe file
+þlabel Change the emx options of a bound .exe file
+þlabel Display the emx options of a bound .exe file
+þi2 -a command
+þi2 -i command
+
+  emxbind also can display or change the emx options of a bound .exe
+  file.  Note that the -i option was called -s in previous versions of
+  emxbind.
+
+  þbf{Usage (showing options):}
+
+þindent
+  þsy{emxbind -i [<emxbind_options>] <program_file>[.exe]}
+þendindent
+
+  þbf{Usage (altering options):}
+
+þindent
+  þsy{emxbind -a [<emxbind_options>] <program_file>[.exe] [<emx_options>]}
+þendindent
+
+þlist
+þitem <emxbind_options>
+
+  The following options can be given to emxbind.  They must appear at
+  the beginning of the emxbind arguments.
+
+þdescription
+þitem -a
+
+    change emx options
+
+þitem -q
+
+    don't display emxbind banner line
+
+þenddescription
+
+þitem <program_file>
+
+    path name of a bound .exe file to be read or changed,
+    respectively.  The default extension is .exe
+
+þitem <emx_options>
+
+    remove the options if empty, otherwise put these options into the
+    .exe file (see also the þhpt{-b command})
+þendlist
+
+
+þh2 Updating emx.exe in a bound .exe file
+þlabel Update emx.exe in a bound .exe file
+þi2 -u command
+
+  emxbind also can replace the DOS loader in an existing bound .exe
+  file.  You should use this only if you can't rebuild the .exe file
+  because you don't have the a.out file.  Note that you usually have
+  to re-link your program when using a new release of emx due to
+  differences in the system interface.
+
+  þbf{Usage:}
+
+þindent
+  þsy{emxbind -u [<emxbind_options>] <emx>[.exe] <program_file>[.exe]}
+þendindent
+
+þlist
+þitem <emxbind_options>
+
+  The following options can be given to emxbind.  They must appear at
+  the beginning of the emxbind arguments.
+
+þdescription
+þitem -q
+
+    don't display emxbind banner line
+
+þitem -u
+
+    replace DOS loader
+
+þenddescription
+
+þitem <emx>
+
+    path name of emxd.exe, emx.exe or emxl.exe.  This DOS loader is
+    copied to the <program_file>.  The default extension is .exe.
+
+þitem <program_file>
+
+    path name of the bound .exe file to be changed.  The default
+    extension is .exe.  Better make a backup copy of the file before
+    using þtt{emxbind -u}.
+
+þendlist
+
+
+þh2 Stripping the symbol table from a bound .exe file
+þlabel Strip the symbol table from a bound .exe file
+þi2 -s command
+þlabel -s command
+
+  emxbind can also be used to remove the symbol table from a bound
+  .exe file
+þif ipf
+  (þhpt{strip}
+þelse
+  strip.exe
+þendif
+  cannot be used on .exe files).  You can also
+  strip the symbol table while creating the .exe file by using the -s
+  option with the -b command.
+
+  þbf{Usage:}
+
+þindent
+  þsy{emxbind -s [<emxbind_options>] <program_file>[.exe]}
+þendindent
+
+þlist
+þitem <emxbind_options>
+
+  The following options can be given to emxbind.  They must appear at
+  the beginning of the emxbind arguments.
+
+þdescription
+þitem -q
+
+    don't display emxbind banner line
+
+þitem -s
+
+    strip symbol table
+
+þenddescription
+
+þitem <program_file>
+
+    path name of the bound .exe file to be changed.  The default
+    extension is .exe.  If you cannot recreate the .exe file, make a
+    backup copy of the file before using þtt{emxbind -s}.
+þendlist
+
+þi1
+
+þh2 Module definition files
+þlabel module definition file
+þlabel module definition files
+
+  emxbind reads LINK386 compatible module definition files.  In the
+  following list of available þhpt{module definition statements},
+  optional parts are enclosed in brackets.  Case is ignored for
+  keywords (though IBM says you should use upper case for keywords).
+  See below a list of þhpt{reserved words}.  You cannot use keywords
+  for function names, module names etcþ.  In case of a conflict,
+  enclose the offending name in single or double quotes.  Quotes are
+  also required if a name contains a special character such as blank,
+  tab, `@', `=', `.' or `;'.  Lines starting with a semicolon are
+  treated as comment lines and are completely ignored.  Numbers can be
+  given in decimal, octal or hexadecimal, using C syntax.
+
+þh3 Module definition statements
+þlabel module definition statements
+
+þlist
+þitem þsy{CODE ...}
+þkeyword CODE
+
+    Define default attributes for code segments.  Ignored by emxbind.
+
+þitem þsy{DATA ...}
+þkeyword DATA
+
+    Define default attributes for data segments.  Ignored by emxbind.
+
+þitem þsy{DESCRIPTION '<text>'}
+þkeyword DESCRIPTION
+
+    Put a text into the .exe or .dll file.  The text must be enclosed
+    in single or double quotes.  To include a single quote in single
+    quotes or a double quote in double quotes, simply enter the quote
+    twice.  The text will be put at the start of the nonresident name
+    table, which is put at the end of the .exe or .dll file.
+    Typically, DESCRIPTION is used to insert a copyright message.
+
+    Example:
+
+þexample
+DESCRIPTION 'HAL9000 -- Copyright (c) 2001 by Space Odyssey Inc.'
+þendexample
+
+þitem þsy{EXETYPE ...}
+þkeyword EXETYPE
+
+    Identifies the operating system.  Ignored by emxbind (the
+    operating system is always OS/2).
+
+þitem þsy{EXPORTS <entryname> [=<internalname>] [@<ordinal> [RESIDENTNAME|NONAME]]}
+þkeyword EXPORTS
+
+    Make functions and variables visible outside the .exe or .dll
+    file.  All entry points of a dynamic link library must be exported
+    using EXPORTS.  Exporting entry points of .exe files is less
+    common.
+
+    Following the EXPORTS keyword, you can enter any number of
+
+þindent
+  þsy{<entryname> [=<internalname>] [@<ordinal> [RESIDENTNAME|NONAME]]}
+þendindent
+
+    lines, one for each entrypoint.  <entryname> is the name of the
+    function as made visible outside of the .exe or .dll file.
+    <entryname> is always converted to upper case.  <internalname> is
+    the name of the function as defined in your program.  If
+    =<internalname> is omitted, it is assumed to be identical to
+    <entryname>.  <internalname> is case sensitive.  Exported
+    functions not only have a name (<entryname>), they also have an
+    ordinal number, the position within the name table.  Using ordinal
+    numbers when importing saves space and is supposed to be faster.
+    You can assign a specific ordinal number to an exported function
+    by entering @<ordinal>.  <ordinal> is the ordinal number to be
+    used (1 through 65535).  If @<ordinal> is not given, emxbind chooses an
+    unused ordinal number, but you won't know the ordinal number and
+    therefore cannot use it for importing.  If @<ordinal> is
+    specified, <entryname> is by default put into the nonresident name
+    table, which is not kept in memory while the .exe or .dll file is
+    running or loaded, respectively.  This saves space.  To put
+    <entryname> into the resident name table, enter RESIDENTNAME.
+    Then, OS/2 will keep <entryname> in memory while the .exe or .dll
+    file is running or loaded, respectively.  This saves time.
+    Example:
+
+þexample
+EXPORTS my_qsort=qsort1 @1 RESIDENTNAME
+        my_hsort
+þendexample
+
+    Use NONAME to avoid putting <entryname> into the name tables.
+    This may be required for dynamic link libraries which export many
+    functions and variables.
+
+þitem þsy{HEAPSIZE <number>}
+þkeyword HEAPSIZE
+
+    Set the size of the local heap.  <number> can be þtt{MAXVAL} as
+    well.  Ignored by emxbind.
+
+þitem þsy{IMPORTS [<internalname>=]<modulename>.<entry>}
+þkeyword IMPORTS
+
+    Define imported symbols.  Ignored by emxbind.  Use emximp
+    instead.
+
+þitem þsy{LIBRARY [<libraryname>] [<initialization>] [<termination>]}
+þkeyword LIBRARY INITGLOBAL INITINSTANCE TERMGLOBAL TERMINSTANCE
+
+    Create dynamic link library (.dll file).  If LIBRARY is used, it
+    must be the first statement of the module definition file.
+    <libraryname> is the name of the module.  The name is the first
+    entry of the resident name table and must match the base name of
+    the .dll file.  If <libraryname> is not specified, the name of the
+    output file sans directory and extension is used.
+    <initialization> can be either INITGLOBAL or INITINSTANCE.
+    INITGLOBAL causes the library initialization function to be called
+    when the DLL is initially loaded into memory.  INITINSTANCE causes
+    the library initialization function to be called each time a
+    process loads the DLL and each time a process referencing the DLL
+    is started.  <termination> can be either TERMGLOBAL or
+    TERMINSTANCE.  TERMGLOBAL causes the library termination function
+    to be called when the DLL is no longer used by any process.
+    TERMINSTANCE causes the library termination function to be called
+    each time a process frees the DLL and each time a process
+    referencing the DLL terminates.
+
+    Currently, TERMGLOBAL seems to cause the termination function not to
+    be called at all.
+
+    See þhpt{_DLL_InitTerm()} for details about the library
+    initialization function and the library termination function.
+
+    If <initialization> and <termination> are omitted, INITGLOBAL and
+    TERMGLOBAL are used.  If one of <initialization> and <termination>
+    is specified, the other one defaults to an appropriate value, as
+    shown by the following table:
+
+þexample
+                      ³ (no termination) ³ TERMGLOBAL   ³ TERMINSTANCE
+ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄ
+  (no initialization) ³ INITGLOBAL       ³ INITGLOBAL   ³ INITINSTANCE
+                      ³ TERMGLOBAL       ³ TERMGLOBAL   ³ TERMINSTANCE
+ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄ
+  INITGLOBAL          ³ INITGLOBAL       ³ INITGLOBAL   ³ INITGLOBAL
+                      ³ TERMGLOBAL       ³ TERMGLOBAL   ³ TERMINSTANCE
+ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄ
+  INITINSTANCE        ³ INITINSTANCE     ³ INITINSTANCE ³ INITINSTANCE
+                      ³ TERMINSTANCE     ³ TERMGLOBAL   ³ TERMINSTANCE
+þendexample
+
+    Examples:
+
+þexample
+LIBRARY
+LIBRARY INITINSTANCE
+LIBRARY mylib
+LIBRARY mylib INITINSTANCE TERMGLOBAL
+þendexample
+
+þitem þsy{NAME [<appname>] [<apptype>] [NEWFILES]}
+þkeyword NAME NOTWINDOWCOMPAT WINDOWAPI WINDOWCOMPAT NEWFILES LONGNAMES
+
+    Create an .exe file.  If NAME is used, it must be the first
+    statement.  <appname> is the name of the module.  The name is the
+    first entry of the resident name table.  If <appname> is not
+    specified, the name of the output file sans directory and
+    extension is used.  <apptype> can be one of the following
+    keywords:
+
+þdescription
+þitem NOTWINDOWCOMPAT
+
+        the program will run full-screen
+
+þitem WINDOWAPI
+
+        the program is a Presentation Manager application
+
+þitem WINDOWCOMPAT
+
+        the program will run in a text window
+
+þenddescription
+
+    The default is WINDOWCOMPAT.  <apptype> can be overridden on the
+    emxbind command line with the -f, -p and -w options.
+
+    The NEWFILES keyword (LONGNAMES is an alias) is ignored, emx
+    applications always use long file names.  Examples:
+
+þexample
+NAME WINDOWAPI
+NAME myprog
+NAME myprog NOTWINDOWCOMPAT
+þendexample
+
+þitem þsy{OLD '<library>'}
+þkeyword OLD
+
+    Preserve import information.  Ignored by emxbind.
+
+þitem þsy{PROTMODE}
+þkeyword PROTMODE
+
+    Executable runs only in protected mode.  Ignored by emxbind.
+
+þitem þsy{SEGMENTS ...}
+þkeyword SEGMENTS
+
+    Set segment attributes.  Ignored by emxbind.
+
+þitem þsy{STACKSIZE <number>}
+þlabel STACKSIZE statement
+þkeyword STACKSIZE
+
+    Set the stack size for OS/2 programs.  Always use this statement
+    as the default is too small.  The stack size should be 32768 or
+    more.  The stack size for DOS programs is controlled by the
+    þhpt{-s# emx option}.
+
+þitem þsy{STUB '<program>'}
+þkeyword STUB
+
+    Use <program> as DOS executable file.  This program is run if the
+    .exe or .dll file is started under DOS.  <program> is sought in
+    the directories listed in the EMXPATH and PATH environment
+    variables unless the filename includes a directory.  If the <emx>
+    argument is given on the emxbind command line, the STUB statement
+    is ignored.  If <emx> is not given and the STUB statement is not
+    present, þtt{\emx\bin\emxl.exe} is used.  If that file does not
+    exist, emxbind searches the directories listed in the EMXPATH and
+    PATH environment variables and the current working directory for
+    emxl.exe.  Example:
+
+þexample
+STUB 'emx.exe'
+þendexample
+þendlist
+
+
+þh3 Reserved words
+þlabel reserved words
+
+  The following words are reserved.  You cannot use them as function
+  names, module names, etc. unless enclosed in quotes.
+
+þexample
+ALIAS                    INVALID                  PHYSICAL
+BASE                     IOPL                     PRELOAD
+CLASS                    LIBRARY                  PRIVATE
+CODE                     LOADONCALL               PRIVATELIB
+CONFORMING               LONGNAMES                PROTECT
+CONTIGUOUS               MAXVAL                   PROTMODE
+DATA                     MIXED1632                PURE
+DESCRIPTION              MOVABLE                  READONLY
+DEV386                   MOVEABLE                 READWRITE
+DEVICE                   MULTIPLE                 REALMODE
+DISCARDABLE              NAME                     RESIDENT
+DOS4                     NEWFILES                 RESIDENTNAME
+DYNAMIC                  NODATA                   SEGMENTS
+EXECUTEONLY              NOEXPANDDOWN             SHARED
+EXECUTE-ONLY             NOIOPL                   SINGLE
+EXECUTEREAD              NONAME                   STACKSIZE
+EXETYPE                  NONCONFORMING            STUB
+EXPANDDOWN               NONDISCARDABLE           SWAPPABLE
+EXPORTS                  NONE                     TERMGLOBAL
+FIXED                    NONPERMANENT             TERMINSTANCE
+HEAPSIZE                 NONSHARED                UNKNOWN
+HUGE                     NOTWINDOWCOMPAT          VIRTUAL
+IMPORTS                  OBJECTS                  WINDOWAPI
+IMPURE                   OLD                      WINDOWCOMPAT
+INCLUDE                  ORDER                    WINDOWS
+INITGLOBAL               OS2
+INITINSTANCE             PERMANENT
+þendexample
+
+
+þh1 Using emx options
+þlabel Using emx options
+
+  Under DOS, emx options can be given on the emx command line:
+
+þindent
+  þsy{emx [<options>] <program> [<arguments>]}
+þendindent
+
+  where <program> is either a bound .exe file or an a.out file.
+  Options marked [*] for DOS below affect only the emx program given on
+  the command line.  All other options are `sticky' and apply to all
+  processes started by that instance of emx.  Options of this type put
+  by emxbind into the executable file are ignored when running an emx
+  program by running emx.  If you need one of these options, put them
+  on the emx command line.
+
+  Under OS/2 and DOS, emx options can also be given in the EMXOPT
+  environment variable.  These options apply to all processes.
+
+  Moreover, you can use emxbind to put emx options into the executable
+  file (see above for restrictions).  In this case, options marked [*]
+  below apply only to the program for which they have been set.  All
+  other options are `sticky' and apply to all processes started by the
+  current instance of emx (unless you are running emx manually as shown
+  above).
+
+  Options given on the emx command line override options given in
+  EMXOPT.  Options given in EMXOPT override options stored in the
+  executable file.
+
+  The following emx options are available:
+
+þdescription
+þitem -a*
+
+     [DOS*] Enable dangerous features: -ac makes data and the stack
+     executable, -am enables þhpt{_memaccess()}, -aw enables write
+     access to all memory areas, -ai enables þhpt{_portaccess()}.  By
+     default, only the .text section is executable, _memaccess() and
+     _portaccess() are disabled.  You can combine letters: for
+     instance, -aim enables both _memaccess() and _portaccess(), -aciw
+     enables all dangerous features.  Note: -ac is automatically set
+     in programs run with P_DEBUG mode of þhpt{spawn*()}.  This is
+     used to be able to call functions of the debuggee by putting code
+     into the stack.
+
+þitem -c
+
+     [*] Disable core dumps caused by signals.  Core dumps created by
+     þhpt{_core()} are not disabled by -c.
+
+þitem -d
+
+     [DOS] Don't use extended memory.  Only low memory (below 1 MByte)
+     will be used.  Use this if you suspect a bug in the extended
+     memory management of emx or a bug in an extended memory manager.
+
+þitem -e
+
+     [DOS*] Redirect the standard error handle (2) to standard output
+     (1)
+
+þitem -h#
+þlabel -h# emx option
+
+     [DOS, OS/2*] Set file handle limit.  Under DOS, the DOS file
+     handle limit for the emx process is set to þsy{#}.  The number
+     þsy{#} must be between 10 and 255.  This option is ignored for
+     DOS versions earlier than 3.30.  This option does not change the
+     emx limit for the number of files per process -- that limit is
+     always 40.  Under OS/2, the file handle limit for the current
+     process is set to þsy{#}.  The number þsy{#} must be between 10
+     and 65536.
+
+þitem -m#
+
+     [DOS] Select machine.  -m1 selects Fujitsu FMR70 (not implemented
+     yet), -m2 selects NEC PC-98 (not implemented yet), -m3 selects
+     Inboard 386/PC.
+
+þitem -o
+
+     [DOS] Send the register dump of an exception to stdout.  Without
+     -o, the register dump is sent to the CON device.  You need -o for
+     redirecting the register dump to a file.
+
+þitem -p
+
+     [DOS] Don't use low memory (lower Megabyte); use this if the
+     program runs a DOS program; not required for running emx programs
+     (either a.out and bound .exe) unless command.com is called to run
+     the programs (as done by the þhpt{system()} library function).
+     If -p is not given, low memory will be used and there won't be
+     enough low memory for running DOS programs.
+
+þitem -q
+
+     [*] All command line arguments passed to child processes will be
+     quoted unconditionally, that is, wildcard expansion and response
+     files won't work in child processes of processes for which the -q
+     option is in effect.
+
+þitem -r*
+
+     [*] Prepend drive letter * to absolute path names.  If a path
+     name starts with þtt{/} but does not start with þtt{//},
+     þtt{/dev/} or þtt{/pipe/}, * followed by a colon will be
+     prepended.  If -rd has been given, the filename þtt{\mydir\abc}
+     will be translated to þtt{d:\mydir\abc}.  Note: this option can
+     cause unexpected effects.
+
+þitem -s#
+þlabel -s# emx option
+
+     [DOS*] Set stack size (KByte), minimum: -s8, maximum: -s524288,
+     default: -s8192.  Note that under DOS, the heap and the stack
+     share the same memory area.  The pages not used by the stack are
+     available for the heap.  Therefore, you should use -s# if you
+     need more than 8 MByte of heap and stack.
+
+þitem -t
+
+    [*] Truncate file names to 8.3 format.  Each part of a pathname is
+    truncated to 8.3 format by taking the first 8 characters before
+    the dot and the first 3 characters after the dot.  This is useful
+    to compile programs on a FAT filesystem with minimal changes.
+
+    Without argument, -t enables truncation on all drives and for UNC
+    pathnames.
+
+    The -t option takes an optional argument, listing the names of the
+    drives on which file names should be truncated.  The special drive
+    name `þtt{/}' controls whether to truncate UNC pathnames.  With
+    `þtt{-tc/}', for instance, file names on drive C and UNC pathnames
+    will be truncated.
+
+    If the argument of the -t option is `þtt{-}', truncation is
+    disabled for all drives and for UNC pathnames.  This is the
+    default setting.  If the argument starts with `þtt{-}', truncation
+    is disabled on all drives listed.  With `þtt{-t -t-d}', for instance,
+    UNC pathnames and file names on all drives except
+    drive D will be truncated.
+
+þitem -x
+
+     [OS/2] Don't suppress wildcard expansion and response files if
+     the `MKS Korn shell' method of passing command line arguments is
+     used.
+
+þitem -C#
+þlabel -C# emx option
+
+     [DOS*] Commit memory.  By default, memory is allocated as soon as
+     a page is accessed.  If there isn't enough memory (and swap
+     space), the process is terminated.  With -C#, memory is allocated
+     when creating the process and when enlarging the data segment
+     with þhpt{brk()} and þhpt{sbrk()}.  If there isn't enough memory
+     (and swap space), the process brk(), sbrk(), þhpt{malloc()}
+     etc. return an error.  The number þsy{#} specifies how many KByte
+     should be allocated for the stack.  If þsy{#} is omitted, 0 is
+     used.  The -C# option is not yet completely implemented -- if an
+     allocation request succeeds partly, the allocated pages are not
+     freed.
+
+þitem -E
+
+     [OS/2*] Run debuggee in same session.  By default, a debugger for
+     emx (such as GDB) runs the child process in a separate session.
+     The P_NOSESSION flag of þhpt{spawn*()} has the same effect as
+     -E.
+
+     [DOS] Don't check for 387 coprocessor.  Assume no coprocessor is
+     present.  This option is used for testing.
+
+þitem -F
+
+     [DOS] Use fast A20 switching.  By default, the standard method
+     for switching A20 is used.  A faster method is available on some
+     machines.  That method will be used if the -F option is present.
+
+þitem -K
+
+     [OS/2*] Don't use DosKillThread.  Due to bugs in OS/2,
+     DosKillThread may cause problems.  emx.dll automatically avoids
+     using DosKillThread for OS/2 2.1 and older.  For OS/2 2.11 and
+     later, you can use the -K option to disable usage of
+     DosKillThread.  Currently, DosKillThread is not used by emx.dll
+     and this option does not have any effect.
+
+þitem -L
+
+     [DOS*] Disable preloading of pages from the executable file.  By
+     default, the complete code and data areas are read into memory
+     before a program is started.  If there is not enough memory, no
+     pages are preloaded.  With -L (or if not enough memory is
+     available), pages are loaded as soon as they are accessed.
+
+þitem -O
+
+     [DOS] Override XMS version check.  By default, emx checks for XMS
+     version number 2.00 or later and for XMS driver revision 2.06 or
+     later, as older himem.sys drivers don't work correctly.  You can
+     override this check by giving the -O option (for drivers using a
+     different revision numbering scheme), but emx may not work with
+     your XMS driver, anyway.  Actually, emx has not been tested with
+     himem.sys 2.05; 2.04 fails, 2.06 works.
+
+þitem -P
+
+     [DOS] Use patched code for A20 switching.  There is a patch area
+     in emx.exe where you can put alternate code for switching A20.
+     The -P option enables the code in the patch area.
+
+þitem -S#
+
+     [DOS] Enable the þhpt{emx kernel debugger}.  Use the -S option to
+     operate the debugger through the keyboard and display.  If you
+     want to debug using a terminal, enter -S1 to use COM1, -S2 to use
+     COM2.
+
+þitem -V
+
+     Display emx version.  On program start, the emx version will be
+     displayed.
+
+þitem -Z
+
+     [DOS*] Don't zero-fill pages.  This option is used for testing.
+
+þenddescription
+
+þh1 More emx utilities
+
+þif ipf
+
+þdescription
+þitem þhpt{emxaout}
+
+  Convert .obj files to .o files
+
+þitem þhpt{emxcat}
+
+  Concatenate source files
+
+þitem þhpt{emxexp}
+
+  Create export list from object files and libraries
+
+þitem þhpt{emximp}
+
+  Create import libraries
+
+þitem þhpt{emxload}
+
+  Preload executables to speed up compilation
+
+þitem þhpt{emxomf}
+
+  Convert .o files to .obj files
+
+þitem þhpt{emxomfar}
+
+  Manage .lib files
+
+þitem þhpt{emxomfld}
+
+  Call LINK386 like ld
+
+þitem þhpt{emxrev}
+
+  Display emx revision index
+
+þitem þhpt{emxtsf}
+
+  Create .tsf files for TRCUST
+
+þitem þhpt{listomf}
+
+  List an .obj or .lib file
+
+þitem þhpt{updt}
+
+  Update files
+
+þenddescription
+þendif
+
+þh2 emxaout
+þlabel emxaout
+þindex emxaout
+þkeyword emxaout
+
+  The emxaout tool converts OMF object files (.obj files) to a.out
+  object files (.o files).  The converted files can be used with the
+  Unix-style linker þhpt{ld}.  By using emxaout, you can create .o
+  files with MASM 6.0.
+
+þindent
+  þsy{emxaout [-u] [-o <output_file>] <input_file>}
+þendindent
+
+  Convert the OMF file <input_file> to a.out format.  The default
+  extension for <input_file> is .obj.  If the -o option is used, the
+  a.out file is written to <output_file>.  Otherwise, the name of the
+  output file is constructed by replacing the extension of
+  <input_file> with .o.
+
+  The following option is available:
+
+þlist
+þitem -u
+
+    Don't add leading underscores to symbol names.  By default,
+    emxaout prepends an underscore to every symbol name.
+
+    When using the þtt{PROC C}, þtt{PROTO C} and þtt{EXTERNDEF C}
+    directives of MASM 6.0, you should use the -u option of emxaout
+    because MASM prepends an underscore to symbols defined with those
+    directives.
+
+þendlist
+
+  The OMF file must have 32-bit OS/2 format, that is, you should use
+  the following MASM directives:
+
+þexample
+.386
+.MODEL FLAT
+þendexample
+
+  emxaout discards debugging information.
+
+
+þh2 emxcat
+þlabel emxcat
+þindex emxcat
+þkeyword emxcat
+
+  The emxcat tool concatenates assembler or C source files.  This is
+  used for building emxwrap.dll.
+
+þindent
+  þsy{emxcat [-D<symbol>]... -o <output_file> <input_file>...}
+þendindent
+
+  All the þsy{<input_file>}s are concatenated and written to
+  <output_file>.  If the output file is included in the input files,
+  it is not copied; emxcat simply compares the filenames, therefore
+  it's possible to fool emxcat and make it copying until the disk is
+  full.
+
+  Your code should not depend on the order in which the files are
+  copied to the output file.  A different version of emxcat may copy
+  the files files in a different order.
+
+  At the very beginning of the output file, the symbols given on the
+  command line are defined.  Note that there must not be a space
+  between -D and the name of the symbol.
+
+  #include statements are collected at the start of the output file.
+  The (partial) order of the include files is maintained.  If there is
+  an inconsistency in the order of include files in different input
+  files, emxomf prints a warning message.  For instance, this happens
+  for the following three input files:
+
+þexample
+/* file1.c */
+#include "a.h"
+#include "b.h"
+
+/* file2.c */
+#include "b.h"
+#include "c.h"
+
+/* file3.c */
+#include "c.h"
+#include "a.h"
+þendexample
+
+  The statement
+
+þexample
+#include <sys/emx.h>
+þendexample
+
+  is treated specially: it always precedes all other #include
+  statements if present in one of the input files.  (The
+  þtt{<sys/emx.h>} header no longer exists; it had to be included
+  before any other headers.)
+
+  When concatenating .s files, lines starting with þtt{CONST_} are
+  omitted if already copied to the output file -- only the first
+  instance is retained.
+
+  All macros þtt{#define}d by an input file are #undefined after
+  copying the input file.  Constants starting with þtt{INCL_} are an
+  exception and are collected at the start of the output file, before
+  the #include statements.
+
+  emxcat leaves alone #define and #include statements which do not
+  start at the first column of the line.  If you put blanks before
+  #define and #include, emxcat copies these statements to the output
+  file without treating them specially.
+
+
+þh2 emxexp
+þlabel emxexp
+þindex emxexp
+þkeyword emxexp
+
+  The emxexp tool creates an export list for a module definition file
+  from object files and libraries.  This is used for building dynamic
+  link libraries written in C++.
+
+þindent
+  þsy{emxexp [-n] [-u] [-o[<ordinal>]] <input_file>...}
+þendindent
+
+  For each public symbol (except for uninitialized variables unless
+  the -u option is given) of the
+  input files (which can be .o, .a, .obj or .lib files), emxexp prints
+  to the standard output an export definition for the EXPORTS
+  statement of a module definition file.  For mangled names, a comment
+  is generated which shows the demangled name.  The following options
+  are available:
+
+þlist
+þitem þsy{-n}
+
+  Add the NONAME keyword to each export definition to keep LINK386
+  from putting the name into the name tables.  This is required for
+  dynamic link libraries which export too many names.
+
+þitem þsy{-o[<ordinal>]}
+
+  Add ordinal numbers to the export definitions.  If <ordinal> is
+  given, ordinal numbers will start with that number.  Otherwise,
+  ordinal numbers will start with 1.
+
+þitem þsy{-u}
+
+  Also export unitialized variables.  Each uninitialized variable
+  encountered in the input files is exported only once.  If you
+  concatenate export lists created by multiple runs of emxexp, you
+  have to remove duplicate exports of uninitialized variables
+  yourself.  Therefore, it is recommended to give all the input files
+  on the command line of a single emxexp invocation.  By default,
+  uninitialized variables are not exported.
+
+þendlist
+
+
+þh2 emximp
+þlabel emximp
+þlabel (I1)
+þlabel (I2)
+þindex emximp
+þkeyword emximp
+
+  emximp manages files required for importing functions from dynamic
+  link libraries.
+
+  Three different methods for importing are used for the two methods
+  of creating executable files.  When using ld and emxbind, there are
+  two methods for importing:
+
+þdescription
+þitem (I1)
+
+      The import library contains a small piece of code for each
+      function which loads the AL register with the number of argument
+      words and jumps to the imported function.  Information on
+      imported functions is stored in tables in the text segment of
+      the program.  þhpt{emxbind} reads these tables to create
+      appropriate fixups in the .exe file.  When an imported function
+      is called while running the resulting program under DOS, an
+      error message will be displayed and the program will be
+      terminated.  Data cannot be imported with method (I1).  You have
+      to use the -R option of þhpt{ld}.
+
+þitem (I2)
+
+      The import library does not contain code for import definitions.
+      Instead, it contains special symbol table entries, which are
+      copied to the a.out file.  One of these entries makes ld create
+      a relocatable output file.  emxbind reads the symbol table and
+      creates appropriate fixups in the .exe file.  The AL register
+      isn't loaded with the number of argument words.  The program
+      will be aborted (protection violation) when an imported function
+      is called under DOS.  The -R option of ld is automatically
+      turned on when referencing an import definition of type (I2).
+
+þenddescription
+
+  When using emxomf and LINK386, the standard OS/2 method is used:
+
+þdescription
+þitem (I3)
+
+      LINK386 reads a .lib import library or a module definition file
+      to create appropriate fixups.  The AL register isn't loaded with
+      the number of argument words.  The program won't run under DOS.
+
+þenddescription
+
+  Methods (I2) and (I3) are recommended unless the dynamic link
+  library requires the AL register to be loaded with the number of
+  argument words.  os2.a uses method (I2).
+
+  emximp is used to create appropriate files for all these methods.
+  Information on functions exported by dynamic link libraries is
+  provided in emx import list files.
+
+  The following table summarizes the features of the three methods:
+
+þexample
+Method               ³  (I1)  ³   (I2)  ³   (I3)
+ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄ
+Linker               ³  ld    ³   ld    ³ LINK386
+Import by name       ³  YES   ³   NO    ³ YES
+Load AL register     ³  YES   ³   NO    ³ NO
+Code overhead        ³  YES   ³   NO    ³ NO
+Catch call under DOS ³  YES   ³   NO    ³ NO
+Import library type  ³ .o .a  ³   .a    ³ .lib .def
+Can import functions ³  YES   ³   YES   ³ YES
+Can import data      ³  NO    ³   YES   ³ YES
+Additive fixups      ³  NO    ³   YES   ³ YES
+Linker options       ³  -R    ³         ³
+þendexample
+
+þipfminitoc
+
+þh3 What is an emx import list file?
+
+  An emx import list file defines how functions can be imported from
+  dynamic link libraries.  For each function, the import list file
+  defines the name of the function, the module name (that's the name
+  of the dynamic link library exporting the function), either the
+  ordinal number or the name of the function as exported by the
+  dynamic link library, and the number of argument 32-bit words
+  expected by the function (this is the number of arguments unless
+  structures are passed by value).
+
+  For method (I1), emximp is used to turn an import list file into an
+  .a import library which can be linked to a program using the
+  þhpt{ld} linker.  emximp either creates assembler source files (.s)
+  or automatically calls the assembler to create object files (.o).
+  The object files can be packed into a library with the þbf{ar}
+  program.
+
+  For method (I2), emximp is used to turn an import list file (.imp
+  file), an OMF import library (.lib file), or a module definition
+  file (.def file) directly into an .a import library which can be
+  linked to a program using the ld linker.
+
+  For method (I3), emximp can convert an import list file into a
+  module definition file or an OMF import library.  emximp can also
+  convert a module definition file (.def file) into an OMF import
+  library.
+
+  Comments in an import list file are started with a semicolon.  Empty
+  lines are ignored.
+
+  For each function you have to put one line into the import list
+  file. Here's an example of an import list file:
+
+þexample
+; myimport.imp
+DosStartTimer       doscalls 351 3
+DosStopTimer        doscalls 290 1
+þendexample
+
+  Such a line consists of four components which are separated by one
+  or more blanks.  The first word is the name of the function, as used
+  in C programs.  The second word is the name of the DLL.  The third
+  word is either the ordinal number of the DLL entry or the name of
+  the DLL entry.  You have to use ordinal numbers for OS/2 API
+  functions.  The fourth word is the number of 32-bit words of
+  arguments expected by the function.  This is the number of arguments
+  unless structures are passed by value.
+
+  A question mark used as forth word is equivalent to using the number
+  0.  A question mark should be used if the number of arguments is
+  unknown or if the entry point is not a function (data can also be
+  exported).  Using a question mark causes a warning when creating
+  files for method (I1).
+
+  An þtt{R} used as forth word causes the AL register not to be loaded
+  with method (I1) -- this is used for functions which expect an
+  argument in the EAX register.
+
+  An þtt{F} used as forth word specifies a 16-bit function.  emximp
+  adds _16_ in front of the function name to notify þhpt{emxbind} and
+  þhpt{emxomf} of the 16-bitness of the function.  References to
+  symbols starting with _16_ are fixed up by 16:16 far pointers.
+
+
+þh3 Creating an emx import list file from an OMF import library
+
+  To create an emx import list file from an OMF import library, type
+
+þindent
+  þsy{emximp -o <output_file>.imp <input_file>.lib ...}
+þendindent
+
+  <output_file> is the name of the emx import list file to be
+  created.  The name must end with .imp.  <input_file> is the name of
+  an existing import library file.  The name must end with .lib.  You
+  can give one or more input filenames on the command line.
+
+  As the number of argument words of the functions cannot be derived
+  from the import library, a question mark instead of a number for the
+  number of argument words is written to the import list file.
+
+  When encountering a module with static code or data, emximp displays
+  a warning message.
+
+þh3 Creating an emx import list file from a module definition file
+
+  To create an emx import list file from a module definition file, type
+
+þindent
+  þsy{emximp -o <output_file>.imp <input_file>.def ...}
+þendindent
+
+  <output_file> is the name of the emx import list file to be created.
+  The name must end with .imp.  <input_file> is the name of an
+  existing module definition file.  The name must end with .def.  You
+  can give one or more input filenames on the command line.
+
+  As the number of argument words of the functions cannot be derived
+  from the module definition file, a question mark instead of a number
+  for the number of argument words is written to the import list
+  file.
+
+
+þh3 Creating an emx import library for method (I1)
+
+  To create an emx import library for method (I1), type
+
+þindent
+  þsy{emximp [-a<assembler>] [-b<base_name>|<prefix_length>] [-p<module>]...} þbreak
+  þsy{       [-s] <input_file>.imp ...}
+þendindent
+
+  <input_file> is the name of the import list file.  The name must end
+  with .imp.  You can give one or more input filenames on the command
+  line.
+
+  The names of the output files are either taken from the import list
+  file or automatically generated by emximp.  A line in starting with
+  `+' starts a new assembly language file or object file (module).
+  The name of the output file is given after the `+':
+
+þexample
++os2mem1.s          ; start a new output file
+þendexample
+
+  This feature is used only for method (I1).  All the functions
+  defined in one module are linked if at least one of the functions is
+  referenced.
+
+  It's possible to let emximp automatically write one file per
+  function.  The output filenames are constructed by appending the
+  ordinal number or a sequential number to a fixed prefix or to a
+  prefix of the DLL name.  To let emximp automatically choose output
+  filenames, use the -b command line option.  If -b is given, the
+  import list file must not contain lines starting with `+'.  The
+  argument of the -b option is either a number or a string.  If the
+  argument is a string, that string is used as base name of the output
+  files.  If the argument is a number, that many characters are taken
+  from the start of each DLL name to create the base name of the
+  output file.  A number is appended to the base name.  If -s is
+  given, a sequential number is appended, starting with the number 1.
+  The number is incremented for each output file.  If -s is not given,
+  the ordinal number of the function is appended; giving entry names
+  instead of ordinal numbers in the import list file is not allowed
+  for that reason.  Note that appending ordinal numbers to the names
+  may cause problems (output for different functions written to the
+  same file) if multiple DLLs are used in the import list file and the
+  argument of the -b option is a string (or too small a number to make
+  the prefixes unique).  These problems also occur if the import list
+  file defines multiple functions to refer to the same entry point.
+  The extension of the output files is .o if the -a option is used, .s
+  otherwise.
+
+  By default, emximp creates assembler source files.  emximp can
+  automatically call an assembler to assemble the output files.  This
+  feature is turned on by the -a command line option.  The argument of
+  the -a option is the name of the assembler (there must be no blanks
+  between -a and the argument).  If the argument is omitted,
+  þtt{as.exe} is used.  The default extension is .exe, the program
+  will be sought in the directories listed in the PATH environment
+  variable.
+
+  The object files will have the same name as the assembler source
+  files, with the .s extension replaced by .o.
+
+  Under OS/2, the assembly language files are not actually written, a
+  pipe is used instead.  Under DOS, the assembly language files
+  created by emximp will be deleted automatically after running the
+  assembler.
+
+  To save space in the executable file, DLL names which are often used
+  should be put into separate files, see above for an example.  Use
+  the -p option of emximp to use separate files for the DLL names.
+  The argument of the -p option is the name of the DLL.  emximp
+  prepends þtt{__os2_} to the DLL name for making the label used for
+  referencing the DLL name.  You can use multiple -p options.  Here's
+  how to write a separate file which defines a DLL name:
+
+þexample
+        .globl  __os2_pmgpi
+        .text
+__os2_pmgpi:
+        .asciz  "PMGPI"
+þendexample
+
+  This file declares the DLL name PMGPI.  Use the þtt{-p pmgpi} option
+  of emximp to tell emximp to create code that references this file.
+
+
+  þbf{Technical details:}
+
+  Let's examine the .s file created by emximp for the DosSelectSession
+  function.
+
+þexample
+1)              .globl  _DosSelectSession
+2)              .align  2, 144
+3)      _DosSelectSession:
+4)              movb    $1, %al
+5)      1:      jmp     __os2_bad
+6)      2:      .long   1, 1b+1, L1, 38
+7)      L1:     .asciz  "sesmgr"
+8)              .stabs  "__os2dll", 23, 0, 0, 2b
+þendexample
+
+  Line 1 is obvious: it exports _DosSelectSession from os2.a so
+  that þhpt{ld} will link this module when _DosSelectSession is
+  referenced.
+
+  Line 2 is a speed hack: the 386 performs much better when jumping to
+  an address which is an integral multiple of 4.
+
+  Line 3 declares _DosSelectSession.  Your program calls this code
+  when calling DosSelectSession.
+
+  Line 4 stores the number of arguments in the AL register (or rather,
+  the number of argument 32-bit words).
+
+  Line 5 jumps to __os2_bad which displays an error message and stops
+  execution.  This is what happens if you run the program on DOS.
+
+  Line 6 creates a small table which is read by þhpt{emxbind}: It
+  consists of four words:
+
+þitemize
+þitem
+
+   a word of flag bits.  Currently, only bit 0 is defined: it's 0 for
+   import by name, 1 for import by ordinal.
+
+þitem
+
+   the address of the word to be fixed up for referencing the DLL.
+   `þtt{1b+1}' means `local label 1, looking backwards, add one to
+   address'.  Therefore, the address used by the þtt{JMP} instruction
+   is used.
+
+þitem
+
+   a pointer to the name of the module (null-terminated ASCII string).
+   For often used names the pointer should point to a string in a
+   separate, common module to save space, see the -p option.
+
+þitem
+
+   the ordinal number or a pointer to the name of the entry point
+   (null-terminated ASCII string), respectively, depending on bit 0 of
+   the flags word.
+
+þenditemize
+
+  Line 7 defines the module name pointed to by the table.
+
+  Line 8 is the tricky part: it contains a special symbol table entry
+  to make ld build a table named __os2dll which contains pointers to
+  all the small tables (þtt{2b} is the address of the small table).
+  See also crt0.s, where the table is initialized.  crt0 contains a
+  pointer to the table in a fixed location so that emxbind can find
+  the table of pointers, read all the small tables (as described
+  above) and create the necessary OS/2 fixups.
+
+
+þh3 Creating an a.out import library for method (I2)
+
+  To create an a.out import library for method (I2), type
+
+þindent
+  þsy{emximp [-m] -o <output_file>.a <input_file>.def ...} þbreak
+  þsy{emximp [-m] -o <output_file>.a <input_file>.imp ...} þbreak
+  þsy{emximp [-m] -o <output_file>.a <input_file>.lib ...} þbreak
+þendindent
+
+  <output_file>.a is the name of the archive file to be created.  The
+  name must end with .a.
+
+  <input_file>.def is the name of a module definition file containing
+  one or more EXPORTS statements.
+
+  <input_file>.imp is the name of an emx import list file.  The name
+  must end with .imp.
+
+  <input_file>.lib is the name of an import library (OMF).  The name
+  must end with .lib.  Modules in the input files which are not import
+  definitions are ignored.
+
+  You can give one or more input filenames on the command line; all
+  input file must be of the same type, either .imp or .lib.
+
+  All import records of the input files are converted to import
+  modules for method (I2).  After creating the output file, you should
+  run þtt{ar s} on the output file to increase linking efficiency.
+
+  When encountering a module with static code or data in a .lib file,
+  emximp displays a warning message.  You may have to extract those
+  modules from the library, convert them with þhpt{emxaout}, and add
+  them to the target library with þhpt{emxomfar}.
+
+  The -m option directs emximp to add code which calls the
+  þtt{_mcount} function.  This is used for profiling; þtt{os2_p.a} is
+  created with the -m option of emximp.
+
+  þbf{Technical details:}
+
+  A member named __.IMPORT is added to the archive.  GNU þhpt{ld} (the
+  one ported to emx) has been patched to turn on relocatable output if
+  it finds a member named __.IMPORT in a library.  As only the
+  __.SYMDEF member is scanned if present, __.IMPORT defines the
+  special symbol þtt{__IMPORT!}.  When patched GNU ld finds the
+  definition of a symbol named þtt{__IMPORT!} in the __.SYMDEF member,
+  relocatable output is turned on.  (Relocatable output can also be
+  turned on by using the -R option of þbf{ld}.)
+
+  For each function in the input files, emximp adds an a.out-type
+  module to the output file.  Such a module defines two symbols
+  (unless the -m option is used).  One symbol defines the entry point,
+  the other symbol gives information on the DLL name and the ordinal
+  number or procedure name.  For instance, for
+
+þexample
+LIBRARY doscalls
+EXPORTS DosBeep @286
+þendexample
+
+  the two symbols `þtt{_DosBeep}' and `þtt{_DosBeep=doscalls.286}' are
+  defined.  The symbol types 0x69 and 0x6b are used, respectively.
+  GNU ld has been patched to keep references to symbols of type 0x69
+  in the relocation table.
+
+  þhpt{emxbind} scans the relocation table for references to symbols
+  of type 0x69 and scans the symbol table for a matching symbol of
+  type 0x6b which defines the entry point.
+
+þh3 Creating an OMF import library for method (I3)
+
+  To create an OMF import library for method (I3), use one of the
+  following invokations of emximp, depending on the input format:
+
+þindent
+  þsy{emximp [-p#] -o <output_file>.lib <input_file>.def ...} þbreak
+  þsy{emximp [-p#] -o <output_file>.lib <input_file>.imp ...}
+þendindent
+
+  <output_file>.lib is the name of the import library file to be
+  created.  The name must end with .lib.
+
+  <input_file>.def is the name of a module definition file containing
+  one or more EXPORTS statements.
+
+  <input_file>.imp is the name of an emx import list file.
+
+  You can give one or more input filenames on the command line.
+
+  All the import list files must define functions that are in the same
+  dynamic link library.  Lines start with `+' are ignored.
+
+  The number of argument words is lost after that conversion, that is,
+  you cannot recreated the import list file using emximp.
+
+  The -p# option sets the page size to # bytes (16, 32, 64, ...,
+  32768).  If -p is not given, a page size of 16 bytes will be used.
+  Increase the page size if emximp complains about too big a library.
+  If emximp doesn't complain, you shouldn't increase the page size to
+  save disk space.
+
+þh3 Creating a module definition file for method (I3)
+
+  To create a þhpt{module definition file} for method (I3), type
+
+þindent
+  þsy{emximp -o <output_file>.def <input_file>.imp ...}
+þendindent
+
+  <output_file> is the name of the module definition file to be
+  created.  The name must end with .def.
+
+  <input_file> is the name of an emx import list file.  The name must
+  end with .imp.  You can give one or more input filenames on the
+  command line.
+
+  All the import list files must define functions that are in the same
+  dynamic link library.  Lines start with `+' are ignored.
+
+  The number of argument words is lost after that conversion, that is,
+  you cannot recreated the import list file using emximp.
+
+
+þh3 emximp options
+
+  The -q option suppresses warnings about `impure' import libraries,
+  that is, import libraries which also contain code.
+
+
+þh2 emxload
+þlabel emxload
+þindex emxload
+þkeyword emxload
+
+  The emxload tool preloads OS/2 programs.  Preloading programs speeds
+  up loading these programs if you have enough memory.  If you have
+  too little memory, preloading may degrade performance.  Preloading
+  is especially useful with a compiler such as GCC which runs many
+  processes to complete its task.
+
+  emxload starts the emxload server process (emxload.exe contains both
+  the client program described here and the server program).  The
+  server process runs until stopped with the -q option of emxload.
+
+  When using emxload to load a program which is already preloaded by
+  emxload, the expiry time of that program will be reset to the new
+  value.
+
+  There are library functions for using the emxload server in your
+  programs.  See þhpt{_emxload_prog()} etc. for details.
+
+  The GNU C compiler keeps itself in memory for þpa{N} minutes if the
+  environment variable GCCLOAD is set to þpa{N}.  For example, to keep
+  the passes of GCC in memory for 5 minutes, type
+
+þexample
+SET GCCLOAD=5
+þendexample
+
+  The following programs use GCCLOAD: gcc.exe, cpp.exe, cc1.exe,
+  cc1plus.exe, cc1obj.exe, as.exe, and emxomf.exe.
+
+
+þindent
+ þsy{emxload [-m<limit>] [-s<limit>] [-e] [-u[w]]} þbreak
+ þsy{        [-gcc] [-g++] [-gobjc] [-gnat] [-omf] <program>...}
+þendindent
+
+  All the þsy{<program>}s are preloaded.  The default extension is
+  .exe.  There are shortcuts for preloading the GNU C compiler:
+
+þlist
+þitem þsy{-gcc}
+
+  This option preloads the complete GNU C compiler for compiling C
+  programs and generating a.out-style output.  The following programs
+  will be preloaded: þtt{gcc.exe}, þtt{cpp.exe}, þtt{cc1.exe},
+  þtt{as.exe}, þtt{ld.exe}, and þtt{emxbind.exe}.
+
+þitem þsy{-g++}
+
+  This option preloads the complete GNU C compiler for compiling C++
+  programs and generating a.out-style output.  The following programs
+  will be preloaded: þtt{gcc.exe}, þtt{cpp.exe}, þtt{cc1plus.exe},
+  þtt{as.exe}, þtt{ld.exe}, and þtt{emxbind.exe}.
+
+þitem þsy{-gobjc}
+
+  This option preloads the complete GNU C compiler for compiling
+  programs written in the Objective C programming language and
+  generating a.out-style output.  The following programs
+  will be preloaded: þtt{gcc.exe}, þtt{cpp.exe}, þtt{cc1obj.exe},
+  þtt{as.exe}, þtt{ld.exe}, and þtt{emxbind.exe}.
+
+þitem þsy{-gnat}
+
+  This option preloads the complete GNU Ada translator (GNAT) for
+  generating a.out-style output.  The following programs
+  will be preloaded: þtt{gcc.exe}, þtt{gnat1.exe},
+  þtt{as.exe}, þtt{ld.exe}, þtt{gnatbind.exe}, and þtt{emxbind.exe}.
+
+þitem þsy{-omf}
+
+  Use this option in addition to one of the options for preloading GCC
+  to preload the programs used for generating OMF-style output.  The
+  following programs will be preloaded: emxomf.exe, emxomfld.exe,
+  and þtt{link386.exe}.
+
+þendlist
+
+  You can use one or more of the above options.  For instance, if you
+  want to compile C and C++ programs, use
+
+þexample
+emxload -gcc -g++
+þendexample
+
+  This will preload þtt{gcc.exe}, þtt{cpp.exe}, þtt{cc1.exe},
+  þtt{cc1plus.exe}, þtt{as.exe}, þtt{ld.exe}, and þtt{emxbind.exe}.
+
+  There are additional options for controlling the operation of emxload:
+
+þlist
+þitem -m<limit>
+
+  Automatically unload the specified programs after þsy{<limit>}
+  minutes.  This option overrides the -s<limit> option.  By default,
+  programs are unloaded after 10 minutes.
+
+þitem -s<limit>
+
+  Automatically unload the specified programs after þsy{<limit>}
+  seconds.  This option overrides the -m<limit> option. By default,
+  programs are unloaded after 600 seconds.
+
+þitem -e
+
+  Don't unload the specified programs automatically.  This option
+  overrides the -m<limit> and -s<limit> options.  By default, emxload
+  unloads a program after 10 minutes.
+
+þitem -u
+
+  Unload the specified programs.  By default, emxload preloads the
+  specified programs.  With the -u option, all specified programs will
+  be unloaded.  Don't wait until the server has unloaded the programs.
+
+þitem -uw
+
+  Like -u, but wait until the server has unloaded the programs.
+
+þendlist
+
+  Two special calling sequences are available:
+
+þindent
+ þsy{emxload -l}
+þendindent
+
+  List the preloaded programs with the number of minutes and seconds
+  left until automatic unloading.
+
+þindent
+ þsy{emxload -q[w]}
+þendindent
+
+  Stop the emxload server process.  All preloaded programs will be
+  unloaded.  Use -qw to wait until the server is stopped.  -q doesn't
+  wait.
+
+
+þh2 emxomf
+þlabel emxomf
+þindex emxomf
+þkeyword emxomf
+
+  The emxomf tool converts a.out object files (.o files) to Object
+  Module Formats (.obj files).  The converted files can be used with
+  the OS/2 linker link386.exe.
+
+  emxomf keeps itself in memory for þpa{N} minutes if the environment
+  variable GCCLOAD is set to þpa{N}.
+
+þindent
+  þsy{emxomf [-d] [-l[<symbol>]] [-g] [-q] [-s] [-u] [-p <page_size>]} þbreak
+  þsy{       [-m <symbol>] [-i <default_lib>] [-I <idmdll>] [-D <dataseg>]} þbreak
+  þsy{       -o <output_file> <input_file>}
+þendindent
+
+  Convert a single .o or .a file (<input_file>) to an .obj or .lib
+  file (<output_file>).  There are no default extensions.  If the -d
+  option is given, the input file is deleted after successful
+  conversion.  If the input file is an archive, it is not deleted.
+
+þindent
+  þsy{emxomf [-d] [-l[<symbol>]] [-g] [-q] [-s] [-u] [-x] [-p <page_size>]} þbreak
+  þsy{       [-m <symbol>] [-O <directory>] [-r|R<response_file>]} þbreak
+  þsy{       [-i <default_lib>] [-I <idmdll>] [-D <dataseg>] <input_file>...}
+þendindent
+
+  Convert multiple .o and .a files to .obj and .lib files (more than
+  one <input_file> can be given on the command line).  The names of
+  the output files are constructed by replacing the extension of the
+  þsy{<input_file>}s with .obj or .lib, respectively.  If the -x
+  option is given, all members (which must be a.out modules) of
+  archives (.a files) are converted to .obj files.  The names of the
+  output files are constructed by replacing the extension of the
+  member names with .obj.  If the -x option is not given, archives (.a
+  files) are converted to libraries (.lib files).  If the -O option is
+  given, the output files are written to the directory <directory>.  A
+  þbf{LIB} response file <response_file> is created if you use the -r
+  or -R option.  When using -r, the response file will contain
+  commands to add the modules to a library file, when using -R, it
+  will contain commands to replace the modules in a library file.  If
+  the -d option is given, all the input files except for archives are
+  deleted after successful conversion.  If the -s option is given,
+  debugging information is omitted.
+
+  You can put emxomf options into the environment variable EMXOMFOPT.
+  These options will be read before the options given on the command
+  line.
+
+  Options common to both calling sequences:
+
+þlist
+þitem -D <dataseg>
+
+    Change the name of the data segment.  By default, all initialized
+    variables are put into the DATA32 segment which is a member of the
+    DGROUP group.  By using the -D option, the segment used for
+    initialized variables can be changed.  That segment won't be a
+    member of the DGROUP.  This can be used for creating dynamic link
+    libraries with both instance data and shared data.  Define all
+    variables which should be private to the instances of the DLL in a
+    separate source file, initialize all the variables, use the -D
+    option of emxomf to put these variables into a separate segment
+    and set the attributes of that segment in the module definition
+    file to NONSHARED.  All other variables will go into the default
+    data segment, which is shared by all instances of the DLL.
+    Alternatively, you can make variables private by default and put
+    the shared variables into a separate segment.  You have to list
+    all the segments of class DATA in the module definition file.
+    Example:
+
+þexample
+SEGMENTS
+  PRIV CLASS 'DATA' NONSHARED
+  DATA32 CLASS 'DATA' SHARED
+  BSS32 CLASS 'BSS' SHARED
+þendexample
+
+    In this example, variables are shared by default.  The segment
+    PRIV contains private variables.
+
+þitem -g
+
+    Create groups for sets, as did previous versions of emxomf.  This
+    causes an extra object to be created for each set (such as
+    þtt{__CTOR__LIST__}).  By default, all sets are merged into the
+    text object.
+
+þitem -i <default_lib>
+
+    Add default library request.  LINK386 is informed that the .obj
+    file should be linked with the library <default_lib>.  If
+    <default_lib> doesn't include a file name extension, LINK386
+    uses the default extension .lib.  You can specify multiple
+    libraries by using multiple -i options.
+
+þitem -I <idmdll>
+
+    Change the name of the identifier manipulation DLL.  That DLL is
+    used by LINK386 to demangle C++ symbol names in error messages.  A
+    special record (IDMDLL) is inserted into the .obj file by emxomf
+    to tell LINK386 about the name of the DLL.  emxomf inserts that
+    record only if it recognizes the input file as being compiled by
+    G++.  The default for the identifier manipulation DLL is
+    þtt{gppdemid}.  Use þtt{-I-} to suppress the insertion of the
+    IDMDLL record.
+
+þitem þsy{-l[<symbol>]}
+
+    The module (all the modules of an archive when converting an
+    archive) is supposed to be a library modules.  A library module
+    doesn't define a stack segment and doesn't request libraries.  If
+    <symbol> is given (following directly -l, without space), it is
+    used as name of the entry point, that is, the function that should
+    be called when the DLL is started.  If <symbol> is not specified,
+    no entry point will be defined.  If -l and -m are missing, the
+    module is supposed to be part of a program but not the main
+    module.  Such a module doesn't define a stack segment and doesn't
+    have an entry point.
+
+þitem -m <symbol>
+
+    The module is supposed to be the main module of a program.  A main
+    module defines a default stack segment (0x8000 bytes) and has an
+    entry point.  <symbol> is the name of the entry point, that is,
+    the function that should be called when the program is started.
+    -m is used for the startup code module crt0 and should not be used
+    for user modules.  If -l and -m are missing, the module is
+    supposed to be part of a program but not the main module.  Such a
+    module doesn't define a stack segment and doesn't have an entry
+    point.
+
+þitem -p <page_size>
+
+    Set the page size of .lib files to <page_size> bytes (16, 32, 64,
+    ..., 32768).  If -p is not given, a page size of 16 bytes will be
+    used.  Increase the page size if emxomf complains about too big
+    a library.  If emxomf doesn't complain, you shouldn't increase
+    the page size to save disk space.
+
+þitem -q
+
+    Suppress certain warning messages.  Currently, this option
+    suppresses the warning message for internal PC-relative
+    relocations being ignored.
+
+þitem -s
+
+    If the -s option is given, debugging information is omitted.  By
+    default, debugging information is converted from a.out
+    þbf{DBX}-style (with GNU extensions) to HLL version 3 format (as
+    used by IBM's IPMD debugger of the C/C++ Tools 2.0 package and by
+    SD386).  If emxomf cannot translate debugging information, a
+    warning message is displayed.  Types not recognized by emxomf are
+    treated as `þtt{int}' to be able to continue conversion.
+    Restrictions:
+
+þitemize
+þitem
+
+      The Objective C language is not supported yet.
+
+þitem
+
+      Structures (or unions) without declarator within another
+      structure (or union) are ignored as GCC doesn't emit suitable
+      debugging information.
+
+þitem
+
+      Variable-length automatic arrays are not supported.
+
+þitem
+
+      `þtt{long long}' and `þtt{unsigned long long}' types are
+      translated to the following structure, as HLL version 3
+      debugging information doesn't support 64-bit integers:
+
+þexample
+struct _long_long
+{
+   unsigned long lo;
+   unsigned long hi;
+}
+þendexample
+
+þitem
+
+     Pointer to member (C++) is not yet supported.
+
+þenditemize
+
+þitem -u
+
+    List all symbol table entries (stabs code and symbol name) unknown
+    to emxomf.  This option is used for debugging emxomf.
+
+þendlist
+
+
+þh2 emxomfar
+þlabel emxomfar
+þindex emxomfar
+þkeyword emxomfar
+
+  emxomfar is a librarian for OMF .lib files with a command line
+  interface similar to þbf{ar} to simplify makefiles.
+
+þindent
+  þsy{emxomfar [-p#] <command> <library_file> [<module>]...}
+þendindent
+
+  The default extension for <library_file> is .lib.  When modifying a
+  library file, a backup file with .bak extension is created.
+
+  Here's a description of emxomfar commands:
+
+þdescription
+þitem d
+
+    Delete modules from library.  The module name __.SYMDEF is
+    ignored.
+
+þitem m
+
+    Move members to the end of the archive.  Not implemented in
+    emxomfar.
+
+þitem p
+
+    Copy members to standard output.  Not implemented in emxomfar.
+
+þitem q
+
+    Quick append.  This command is equivalent to the r command in
+    emxomfar.
+
+þitem r
+
+    Replace modules in library.  Modules which are not in the library
+    are added to the library.  The default extension for modules is
+    .obj.
+
+þitem s
+
+    Build the __.SYMDEF symbol table member.  This command is ignored
+    by emxomfar.
+
+þitem t
+
+    List table of contents.  Use the v option to also list public
+    symbols.
+
+þitem x
+
+    Extract modules from library.  The default extension for modules
+    is .obj.
+
+þenddescription
+
+  You can additionally use the following modifiers in the <command>
+  argument:
+
+þdescription
+
+þitem a
+
+    Position after specified member.  Not implemented in emxomfar
+
+þitem b
+
+    Position before specified member.  Not implemented in emxomfar
+
+þitem c
+
+    Don't display warning when creating new library.
+
+þitem i
+
+    Position before specified member.  Not implemented in emomfar
+
+þitem l
+
+    Create temporary file in current directory.  Ignored by emxomfar
+
+þitem o
+
+    Preserve dates.  Ignored by emxomfar
+
+þitem u
+
+    Don't replace members with older files (update).  Ignored by
+    emxomfar
+
+þitem v
+
+    Verbose output.
+
+þenddescription
+
+  The following option must precede <command> if used:
+
+þdescription
+þitem -p#
+
+    Set page size to # bytes (16, 32, 64, ..., 32768).  If -p is not
+    given, a page size of 16 bytes will be used.  Increase the page
+    size if emxomfar complains about too big a library.  If emxomfar
+    doesn't complain, you shouldn't increase the page size to save
+    disk space.
+
+þenddescription
+
+  Example:
+
+þexample
+emxomfar -p32 rc newlib *.obj
+þendexample
+
+
+þh2 emxomfld
+þlabel emxomfld
+þindex emxomfld
+þkeyword emxomfld
+
+  emxomfld is a front end to LINK386, providing an þhpt{ld}-like
+  command line syntax for LINK386.  After parsing the command line,
+  LINK386 is called with equivalent command line arguments.
+
+þindent
+  þsy{emxomfld -o <file> [-l <lib>] [-L <libdir>] [-T <base>] [-sS]} þbreak
+  þsy{         [-Zexe] [-Zdll] [-Zstack <stack_size>] [-Zmap[=<map_file>]]} þbreak
+  þsy{         [-O <option>] <file>...}
+þendindent
+
+  The files given on the emxomfld command line are assumed to be .obj
+  files to be linked unless the extension is .def, .lib or
+  .res.  A file having a .def extension is used as module definition
+  file.  There may be at most one module definition file.  A file
+  having a .lib extension is used as library file.  A file
+  having a .res extension is used as binary resource file; þbf{rc} is
+  called to attach the resources to the output file.
+
+  Example:
+
+þexample
+emxomfld -o test -lc -Lc:/mylibs test1 test2 test.def test.res
+þendexample
+
+  Create file test.exe (or test.dll, depending on the contents of
+  test.def), by linking test1.obj and þtt{obj2.obj} with c.lib.  c.lib
+  is sought in þtt{c:/mylibs}.  Use the module definition file
+  test.def.  Call þbf{rc} to copy the resources from test.res to
+  test.exe (or test.dll).
+
+  The following options are available:
+
+þlist
+þitem þsy{-i}
+
+    Pass the þtt{/INFORMATION} option to LINK386, causing filenames
+    to be displayed while linking.  This is used for debugging
+    emxomfld.
+
+þitem þsy{-l <lib>}
+
+    Link with the library þsy{<lib>}þtt{.lib}.  For instance, -lc
+    causes c.lib to be used.
+
+þitem þsy{-L <libdir>}
+
+    Add the directory <libdir> to the library search path.  Libraries
+    are sought in the directories given by -L options.  emxomfld
+    prepends the directories to the LIB environment variable.
+
+þitem þsy{-o <file>}
+
+    <file> is the output file.  The default extension (.exe or .dll)
+    is provided by LINK386.  If -o is omitted, þtt{$$$} will be used.
+
+þitem þsy{-O <option>}
+
+    Pass the option <option> to LINK386.  For each option to be passed
+    to LINK386, one -O has to be used.  <option> should start with a
+    slash.  Example:
+
+þexample
+-O/runfromvdm
+þendexample
+
+    See also the -Zlinker option of GCC.
+
+þitem þsy{-s}
+
+    Strip all symbols, including debugging information.  If -s and -S
+    are not used, emxomfld passes the þtt{/DEBUG} option to LINK386.
+
+þitem þsy{-S}
+
+    Strip debugging symbols (emxomfld strips all symbols, including
+    debugging information, if -S is used).  If -s and -S are not used,
+    emxomfld passes the þtt{/DEBUG} option to LINK386.
+
+þitem þsy{-T <base>}
+
+    Set the base address of the text segment.  This option is
+    translated to the þtt{/BASE} option of LINK386.  emxomfld
+    automatically passes þtt{/BASE:0x10000} to LINK386 unless -T is
+    used or a DLL is built.  If neither -T nor -Zdll is used, the
+    module definition file is read to learn whether a DLL is being
+    built or not.
+
+þitem þsy{-x}
+
+    Discard all local symbols (this option is ignored by emxomfld).
+
+þitem þsy{-X}
+
+    Discard local symbols starting with þtt{L} (this option is ignored
+    by emxomfld).
+
+þitem þsy{-Zdll}
+
+    Build a DLL.  If the -Zdll option is present, emxomfld does not
+    automatically pass þtt{/BASE:0x10000} to LINK386.  The -Zdll
+    option isn't necesary as a module definition file is required when
+    building a DLL and emxomfld and emxbind read the module definition
+    file to learn whether a DLL is to be built or not.
+
+þitem þsy{-Zexe}
+
+    If the -Zexe option is present, emxomfld deletes the output file
+    (whose name is given on the command line) and adds .exe to the
+    output filename.  After calling LINK386, emxomfld creates an
+    empty output file (without .exe).  This feature is used for
+    minimizing changes to Unixoid makefiles.  See also the -Zexe
+    option of GCC and ld.
+
+þitem þsy{-Zmap[=<map_file>]}
+
+    Let LINK386 write the map file <map_file>.  LINK386 adds the
+    default extension `þtt{map}'.  If þsy{=<map_file>} is not
+    specified, the name of the map file will be derived from the
+    output file name.
+
+þitem þsy{-Zstack <stack_size>}
+
+    Set the stack size of the executable, in Kbyte.  The argument of
+    the -Zstack option is multiplied by 1024 and turned into a
+    þtt{/STACK} LINK386 option.  The number can be given in decimal,
+    octal or hexadecimal, using C notation.
+
+þendlist
+
+
+þh2 emxrev
+þlabel emxrev
+þindex emxrev
+þkeyword emxrev
+
+  emxrev displays the revision number of emx DLLs (emx.dll, emxio.dll,
+  emxlibc.dll, emxlibcm.dll, emxlibcs.dll, and emxwrap.dll).  The
+  revision number is incremented every time a changed version of a DLL
+  is released.  By looking at the revision numbers of the DLLs, you
+  can tell which one is the newest one.
+
+  To display the revision number of the default emx DLLs, type
+
+þindent
+  þsy{emxrev}
+þendindent
+
+  The default DLLs are those used by the operating system when
+  starting a program.
+
+  To display the revision number of a specific file, type
+
+þindent
+  þsy{emxrev -f <file>}
+þendindent
+
+  If a directory is included in <file>, append .dll to the name.  If
+  no directory is included in <file>, don't append .dll to the name.
+
+  To display the revision numbers of the emx DLLs in directory <dir>,
+  type
+
+þindent
+  þsy{emxrev -d <dir>}
+þendindent
+
+  To display the revision numbers of the emx DLLs in all directories
+  of drive <drive> (þtt{c:}, for instance), type
+
+þindent
+  þsy{emxrev -c <drive>}
+þendindent
+
+  To display the revision numbers of the emx DLLs in all directories
+  of all hard disks, type
+
+þindent
+  þsy{emxrev -a}
+þendindent
+
+  To display the revision numbers of the emx DLLs in the directories
+  listed in the LIBPATH statement of a config.sys file, type
+
+þindent
+  þsy{emxrev -p <file>}
+þendindent
+
+  where <file> is the name of the config.sys file.
+
+
+þh2 emxtsf
+þlabel emxtsf
+þindex emxtsf
+þkeyword emxtsf
+
+  emxtsf assists in creating .tsf files for TRCUST.  TRCUST (which can
+  be downloaded as part of the þtt{os2pdp.zip} package from the usual
+  OS/2 archives) generates þtt{.tdf} and þtt{.tff} files from .tsf
+  files; þtt{.tdf} files are used by OS/2's TRACE command,
+  þtt{.tff} files are used by OS/2's TRACEFMT command.
+
+þindent
+  þsy{emxtsf [-d <dll_name>] [-w <level>] <tss_file> <map_file> <def_file> <dll_name>}
+þendindent
+
+  <tss_file> declares what functions are to be traced and how to
+  format their arguments; the format of that file is described below.
+
+  <map_file> is the .map file created by the linker for the DLL.  It's
+  used to find out which symbols are available.  This avoids errors
+  when TRCUST is run.
+
+  <def_file> is the DLL's module definition file (.def file); the
+  ordinal numbers of the EXPORTS statement will be used as minor trace
+  codes.  Functions which are not exported will be assigned minor
+  trace codes starting at 0x7fff, counting down.
+
+  <dll_name> is the name of the DLL.  If the -d option is not used,
+  TRACEFMT will print the function name as is.  If the -d option is
+  used, <dll_name> followed by a colon and a space will be prefixed to
+  the function name.
+
+  The -w option sets the warning level.  Warning level 0 is the
+  default setting.  Warning level 1 prints the names of functions
+  exported by the DLL but not defined in the <tss_file> to standard
+  error.  Warning level 2 additionally prints the names of functions
+  for which no epilogue has been found.
+
+  emxtsf writes the output to standard output; the output should be
+  appended to a manually created .tsf file header.
+
+  In <tss_file>, empty lines and lines starting with a semicolon are
+  ignored.  All remaining lines start with a letter which is followed
+  by a space character and additional data.
+
+  A line starting with `þtt{G}' defines a group; all following
+  function definitions belong to that group until another group is
+  defined.  A line starting with `þtt{T}' defines a list of event
+  types; these event types will be used for all following function
+  definitions until another list of event types is defined.
+
+Example:
+
+þexample
+G IO
+T APP,CPP
+þendexample
+
+  Note that in the header of the .tsf file, each group must be defined
+  in a þtt{GROUP} statement and each event types must be defined in a
+  þtt{TYPELIST} statement.  Both a group and a list of event types
+  must be defined before functions can be defined.
+
+  A line defining a function starts with a letter which defines the
+  return type of the function.  The following return types are
+  supported:
+
+þdescription
+þitem þtt{i}
+32-bit integer
+þitem þtt{p}
+pointer
+þitem þtt{v}
+no return value (void)
+þitem þtt{I}
+ignore this symbol
+þenddescription
+
+  Note that floating-point return values cannot be traced.  `þtt{I}'
+  pretends that a symbol has been used; this is used to avoid the
+  warnings for exported symbols (such as variables) that are not
+  traced.
+
+  The letter is followed by a space and the function name.  The
+  function name is followed by parenthesis in which the arguments are
+  declared.  For each argument, the argument type and the argument
+  name is provided (separated by a space), arguments are separated by
+  commas.  The argument type is a single letter:
+
+þdescription
+þitem þtt{i}
+32-bit integer
+þitem þtt{p}
+pointer
+þitem þtt{s}
+string (consisting entirely of printable characters)
+þenddescription
+
+  The following example defines tracepoints for some standard library
+  functions:
+
+þexample
+v clearerr (p stream)
+p fgets (p buffer, i size, p stream)
+v abort ()
+I errno         ; suppress warning about errno not being traced
+þendexample
+
+  If a function has more arguments than declared in the <tss_file>,
+  remaining arguments of the function won't be traced.
+
+  For each function, emxtsf creates a Pre-Invocation tracepoint.  If
+  the function has been compiled with the þhpt{-mepilogue} option of
+  GCC, a Post-Invocation tracepoint will be created as well.
+
+
+þh2 listomf
+þlabel listomf
+þindex listomf
+þkeyword listomf
+
+  listomf lists an .obj or .lib file in (more or less) human-readable form.
+
+þindent
+  þsy{listomf [-d] <input_file>}
+þendindent
+
+  Give the name of the object file or library file on the command
+  line.  There is no default extension.  If the -d option is given,
+  listomf won't interpret debugging information.
+
+  Warning: listomf is a quick and dirty program which was used for
+  developing þhpt{emxomf}.
+
+
+þh2 updt
+þlabel updt
+þindex updt
+þkeyword updt
+
+þitemize
+þitem
+    Copy file if contents have changed:
+
+þindent
+  þsy{updt [-v] <source_file> <target_file>}
+þendindent
+
+  updt copies the source file to the target file if the target file
+  does not exist or if the source and target files differ in contents.
+  This is used by the makefile for GCC.
+
+þitem
+    Copy file if source file is newer:
+
+þindent
+  þsy{updt [-v] -t <source_file> <target_file>}
+þendindent
+
+  updt copies the source file to the target file if the target file
+  does not exist or if the source file is newer than the target file.
+  This is used for configuring GCC.
+þenditemize
+
+  The -v option turns on information messages.
+
+
+þh1 Hints for porting Unix programs to emx
+
+þitemize
+þitem
+
+  If you want Unix-like wildcard expansion built into the program, use
+
+þexample
+int main (int argc, char *argv[])
+{
+  _wildcard (&argc, &argv);
+  /* ... the program ... */
+}
+þendexample
+
+  This should be done at the very beginning of þhpt{main()}, before
+  þpa{ARGC} and þpa{ARGV} are used.  See þhpt{_wildcard()} and
+  þhpt{_response()}.
+
+þitem
+
+  Change all þhpt{open()}, þhpt{fopen()}, þhpt{fdopen()} and
+  þhpt{freopen()} calls to use O_BINARY or "b", respectively, for
+  binary files.  If a file contains both binary and textual data, read
+  the file in binary mode and do the conversion yourself.
+
+þitem
+
+  Though fseek() and ftell() now work on text files, the offsets are
+  different from what Unix programs expect.  You may have to open the
+  files in binary mode and ignore carriage returns (this has been done
+  in GDB).
+
+þitem
+
+  Replace þhpt{fork()} and þhpt{exec*()} with þhpt{spawn*()}.  Under
+  OS/2, fork() is inefficient.  Under DOS, fork() is not implemented.
+
+þitem
+
+  Replace þhpt{exec*()} with þhpt{spawn*()} and þhpt{exit()} if the
+  parent process waits for the termination of the new process (by
+  calling þhpt{wait()} or by waiting for SIGCLD).  This is required to
+  keep the process ID of the child process.  In a forked process,
+  however, you don't have to do this because emx.dll does it for you.
+
+þitem
+
+  Programs reading a.out files should be changed to call
+  þhpt{_seek_hdr()} or þhpt{_fseek_hdr()} before reading the header to
+  support .exe files.  More changes are usually required.
+
+þitem
+
+  Watch out for Unix file system hacks: Unix allows deleting and
+  renaming an open file (the file will be deleted after being closed).
+
+þitem
+
+  Watch out for Unix file names (Unix is case sensitive, long file
+  names and multiple dots are allowed).  On OS/2's HPFS multiple dots
+  are also allowed; however, trailing dots are not significant (except
+  for the special file names `þtt{.}' and `þtt{..}').
+
+þitem
+
+  The null device is called þtt{/dev/null} under Unix.  The __open()
+  system call translates the filenames þtt{"/dev/null"} and
+  þtt{"/dev/tty"} (lower case, with slashes) to þtt{"nul"} and
+  þtt{"con"}, respectively.  However,
+
+þexample
+system ("whatever >/dev/null");
+þendexample
+
+  won't work as the standard OS/2 and DOS command interpreters don't
+  recognize þtt{/dev/null}.
+
+þitem
+
+  Programs using stdin, stdout or stderr for binary data should call
+  þhpt{_fsetmode()} to switch the stream to binary mode.
+
+þitem
+
+  If you want to use þtt{\} for separating directories, changes may be
+  necessary.  These changes are optional because þtt{/} also works.
+
+þitem
+
+  Implement support for drive names.  This can be done by using
+
+þexample
+#define getcwd _getcwd2
+#define chdir _chdir2
+þendexample
+
+  In addition, some changes will be necessary.  For instance, you have
+  to change code which checks whether a filename is an absolute path
+  name.  þhpt{_fullpath()} and þhpt{_abspath()} can also be useful.
+
+þitem
+
+  Note that þtt{///abc} is a valid Unix filename.  It's equivalent to
+  þtt{/abc}.
+
+þitem
+
+  Note that þtt{chdir ("..")} is a no-op under Unix if the current working
+  directory is the root directory.  Under emx, þtt{chdir ("..")} fails in
+  the root directory.
+
+þitem
+
+  Use termio or termios or read the keyboard with þhpt{_read_kbd()} if
+  you don't want to get input line by line.
+
+þitem
+
+  Under Unix, directories in environment variables (PATH, for
+  instance) are separated by colons; use semicolons instead.
+
+þitem
+
+  Do not use the þtt{PTRACE_TRACEME} request of þhpt{ptrace()}: use
+  P_DEBUG instead when starting the process with þhpt{spawn*()}.
+
+þitem
+
+  By default, signal processing is different when using signal():
+  SIG_ACK should be used instead of the signal handler address to
+  re-enable a signal by calling þhpt{signal()} when the signal handler
+  has been called.  This behavior can be changed with the
+  -Zbsd-signals and -Zsysv-signals options of GCC.  If you use POSIX.1
+  functions for signal handling, SIG_ACK is not required.
+
+þitem
+
+  The shell isn't called þtt{/bin/sh}.  Use þhpt{system()}.  system()
+  and þhpt{popen()} don't expand wildcards (unless COMSPEC points to a
+  shell which expands wildcards).
+
+þitem
+
+  Printing single characters is inefficient.  A solution is to use
+
+þexample
+setvbuf (stdout, NULL, _IOLBF, BUFSIZ)
+þendexample
+
+  and to use þtt{fflush (stdout)} if you need the output immediately
+  (flushing is required only after displaying prompting texts before
+  reading input or displaying progress reports that don't end with a
+  newline character).  GDB output has been made much faster by using
+  line buffering.
+
+þitem
+
+  Note that þtt{VEOF != VMIN} and þtt{VEOL != VTIME}.  Programs which
+  use VEOF and VEOL to access VMIN and VTIME, respectively, should be
+  changed to use VMIN and VTIME.  emx uses separate fields for VEOF,
+  VEOL, VMIN and VTIME.
+
+þitem
+
+  To use termio, you have to reset the IDEFAULT bit of c_lflag.  This
+  does not apply to termios.
+
+þenditemize
+
+
+þh1 Creating OS/2 programs
+
+  This section describes additional features available when devoloping
+  OS/2 programs.
+
+þipfminitoc
+
+þh2 Calling OS/2 API functions
+þlabel Calling OS/2 API functions
+
+  Use
+
+þexample
+#include <os2.h>
+þendexample
+
+  in your C files to call OS/2 API functions.  GCC automatically links
+  your program with os2.a (or os2.lib) by passing the -los2 option to
+  the linker.  If you call the linker manually, you have to tell the
+  linker to link with library os2.  Note that your program will crash
+  if it calls an OS/2 API function when run under DOS.
+
+  You can use either the header file that comes with emx (os2emx.h) or
+  the header files that come with the Developer's Toolkit for OS/2
+  (an IBM product).  By default, os2emx.h is used when doing
+  þtt{#include <os2.h>}.  To use the header files of the Developer's
+  Toolkit for OS/2, edit þtt{/emx/include/os2.h} to #include
+  os2tk.h instead of os2emx.h, and add the toolkit include file
+  directory to the C_INCLUDE_PATH, CPLUS_INCLUDE_PATH and
+  OBJC_INCLUDE_PATH environment variables.  Instead of editing
+  þtt{os2.h}, you can #define þtt{USE_OS2_TOOLKIT_HEADERS} before
+  doing þtt{#include <os2.h>}.
+
+  Note that you should define þtt{INCL_}þsl{WHATEVER} constants when
+  using os2emx.h as you would with the IBM Developer's Toolkit for
+  OS/2 -- though not all constants are tested by the current
+  version of os2emx.h.
+
+  When compiling C++ programs, you may have to define the preprocessor
+  symbol þtt{OS2EMX_PLAIN_CHAR}.
+
+  When passing a pointer to a structure to a 16-bit function, the
+  structure must not cross a 64 KByte boundary.  This (currently)
+  cannot be automatically assured for structures allocated in the
+  stack (auto variables and function arguments).
+
+  To pass the address of an þtt{auto} variable to a 16-bit function,
+  you should define the variable twice and use þtt{_THUNK_PTR_STRUCT_OK}
+  or þtt{_THUNK_PTR_SIZE_OK} to check which one is properly aligned.
+
+  To ensure that all structures passed to 16-bit functions are
+  properly aligned, define all those variables in a module of their
+  own which must be the first module linked.  This doesn't work if the
+  combined size of all those variables exceeds 64 KByte.  Use
+  þhpt{_tmalloc()} to allocate memory for structures passed to 16-bit
+  functions.
+
+  The 32-bit wrappers for 16-bit OS/2 API functions are provided for
+  both static linking (library os2) and dynamic linking (library
+  þtt{wrap}, emxwrap.dll).
+
+
+þh2 Importing from OS/2 DLLs
+þlabel Importing from OS/2 DLLs
+
+  All functions in the list above are defined in os2.a and os2.lib.
+  Moreover, the 32-bit wrappers for the 16-bit OS/2 API functions are
+  available in the dynamic link library emxwrap.dll to reduce the size
+  of the executables.  The import library for emxwrap.dll is
+  þtt{wrap}.  To import functions not defined in os2.a and os2.lib,
+  you have to create an import list file for these functions.
+
+  See the þhpt{emximp} documentation for details.
+
+  Please note that you cannot directly call 16-bit functions not
+  listed above.  See below for details.
+
+
+þh2 Creating Presentation Manager applications using ld and emxbind
+þlabel Creating Presentation Manager applications using ld and emxbind
+
+  To create a Presentation Manager application using ld and emxbind,
+
+þitemize
+þitem
+
+  þtt{#include <os2.h>}
+
+þitem
+
+  link with os2.a (done automatically when using GCC to link)
+
+þitem
+
+  use þtt{rc -r} to compile the resource-definition file into a binary
+  resource file (.res file)
+
+þitem
+
+  use þtt{emxbind -ep} or a module definition file to set the
+  application type
+
+þitem
+
+  use the -r option of emxbind to put the resources from the binary
+  resource file into the .exe file.  If there is a .res file on the GCC
+  or ld command line, it is automatically passed to emxbind
+
+þenditemize
+
+  Do not use rc to put the resources into the .exe file!
+
+  Example:
+
+þexample
+cd \emx\test
+rc -r pm1.rc
+gcc -o pm1 pm1.c
+emxbind -bp -rpm1.res /emx/bin/emxl pm1
+þendexample
+
+  Ditto, using a module definition file:
+
+þexample
+cd \emx\test
+rc -r pm1.rc
+gcc -o pm1.exe pm1.c pm1.def pm1.res
+þendexample
+
+  Example (compiling the `template' toolkit sample program):
+
+þexample
+cd \toolkt20\c\samples\template
+copy ..\prodinfo.bmp
+rc -r main.rc
+gcc -s -o template.exe *.c template.def main.res
+þendexample
+
+
+þh2 Creating Presentation Manager applications using emxomf and LINK386
+þlabel Creating Presentation Manager applications using emxomf and LINK386
+
+  To create a Presentation Manager application using emxomf and LINK386,
+
+þitemize
+þitem
+
+  þtt{#include <os2.h>}
+
+þitem
+
+  link with os2.lib (done automatically when using GCC to link)
+
+þitem
+
+  use a module definition file which uses the WINDOWAPI keyword of the
+  NAME statement
+
+þitem
+
+  use þtt{rc -r} to compile the resource-definition file into a binary
+  resource file (.res file)
+
+þitem
+
+  use rc or emxomfld to add the binary resource file to the .exe
+  file.  Optionally, you can compile the resource-definition file and
+  add it to the .exe file using rc in one step.  Using two steps is
+  recommended in makefiles.
+
+þenditemize
+
+  Example:
+
+þexample
+cd \emx\test
+rc -r pm1.rc
+gcc -o pm1.exe pm1.c pm1.def pm1.res -Zomf
+þendexample
+
+  Example (compiling the `template' toolkit sample program):
+
+þexample
+cd \toolkt20\c\samples\template
+copy ..\prodinfo.bmp
+rc -r main.rc
+gcc -Zomf -o template.exe *.c template.def main.res
+þendexample
+
+  If you want to use the þhpt{-Zsys} option, you should increase the
+  stack size by editing the STACKSIZE statement in the .def file.
+  Note that the command line arguments and the complete environment
+  are copied to the stack!  The stack size should be at least 32768.
+
+
+þh2 Creating Workplace Shell applications
+þlabel Creating Workplace Shell applications
+
+  Dynamic link libraries for Workplace Shell objects should be either
+  DLLs without C runtime environment or stand-alone DLLs (see below).
+
+  For creating Workplace Shell applications, you need the SOM headers
+  and the SOM compiler from the Developer's Toolkit for OS/2 (an IBM
+  product).
+
+  See the `flag' example in þtt{/emx/samples}.
+
+þh2 Creating dynamic link libraries
+þlabel Creating dynamic link libraries
+
+  There are six types of dynamic link libraries:
+
+þenumerate
+þitem
+
+  DLLs which use emxlibcm.dll or emxlibcs.dll or a custom C runtime
+  DLL.  These DLLs don't contain C library functions.  Calls to C
+  library functions are resolved by emxlibcm.dll or emxlibcs.dll or a
+  custom C runtime DLL (and, in all three cases, emx.dll).  The main
+  program and all DLLs must use the same C runtime DLL.
+
+þitem
+
+  Custom C runtime DLLs.  These DLLs contain the C library or parts
+  thereof and export the C library functions to other DLLs and to the
+  main program.  An application (main program and DLLs) should use
+  only one custom C runtime DLL; emxlibcm.dll and emxlibcs.dll should
+  not be used.  Either the system call library sys.lib or emx.dll can
+  be used.  This type of DLL is recommended if you want to ship your
+  application with your own DLLs, but without any emx DLLs.  This type
+  of DLL can also be used when replacing library functions such as
+  malloc() which are referenced by other library functions.
+
+þitem
+
+  C runtime forwarder DLLs.  These DLLs forward all C runtime
+  functions to emxlibcm.dll or emxlibcs.dll, and add some functions of
+  their own.  However, they cannot safely replace functions of
+  emxlibcm.dll or emxlibcs.dll as the latter ones won't call the
+  replacement functions.
+
+þitem
+
+  Stand-alone DLLs.  These DLLs contain the C library or parts
+  thereof, which is used privately by the DLL.  The main program and
+  the other DLLs use a different C runtime environment.  You should
+  use only `simple' C library functions such as memcpy() which don't
+  require global variables.
+
+  Keep in mind that the DLL and the program using the DLL don't share
+  global variables such as þhpt{errno}, þhpt{timezone}, and -- very
+  important -- the variables used for I/O.
+
+þitem
+
+  DLLs without C runtime environment.  These DLLs don't call any C
+  library functions which require a runtime environment.  Only OS/2
+  API functions and simple C library functions such as þtt{strcpy()}
+  can be called.
+
+þitem
+
+  Resource DLLs.  These DLLs contain only resources.  Some bits of
+  code are required for library initialization.
+
+þendenumerate
+
+  Write a þhpt{module definition file} (.def file) that contains a
+  LIBRARY statement and an EXPORTS statement.  The EXPORTS statement
+  has to list all functions to be exported by your DLL.  The .def file
+  should have the same name as the .dll file to be created.
+
+  Compile and link your program using the þhpt{-Zdll} option of GCC.
+  This option causes the dll0 startup to be used instead of crt0 and
+  selects appropriate libraries.  As DLLs are usually multithread
+  libraries, you should also use the þhpt{-Zmt} option.  Specify the
+  name of the .def file on the GCC or ld command line, respectively.
+
+  Using the þhpt{-mprobe} GCC option is recommended for creating DLLs
+  as the DLL might be called from a thread with uncommitted stack.
+
+  Linking with LINK386 (using GCC -Zomf) is recommended for dynamic
+  link libraries.  Use ld and emxbind only if you want to debug the
+  dynamic link library.
+
+þh3 Creating dynamic link libraries that use a C library DLL
+
+  Dynamic link libraries that use emxlibcm.dll or emxlibcs.dll (or a
+  custom C runtime DLL) are allowed to call all library functions,
+  including stream I/O, as long as they are used together with
+  programs and other dynamic link libraries that use the same
+  emxlibcm.dll or emxlibcs.dll (or the same custom C runtime DLL used
+  by the DLL).  That is, all I/O done by C library functions must be
+  done in a single place, emxlibcm.dll, emxlibcs.dll, or the custom C
+  runtime DLL.  The following GCC options are used for building
+  a DLL which uses a C library DLL: þhpt{-Zdll} þhpt{-Zcrtdll}.
+
+  The default _DLL_InitTerm() function calls _CRT_init(),
+  constructors, and destructors, but does not call _CRT_term().
+  _CRT_init() is called to ensure that the C library has been
+  initialized for use by the constructors, even if OS/2 happens to
+  initialize the DLLs in a wrong sequence.  _CRT_term() is not called
+  because other libraries may still use the C library.
+
+  See þtt{/emx/test/testdll3.cc} for an example.
+
+þh3 Creating custom C runtime DLLs
+
+  Creating a custom C runtime DLL means creating a DLL which contains
+  your own code and some or all code of emxlibcm.dll or emxlibcs.dll.
+  Write a module definition file which exports your functions and all
+  C library functions and variables referenced by the main program and
+  other DLLs using the custom C runtime DLL.
+
+  You can use þtt{/emx/lib/cdll.def} as template.  Note that some
+  symbols must always be exported, see þtt{/emx/lib/cdll.def} for
+  details.
+
+  To create a multithread DLL, delete all lines of
+  þtt{/emx/lib/cdll.def} which contain the string þtt[{ST}].  To
+  create a single-thread DLL, delete all lines containing þtt[{MT}].
+  To create a DLL which uses emx.dll, delete all lines containing
+  þtt[{SYS}].  To create a DLL which does not use emx.dll (-Zsys),
+  delete all lines containing þtt[{EMX}].  This can be automatically
+  done, for instance with the þtt{sed} tool; see target
+  þtt{testdll7.def} in þtt{/emx/test/makefile}.
+
+  Don't forget to use the following statement:
+
+þexample
+DATA
+  MULTIPLE NONSHARED
+þendexample
+
+  Use the following GCC option for building a custom C runtime DLL:
+  þhpt{-Zdll}.  The options þhpt{-Zomf} and þhpt{-Zsys} are optional.
+
+  If clients of your DLL call the hardware port I/O functions such as
+  þhpt{_inp8()}, either link the clients with þtt{-lemxio} or use
+  þtt{/emx/src/lib/cdll/emxio.def} in addition to your module
+  definition file for creating the import library (it is essential to
+  import the functions from þtt{emxio.dll}, therefore appending
+  þtt{emxio.def} to your module definition file won't work).
+
+  To use your custom C runtime DLL, use the þhpt{-Zcrtdll} option of
+  GCC: If your import library is named þtt{myclib.lib}, use
+  þtt{-Zcrtdll=myclib} in GCC's command line.
+
+  The default _DLL_InitTerm() function calls _CRT_init(),
+  constructors, destructors, and _CRT_term().
+
+  See þtt{/emx/test/testdll4.c} and þtt{/emx/test/testdll7.c} for
+  examples.
+
+þh3 Creating C runtime forwarder DLLs
+
+  Creating a C runtime forwarder DLL is similar to creating a custom C
+  runtime DLL (see above).  However, instead of statically linking the
+  C runtime library, it is linked dynamically.  That is, the exports
+  of the forwarder DLL are resolved by imports from emxlibcm.dll or
+  emxlibcs.dll.
+
+  Use the following GCC option for building a forwarder DLL:
+  þhpt{-Zdll} þhpt{-Zomf} þhpt{-Zcrtdll}.  As emxbind does not
+  support forwarders, you have to use -Zomf.
+
+þh3 Creating stand-alone dynamic link libraries
+
+  A stand-alone dynamic link library has its own runtime environment
+  which is not shared with the client application or other DLLs.  Use
+  the following GCC options for creating a stand-alone DLL:
+  þhpt{-Zdll} þhpt{-Zso} þhpt{-Zsys} þhpt{-Zomf}.
+
+  The default _DLL_InitTerm() function calls _CRT_init(),
+  constructors, destructors, and _CRT_term().
+
+  See þtt{/emx/test/testdll5.c} for an example.
+
+þh3 Creating dynamic link libraries without C runtime environment
+
+  To create a dynamic link library without C runtime, do not reference
+  any C library function which requires a runtime environment.  As the
+  þtt{new} operator of C++ calls malloc(), you cannot use C++ to
+  create a DLL of this type unless you provide your own memory
+  management.  Do not use þhpt{-Zmt} even if the DLL is used by
+  multithread programs; you have to use Mutex semaphores when using
+  functions such as þtt{strtok()} which are not thread-safe.  Use the
+  following GCC options to build a DLL without C runtime environment:
+  þhpt{-Zdll} þhpt{-Zno-rte} þhpt{-Zomf}.
+
+  The default _DLL_InitTerm() function calls constructors and
+  destructors, but does not call _CRT_init() and _CRT_term() as there
+  is no runtime environment to initialize.
+
+  See þtt{/emx/test/testdll1.c} for an example.
+
+þh3 Creating resource DLLs
+
+  To create a resource DLL, build a DLL from þtt{/emx/lib/res0.obj}
+  and add the resources with rc:
+
+þexample
+link386 \emx\lib\res0,myres.dll,nul,,myres.def
+rc myres.res myres.dll
+þendexample
+
+  The module definition file should start with a LIBRARY statement.
+
+þh3 Creating dynamic link libraries using C++
+
+  You should not use the GNU C++ libraries (þhpt{libg++} and
+  þhpt{libstdc++}) if you create a DLL (unless you are building a
+  stand-alone DLL or a private C runtime DLL) as there is not yet a
+  DLL version of these libraries.
+
+  As creating the module definition file for the DLL by hand is quite
+  boring, you should let your computer do it: see the description of
+  the þhpt{emxexp} tool for details.  The þtt{sign} sample of
+  þtt{emxample.zip} uses emxexp to create the module definition file.
+
+  To call the constructors and destructors for static objects in the
+  DLL, make sure that the þhpt{_DLL_InitTerm()} function of the DLL
+  calls þhpt{__ctordtorInit()} and þhpt{__ctordtorTerm()}.  You should
+  call _CRT_init() before __ctordtorInit() to ensure that the C
+  library has been initialized for use by the constructors, even if
+  OS/2 happens to initialize the DLLs in a wrong sequence.
+
+þh2 Using the DLL version of the C library
+þlabel Using the DLL version of the C library
+
+  To use emxlibcm.dll or emxlibcs.dll, simply type þhpt{-Zcrtdll} on
+  the GCC command line.  This links your program with the import
+  libraries c_import.a or c_import.lib instead of the static C library
+  (þtt{c}, þtt{c_app}, þtt{gcc}, þtt{emx}).  Additionally, code which
+  must be statically linked is taken from c_static.a or c_static.lib.
+  -Zcrtdll can be used with methods (E1) and (E2).  See the
+  þhpt{introduction} for further information.
+
+  Note that emxlibcm.dll and emxlibcs.dll use emx.dll.  Thus, the
+  restrictions of -Zsys do not apply.
+
+  Do not redefine functions in your program which are contained in
+  emxlibcm.dll or emxlibcs.dll.  Other functions in emxlibcm.dll or
+  emxlibcs.dll will continue to use the original versions in that DLL
+  which will cause problems.  If you have to replace library functions
+  and want to use a C library DLL, create a new DLL (which must not be
+  called emxlibc.dll, emxlibcm.dll, or emxlibcs.dll), add your
+  replacement functions and all the functions of emxlibcm.dll or
+  emxlibcs.dll except for the functions you are replacing.
+
+
+þh2 Creating multithread programs
+þlabel Creating multithread programs
+
+  Multithread programs have to use either the multithread static
+  libraries or the dynamic link library emxlibcm.dll.  You have to say
+  þhpt{-Zmt} on the GCC command line.
+
+  Use þhpt{_beginthread()} to start a new thread.  Do not use
+  DosCreateThread unless the new thread doesn't call C library
+  functions.
+
+  The C library functions in þtt{mt/c.a}, þtt{mt/c.lib}, and
+  emxlibcm.dll are not yet completely thread-safe.  The -Zmt, -Zmts,
+  and -Zmtd options define the __MT__ preprocessor macro.  The C
+  library header files check for __MT__ to use alternate definitions
+  suitable for multithread programs when -Zmt, -Zmts, or -Zmtd is
+  used.
+
+  Each thread has its own þhpt{errno} value.  To create a library
+  which can be used for both single-thread and multithread programs,
+  use the þhpt{_errno()} function instead of the errno variable.  If
+  the preprocessor symbol þtt{__ST_MT_ERRNO__} is defined, errno will
+  be redefined to call _errno().  Just use the þtt{-D__ST_MT_ERRNO__}
+  option in the GCC command line.
+
+  If you are very careful, you can write multithread programs that
+  use the single-thread libraries.  Only the main thread is allowed
+  to call library functions that have side effects, including
+  functions that set errno.  All other threads should use OS/2 API
+  functions instead.
+
+  For performance reasons, single-thread programs should be linked
+  with the single-thread libraries (that is, without the -Zmt option).
+
+
+þh2 Calling 16-bit functions
+þlabel Calling 16-bit functions
+
+  Limited support for calling 16-bit functions is available.  You can
+  call 16-bit OS/2 API functions and other 16-bit functions that use
+  the pascal (_pascal) or C (_cdecl) calling convention and are
+  exported by a dynamic link library.  As no changes have been made to
+  GCC to support direct calls to 16-bit functions (this would require
+  big changes to GCC), you have to call 16-bit functions by applying
+  the (awkward) C preprocessor macros and functions described below.
+  There are two sets of macros, one for the pascal calling convention
+  (_THUNK_PASCAL_***) and one for the C calling convention
+  (_THUNK_C_***).  For convenience and compatibility with emx 0.8f,
+  there are also macros _THUNK_*** which are aliases for the
+  _THUNK_PASCAL_*** macros.  For brevity, only the _THUNK_*** macros
+  are explained below.  To call a _cdecl function, use
+  _THUNK_C_FUNCTION etc. instead of _THUNK_FUNCTION etc.
+
+þlist
+þitem þtt{_THUNK_FUNCTION(}þpa{FUNCTION}þtt{)}
+
+        This macro is used for declaring the 16-bit function.  The
+        function is declared as usual, using a prototype, but
+        _THUNK_FUNCTION is applied to the function name.  The 16-bit
+        function must not be called directly.
+
+þitem þtt{_THUNK_PROLOG(}þpa{SIZE}þtt{)}
+
+        For each call to the 16-bit function, this macro must be
+        called first.  þpa{SIZE} is the number of bytes in the
+        argument list of the 16-bit function.  After calling
+        _THUNK_PROLOG, the following macros are used to build the
+        argument list.  The macros are to be applied left-to-right,
+        that is, the first argument is handled first both for the
+        pascal and the C calling convention.
+
+þitem þtt{_THUNK_CHAR(}þpa{ARG}þtt{)}
+
+        Pass an 8-bit argument to the function.
+
+þitem þtt{_THUNK_SHORT(}þpa{ARG}þtt{)}
+
+        Pass a 16-bit argument to the function.
+
+þitem þtt{_THUNK_LONG(}þpa{ARG}þtt{)}
+
+        Pass a 32-bit argument to the function.
+
+þitem þtt{_THUNK_FLAT(}þpa{ARG}þtt{)}
+
+        Pass a 32-bit (flat) pointer to the function.
+
+þitem þtt{_THUNK_FAR16(}þpa{ARG}þtt{)}
+
+        Pass a 16:16-bit far pointer to the function.  After
+        building the argument list, the 16-bit function is called by
+        invoking the following macro.
+
+þitem þtt{_THUNK_CALL(}þpa{FUNCTION}þtt{)}
+
+        Call the 16-bit function þpa{FUNCTION}.  Do not apply
+        _THUNK_FUNCTION to the function name.
+
+þitem þtt{_THUNK_CALLI(}þpa{FUNCTION}þtt{)}
+
+        Call the 16-bit function pointed to by the 16:16-bit far
+        pointer þpa{FUNCTION}.  Use this macro instead of _THUNK_CALL
+        when employing DosLoadModule and DosQueryProcAddr.  The
+        pointer returned by DosQueryProcAddr must be turned into a
+        16:16-bit far pointer by calling _emx_32to16().
+
+þendlist
+
+  There should be no statements other than calls to the _THUNK macros
+  between _THUNK_PROLOG and _THUNK_CALL.  _THUNK_PROLOG starts an
+  expression which is terminated by _THUNK_CALL.  Therefore, the
+  return value of the 16-bit function is returned by _THUNK_CALL and
+  by the entire sequences of statements from _THUNK_PROLOG to
+  _THUNK_CALL.  The return value is the value returned by the 16-bit
+  function in the DX and AX registers.  If the function returns a
+  16-bit value, you have to typecast the return value to þtt{SHORT} or
+  þtt{USHORT} to discard the upper 16 bits.
+
+  See the description of þhpt{_emx_16to32()} and _emx_32to16() for
+  converting 16-bit far pointers to 32-bit flat pointers and vice
+  versa.  This conversion is not done automatically.
+
+  You will get a warning about the variable _tp being unused if the
+  16-bit function doesn't take arguments.  This warning is harmless.
+
+  When passing a pointer to a structure to a 16-bit function, the
+  structure must not cross a 64 KByte boundary.  This (currently)
+  cannot be assured for structures allocated in the stack (þtt{auto}
+  variables and function arguments).  To ensure that all structures
+  passed to 16-bit functions are properly aligned, define all those
+  variables in a module of their own which must be the first module
+  linked.  This doesn't work if the combined size of all those
+  variables exceeds 64 KByte.  Alternatively, you can define the
+  variable twice and use þtt{_THUNK_PTR_STRUCT_OK} or
+  þtt{_THUNK_PTR_SIZE_OK} to check which one is properly aligned.  Use
+  þhpt{_tmalloc()} to allocate memory for structures passed to 16-bit
+  functions.  Example:
+
+þexample
+#include <os2.h>                /* define _THUNK_*** macros */
+
+/* Declare 16-bit function */
+USHORT _THUNK_FUNCTION (Dos16Beep) (USHORT usFrequency, USHORT usDuration);
+
+void beep (int frequency, int duration)
+{
+  _THUNK_PROLOG (2+2);
+  _THUNK_SHORT (frequency);
+  _THUNK_SHORT (duration);
+  _THUNK_CALL (Dos16Beep);
+}
+þendexample
+
+  See þtt{/emx/test/c16test1.c}, þtt{/emx/test/c16test2.c},
+  þtt{/emx/src/lib/sys/scrsize.c}, and þtt{/emx/src/lib/os2/*.c} for
+  more examples.
+
+
+þh1 Customizing
+
+  Default values are provided for the heap size, the stack size and
+  the number of files that can be open simultaneously.  The following
+  sections describe how to increase the limits.
+
+þipfminitoc
+
+þh2 Increasing the heap size
+þlabel Increasing the heap size
+
+  The malloc() implementation of emx 0.9c and later can use multiple
+  heap objects under OS/2; in consequence, the heap size is no longer
+  limited under OS/2.  However, if you use another malloc()
+  implementation which does not support non-contiguous memory
+  allocation or if the application is run under DOS, the maximum size
+  of the heap available for þhpt{malloc()} is fixed.  The default for
+  the combined size of the heap and stack is 8 MByte under DOS.  Use
+  the þhpt{-s# emx option} (see section þref{Using emx options}) to
+  increase the heap and stack size.
+
+  The default heap size is 32 MByte under OS/2.  For the emx
+  implementation of malloc(), this is the size of the initial heap
+  object and the minimum size of additional heap objects.  If ld and
+  emxbind are used for linking, you can change the heap size with the
+  þhpt{-h<heap_size> option of emxbind}.
+
+  If emxomf and LINK386 without -Zsys are used for linking, the heap
+  size cannot be changed.  If -Zsys is used, initialize the variable
+  þtt{_sys_heap_size} to the desired heap size:
+þexample
+unsigned _sys_heap_size = 0x4000000; /* 64 MByte */
+þendexample
+  This can be done in any module explicitely linked to your
+  application.
+
+
+þh2 Increasing the stack size
+þlabel Increasing the stack size
+
+  The default for the combined size of the heap and stack is 8 MByte
+  under DOS.  When using emxbind, the default stack size is 8 MB under
+  OS/2.  When using emxomf and LINK386, the default stack size is 0x8000
+  bytes under OS/2.
+
+  The stack size for DOS can be changed with the þhpt{-s# emx option}.
+  emxbind can put this option into the executable file.
+
+  The stack size for OS/2 can be changed with the þhpt{-k<stack_size>
+  option of emxbind} when using emxbind.  When using LINK386, use the
+  þhpt{STACKSIZE statement} in a þhpt{module definition file}.  The
+  stack size should be at least 32768 bytes.  You can also use the
+  þhpt{-Zstack} option of GCC.
+
+  If you are using certain beta versions of LINK386, bits 16 through 23
+  of the stack size should not equal 0x20000 or 0x40000 bits set.
+  Otherwise, your program will crash under OS/2 2.0 due to a bug in
+  OS/2 2.0.  Use only stack sizes where both the 0x20000 and 0x40000
+  bits are zero or the 0x10000 or 0x80000 bits are one.
+
+þh2 Increasing the number of files
+þlabel Increasing the number of files
+
+  Under DOS and when using emx.dll under OS/2, you can set the number
+  of file handles supported by the emx runtime by setting the EMXOPT
+  environment variable or by using emxbind to put emx options into the
+  .exe file.  See section þref{Using emx options} for the þhpt{-h# emx
+  option}.
+
+  Note that you might have to change the FILES settings in the
+  config.sys file under DOS.  (Under OS/2, the FILES setting of
+  config.sys applies only to DOS programs.)
+
+  When using the system call library (-Zsys, sys.lib) you have to call
+  DosSetMaxFH to increase the number of file handles.
+
+  The number of file handles and streams supported by the C library is
+  not limited.  However, a process inherits only the first 40 file
+  handles (0 through 39) of its parent process.
+
+þh1 Profiling
+
+  Profiling is used to find out where a program spends most of its
+  time, to be able to improve performance of the program by paying
+  special attention to those hot spots.
+
+  See also the GCOV chapter in the GCC manual.  Note that GCOV
+  currently requires support for long file names, that is, it won't
+  work on FAT drives.
+
+þipfminitoc
+
+þh2 Limitations
+
+  Currently, profiling is supported only for programs built with
+  emxbind; that is, you cannot use the -Zomf and -Zsys options of GCC.
+  Moreover, profiling is restricted to the main thread (thread 1), all
+  other threads are ignored.
+
+  Under OS/2, DosProfile, an unsupported and undocumented API is used.
+  That API may disappear in future versions of OS/2 or behave
+  differently in older versions of OS/2: Profiling has been tested
+  only under OS/2 Warp 3.0.
+
+  Under DOS, the periodic interrupt of the real-time clock is used.
+  If emx thinks another programs uses that interrupt, it silently
+  refuses to profile your program (all sampling counters will remain
+  zero).  Profiling also doesn't work if there is no real-time clock
+  or if it is not IBM-compatible.
+
+þh2 Preparing your program for profiling
+
+  You have to recompile your program for profiling, using the -pg or
+  -pn option of GCC.  The -pg option adds specials hooks to functions,
+  uses gcrt0.o instead of crt0.o (to start profiling when the program
+  is run), and uses library þtt{c_p.a} instead of þtt{c.a} (which has
+  been compiled with -pg and therefore contains profiling hooks).  The
+  profiling hooks added by -pg enable gprof to print a call graph
+  which shows which functions called which others, and how much time
+  each function used when its function calls are included.  The -pn
+  option does not add profiling hooks; it uses gcrt0.o instead of
+  crt0.o (to start profiling when the program is run).  Profiling with
+  -pn avoids the overhead caused by the profiling hooks; gprof won't
+  be able to print a call graph and won't know how many times the
+  functions have been called.  Do not use the -s option as gprof needs
+  the symbol table.
+
+  Note that þtt{gcrt0.o} is built from þtt{gmon.c} which is covered by
+  the BSD license (see þtt{\emx\doc\COPYING.BSD}).  þtt{gcrt0.o} is
+  distributed in þtt{bsddev.zip}, therefore you have to install
+  þtt{bsddev.zip} for profiling.
+
+þh2 Creating execution profiles
+
+  To collect profiling data for a program compiled with the -pg or -pn
+  option of GCC, just run it.  On termination of the program, a file
+  named gmon.out will be written in the (then) current working
+  directory.
+
+  A program compiled with the -pg option of GCC will run a bit
+  slower than if compiled without the -pg option.
+
+þh2 Viewing execution profiles
+
+  Change to the directory containing the gmon.out file and run gprof
+  on the executable file:
+
+þexample
+[C:\TEST]myprog args
+[C:\TEST]gprof myprog.exe
+þendexample
+
+  See the gprof manual for details (shipped in þtt{gnudoc.zip}).
+  gprof is distributed in þtt{bsddev.zip}, therefore you have to
+  install þtt{bsddev.zip} for profiling.
+
+  Note that the sampling frequency is 1024Hz under DOS, and 1000Hz
+  under OS/2.  gprof assumes a sampling frequency of 1024Hz under DOS,
+  and 1000Hz under OS/2.  When running gprof under OS/2 on a gmon.out
+  file created under DOS, or vice versa, the absolute timings will be
+  slightly incorrect, though the relative timings will still be valid.
+
+
+þh1 Tracing
+
+  All functions of emxlibcs.dll and emxlibcm.dll can be traced with
+  the OS/2 TRACE command.  If you want to trace the library calls of
+  an application, you have to link it dynamically (þhpt{-Zcrtdll}).
+
+þipfminitoc
+
+þh2 Preparing for tracing
+
+  The following changes should be made to your config.sys file:
+
+þitemize
+þitem
+  Add the þtt{c:\emx\etc} directory to the DPATH environment variable,
+  using the correct drive letter.
+þitem
+  Add the line
+þexample
+TRACEBUF=63
+þendexample
+  to enable tracing.
+þenditemize
+
+  Reboot the machine after changing config.sys.
+
+þh2 Groups and event types
+
+  All the functions of emxlibcs.dll and emxlibcm.dll are divided into
+  groups, to simplify tracing and to reduce the amount of trace data
+  being produced.  Each function belongs to exactly one group.  You
+  can enable and disable tracing for entire groups of tracepoints.
+  The following groups are defined:
+
+þdescription
+þitem þtt{CONV}
+  Converting strings to numbers and vice versa (<stdlib.h> etc.)
+þitem þtt{CTYPE}
+  Functions of <ctype.h>
+þitem þtt{DIR}
+  Reading and managing directories (<unistd.h>, <dirent.h>, etc.)
+þitem þtt{EA}
+  Extended attributes (<io.h>)
+þitem þtt{EMXLOAD}
+  emxload support (<sys/emxload.h>)
+þitem þtt{ENV}
+  environment (<stdlib.h>)
+þitem þtt{FNAME}
+  File names (<stdlib.h> etc.), e.g., þtt{_defext()}
+þitem þtt{GCC}
+  Compiler helper functions and other functions of þtt{libgcc} (þtt{gcc.a})
+þitem þtt{INIT}
+  Initialization and termination
+þitem þtt{LOCALE}
+  Locale support (<locale.h>)
+þitem þtt{LOWIO}
+  Low-level I/O (<io.h>, <unistd.h> etc.)
+þitem þtt{MALLOC}
+  Memory allocation (<stdlib.h>, <malloc.h>, and <umalloc.h>)
+þitem þtt{MATH}
+  Floating-point math (<math.h> and <float.h>)
+þitem þtt{NLS}
+  National language support (<sys/nls.h>)
+þitem þtt{OTHER}
+  All remaining functions
+þitem þtt{PROCESS}
+  Process management and thread management (<unistd.h>, <process.h> etc.)
+þitem þtt{PWD}
+  Password database (<pwd.h>), user IDs, group IDs, etc.
+þitem þtt{RTTI}
+  C++ Run Time Type Identification
+þitem þtt{SEM}
+  Semaphores (<sys/fmutex.h> etc.)
+þitem þtt{SIGNAL}
+  Signal processing (<signal.h>)
+þitem þtt{STDIO}
+  C stream I/O (<stdio.h>)
+þitem þtt{STRING}
+  String and buffer processing (<string.h>, <strings.h>, etc.)
+þitem þtt{SYSCALL}
+  emx system calls
+þitem þtt{TERMIOS}
+  POSIX.1 general terminal interface (<termios.h>)
+þitem þtt{TIME}
+  Time and date (<time.h> etc.)
+þenddescription
+
+  Each tracepoint has two event types: þtt{PRE} or þtt{POST} for the
+  Pre-Invocation tracepoint and Post-Invocation tracepoint,
+  respectively, and þtt{API} or þtt{INT} for API functions and
+  internal functions, respectively.  You can enable or disable tracing
+  by event type.
+
+þh2 Minor trace codes
+
+  Each function has a unique minor trace code.  You can enable tracing
+  of a function by specifying its minor trace code.  For functions
+  which are exported by the DLL, the minor trace code for
+  Pre-Invocation is identical to the ordinal number.  See
+  þtt{\emx\src\lib\cdll\emxlib.def} for the ordinal numbers.
+  Additionally, the following minor trace codes are defined:
+
+þdescription
+þitem 32767
+  þtt{_DLL_InitTerm()}
+þenddescription
+
+  To get the minor trace code for Post-Invocation, add 32768 to the
+  minor trace code for Pre-Invocation.
+
+þh2 Using the TRACE command
+
+  The following command enables tracing for all trace points of
+  emxlibcs.dll:
+
+þexample
+trace on emxlibcs
+þendexample
+
+  Usually, this generates too much data and causes the trace buffer to
+  wrap around.  The following command disables tracing for all trace
+  points of all DLLs:
+
+þexample
+trace on emxlibcs
+þendexample
+
+  The following command enables tracing of all functions of group
+  STDIO and all API functions of LOWIO:
+
+þexample
+trace on emxlibcs (stdio,lowio=api)
+þendexample
+
+  The following command enables tracing for all þtt{exec*()} and
+  þtt{spawn*()} functions:
+
+þexample
+trace on emxlibcs (100-107, 112-119)
+þendexample
+
+  See the OS/2 command reference (þtt{help trace}) for details.
+  Use the TRACEFMT command to view the contents of the trace buffer.
+
+
+þh1 Debugger (DOS)
+þlabel emx kernel debugger
+
+  emxd.exe contains a debugger (that's the difference between emx.exe
+  and emxd.exe).  Use the -S option to enable the debugger.  If you
+  want to debug using a terminal, enter -S1 to use COM1, -S2 to use
+  COM2.  To debug an emx program, type
+
+þindent
+  þsy{emxd -S [<options>] <program> [<arguments>]}
+þendindent
+
+  (which works with all emx programs) or
+
+þtypewriter
+  set emx=c:\emx\bin\emxd.exe þbreak
+  set emxopt=-S þbreak
+  þsy{<program>}
+þendtypewriter
+
+  (which doesn't work if emx.exe is bound to the program).  When
+  starting an emx program by running emx.exe or emxd.exe, the emx
+  options -d, -h#, -m#, -o, -p, -E, -F, -O, -P and -V set by emxbind
+  are ignored.  Pass these options on the command line instead.
+
+  þbf{Command keys:}
+
+þdescription
+þitem .
+
+        display registers and next instruction
+
+þitem :
+
+        show CS:EIP and next instruction (toggle)
+
+þitem BLANK
+
+        1 step
+
+þitem 0
+
+        10 steps
+
+þitem 1-9
+
+        1 through 9 steps
+
+þitem C
+
+        set breakpoint after next instruction and start program.  This
+        command should only be used on þtt{CALL} instructions
+
+þitem F
+
+        display floating point (387) status
+
+þitem N
+
+        step without stopping
+
+þitem F2
+
+        display registers and next instruction
+
+þitem F5
+
+        start program without setting breakpoint
+
+þitem F8
+
+        1 step
+
+þitem F10
+
+        set breakpoint after next instruction and start program
+
+þenddescription
+
+  þbf{Commands:}
+
+þlist
+þitem þsy{A <address>}
+
+        display inforomation about <address> (virtual, physical and
+        external addresses)
+
+þitem þsy{A <range>}
+
+        ditto, loop through <range> in steps of 1000H bytes
+
+þitem þsy{B}
+
+        display breakpoints and watchpoints
+
+þitem þsy{B <address>}
+
+        set breakpoint (default segment: CS).  Up to 3 breakpoints and
+        watchpoints can be set
+
+þitem þsy{D}
+
+        continue last þsy{D} command
+
+þitem þsy{D <address>}
+
+        display hex dump: 16 lines (default segment: DS)
+
+þitem þsy{D <range>}
+
+        display hex dump (default segment: DS)
+
+þitem þsy{G}
+
+        start program
+
+þitem þsy{G <address>}
+
+        set temporary breakpoint at <address> (default segment: CS)
+        and start program
+
+þitem þsy{I}
+
+        display process table: process index, process id, parent
+        process id, and file handle mapping
+
+þitem þsy{K}
+
+        display breakpoints and watchpoints
+
+þitem þsy{K <value>}
+
+        delete breakpoint or watchpoint (by number)
+
+þitem þsy{L <value>}
+
+        display info about selector <value>
+
+þitem þsy{L <value> <value>}
+
+        ditto, loop through range in steps of 8 (not 4!)
+
+þitem þsy{Q}
+
+        quit, return value 0
+
+þitem þsy{Q <value>}
+
+        quit and set the return value to <value>
+
+þitem þsy{R}
+
+        display registers and next instruction
+
+þitem þsy{R <register> <value>}
+
+        set register to <value>
+
+þitem þsy{R <condition>}
+
+        set/reset processor flag
+
+þitem þsy{S <range> <list>}
+
+        search memory
+
+þitem þsy{U}
+
+        continue last þsy{U} command
+
+þitem þsy{U <address>}
+
+        unassemble (default segment: CS)
+
+þitem þsy{V <value>}
+
+        display info about virtual address
+
+þitem þsy{V <value> <value>}
+
+        ditto, loop through range in steps of 1000H bytes
+
+þitem þsy{VP}
+
+        display info about pages that have physical memory assigned
+
+þitem þsy{VP <value>}
+
+        display info by physical address
+
+þitem þsy{VP <value> <value>}
+
+        ditto, loop through range in steps of 1000H bytes
+
+þitem þsy{VX}
+
+        display info about pages that have an external address
+
+þitem þsy{VX <value>}
+
+        display info by external address
+
+þitem þsy{VX <value> <value>}
+
+        ditto, loop through range in steps of 1000H bytes
+
+þitem þsy{W}
+
+        display breakpoints and watchpoints
+
+þitem þsy{W<l><a> <address>}
+
+        set watchpoint at given address (default segment: DS).
+        þsy{<l>} is þtt{B} (byte), þtt{W} (word, <address> must be
+        even) or þtt{D} (dword, the 2 low bits of <address> must be
+        zero).  þsy{<a>} is þtt{R} (trap read and write accesses),
+        þtt{W} (trap write accesses) or þtt{X} (trap modifying write
+        accesses).
+
+þitem þsy{X <value>}
+
+        find symbol at address <value> or below
+
+þendlist
+
+  The following arguments are used by the commands listed above:
+
+þlist
+þitem <address>
+
+þlist
+þitem þsy{[<value>:]<value>}
+
+    selector and offset.  If using the SS register for the selector
+    fails, type the value of SS as hexadecimal number
+
+þitem <symbol>
+
+    use address of variable or function <symbol>.  If <symbol> looks
+    like a hexadecimal number you lose
+
+þendlist
+
+þitem <condition>
+
+  Each processor flag has two states:
+
+þverbatim
+NC, CY, PE, PO, NA, AC, NZ, ZR, PL, NG, DI, EI, UP, DN, NV, OV
+þendverbatim
+
+þitem <register>
+
+   The following registers can be used:
+
+þverbatim
+EAX, EBX, ECX, EDX, ESI, EDI, EBP, ESP, EIP, EFLAGS,
+AX, BX, CX, DX, SI, DI, BP, SP, IP,
+AL, AH, BL, BH, CL, CH, DL, DH,
+CS, DS, ES, FS, GS, SS
+þendverbatim
+
+þitem <range>
+
+    A <range> includes all addresses between the start address and the
+    end address:
+
+þlist
+þitem þsy{<address> <address>}
+
+   The selectors of both addresses must be identical (the selector of
+   the second address should be omitted, it defaults to the selector
+   of the first address).  The second offset must be greater than or
+   equal to the first offset
+
+þendlist
+
+þitem <list>
+
+  A <list> is made of one or more values or multi-letter strings:
+
+  þsy{<value>|'<text>' ...}
+
+þitem <value>
+
+  A <value> is the basic element of an expression.
+
+þlist
+þitem þsy{0} through þsy{ffffffff}
+
+    Hexadecimal number
+
+þitem <register>
+
+    Current value of the register <register>
+
+þitem þsy{'<C>'}
+
+    Character code (ASCII) of the character þsy{<C>}
+
+þendlist
+þendlist
+
+  If the -S option is used, emx will display swapper statistics when
+  returning to DOS.  It displays
+
+þindent
+  þsy{Swapper statistics: F=<f> R=<r> W=<w> N=<n> S=<s>}
+þendindent
+
+  where þsy{<f>} is the number of page faults, þsy{<r>} is the number
+  of swapper file reads, þsy{<w>} is the number of swapper file
+  writes, þsy{<n>} is the number of times the swap space of present
+  pages has been recycled, and þsy{<s>} is the size of the swapper
+  file.  All numbers are decimal numbers.
+
+
+þh1 Executable file format
+
+þdescription
+þitem a.out
+
+    see þtt{/emx/include/a_out.h}
+
+þitem exe
+
+    OS/2 LX format with additional sections, see diagram below
+
+þenddescription
+
+þexample
+ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+³                                 ³
+³ DOS .exe header:                ³
+³                                 ³
+³  ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´
+³  ³                              ³ÄÄÄÄÄÄÄÄ¿
+³  ³ Control information          ³ÄÄÄÄ¿   ³
+³  ³                              ³ÄÄ¿ ³   ³
+³  ÃÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´<ÄÙ ³   ³
+³  ³                              ³    ³   ³
+³  ³ Relocation table             ³    ³   ³
+³  ³                              ³    ³   ³
+ÀÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ    ³   ³
+                                       ³   ³
+ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿<ÄÄÄÙ   ³
+³                                 ³        ³
+³ DOS (emx or emxl) image:        ³        ³
+³                                 ³        ³
+³  ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´        ³
+³  ³                              ³        ³
+³  ³ emxbind header (options)     ³ÄÄÄÄÄÄ¿ ³
+³  ³                              ³      ³ ³
+³  ÃÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´      ³ ³
+³  ³                              ³      ³ ³
+³  ³ Code & data                  ³      ³ ³
+³  ³                              ³      ³ ³
+ÀÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ      ³ ³
+                                         ³ ³
+ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿<ÄÄÄÄÄÄÄÙ
+³                                 ³      ³
+³ OS/2 linear executable header:  ³      ³
+³                                 ³      ³
+³  ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´      ³
+³  ³                              ³      ³
+³  ³ Fixed-size header            ³ÄÄÄÄ¿ ³
+³  ³                              ³ÄÄ¿ ³ ³
+³  ÃÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´<ÄÙ ³ ³
+³  ³                              ³    ³ ³
+³  ³ Loader section               ³ÄÄ¿ ³ ³
+³  ³                              ³  ³ ³ ³
+³  ÃÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´<ÄÄÄÙ ³
+³  ³                              ³  ³   ³
+³  ³ Fixup section                ³  ³   ³
+³  ³                              ³  ³   ³
+ÀÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ  ³   ³
+ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿<Ä´   ³
+³                                 ³  ³   ³
+³ Resources                       ³  ³   ³
+³                                 ³  ³   ³
+ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ  ³   ³
+ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿<Ä³ÄÄÄÙ
+³                                 ³  ³
+³ a.out executable:               ³  ³
+³                                 ³  ³
+³  ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´  ³
+³  ³                              ³ÄÄ³ÄÄ¿
+³  ³ a.out header                 ³  ³  ³
+³  ³                              ³  ³  ³
+³  ÃÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´<Ä´  ³
+³  ³                              ³  ³  ³
+³  ³ Text segment                 ³  ³  ³
+³  ³                              ³  ³  ³
+³  ÃÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´<ÄÙ<Ä´
+³  ³                              ³     ³
+³  ³ Data segment                 ³     ³
+³  ³                              ³     ³
+³  ³  ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´     ³
+³  ³  ³                           ³     ³
+³  ³  ³ OS/2 emxbind header       ³     ³
+³  ³  ³                           ³     ³
+³  ³  ÃÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´     ³
+³  ³  ³                           ³     ³
+³  ³  ³ Other data                ³     ³
+³  ³  ³                           ³     ³
+³  ÃÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´<ÄÄÄÄÙ
+³  ³                              ³
+³  ³ Symbol table                 ³
+³  ³                              ³
+ÀÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+þendexample
+
+þh1 Known problems
+
+þitemize
+þitem
+
+  þhpt{sleep()} and þhpt{_sleep2()} hold signals under
+  DOS, that is, if the þhpt{alarm()} timer elapses, the signal handler
+  for SIGALRM isn't called until the completion of those functions
+
+þitem
+
+  when using the þhpt{-C# emx option}, memory allocated by an
+  unsuccessful þhpt{brk()} or þhpt{sbrk()} call isn't freed.  That is,
+  as soon as a þhpt{malloc()} call fails, further calls will also
+  fail.  Actually, this isn't a bug -- it's a lacking feature
+
+þitem
+
+  emx doesn't work under DOS if more than 64 MByte of memory is
+  installed
+
+þitem
+
+  running emx programs by a DOS program started by an emx program
+  seems not to work under certain circumstances [Is this still true?]
+
+þitem
+
+  breakpoints are shared by all instances of a program under OS/2 2.1
+  and earlier -- this is an OS/2 bug which seems to be fixed OS/2 2.11
+  (ServicePak XR06200 for OS/2 2.1)
+
+þitem
+
+  þhpt{fork()} doesn't work correctly in multithread programs.
+
+þenditemize
+
+þtext
+
+--------------------------- END OF EMXDEV.DOC ------------------------------
+þendtext

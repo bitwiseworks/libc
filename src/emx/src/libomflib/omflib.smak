@@ -1,0 +1,8 @@
+.MODULE	:= omflib
+.MDESC	:= A library for reading/writing OMF object files
+
+.TARGET	:= libomflib.a
+.TKIND	:= aout
+.TSRC	:= $(wildcard src/libomflib/*.c)
+.INSDIR	= lib/
+include mklib.smak

@@ -1,0 +1,2 @@
+TARGET=namelessunions
+include common.gmk

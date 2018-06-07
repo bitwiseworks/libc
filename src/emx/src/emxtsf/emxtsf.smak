@@ -1,0 +1,11 @@
+.MODULE := emxtsf
+.MDESC  := Simplify construction of .TSF files
+.MDEP	:= moddef@omf
+.INSDIR := bin/
+
+.TARGET := emxtsf.exe
+.TKIND	:= $(TOOLFMT)
+.TSRC   := $(wildcard src/emxtsf/*.c)
+.TCF	:= $(CFLAGS.DEF.VERSION)
+.TDEP	:= @O@libmoddef$A
+include mkexe.smak

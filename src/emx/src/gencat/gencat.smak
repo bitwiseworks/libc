@@ -1,0 +1,11 @@
+# The submakefile for building GNU ld (the old one, from 1995' binutils)
+
+.MODULE := gencat
+.MDESC  := NLS catalog generator
+.INSDIR := bin/
+
+.TARGET := gencat.exe
+.TKIND	:= $(TOOLFMT)
+.TSRC   := $(wildcard src/gencat/*.c)
+include mkexe.smak
+

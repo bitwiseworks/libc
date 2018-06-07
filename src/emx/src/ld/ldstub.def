@@ -1,0 +1,14 @@
+; $Id: ldstub.def 214 2003-05-21 22:34:46Z zap $
+;
+; Definition file for the ldstub
+;
+; InnoTek Systemberatung GmbH confidential
+;
+; Copyright (c) 2003 InnoTek Systemberatung GmbH
+; Author: knut st. osmundsen <bird@anduin.net>
+;
+; All Rights Reserved
+;
+NAME ldstub
+STUB NONE
+

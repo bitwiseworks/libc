@@ -1,0 +1,3 @@
+TARGET=inheritance_simple
+TARGET_SRCEXT=cpp
+include common.gmk

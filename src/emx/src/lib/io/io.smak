@@ -1,0 +1,23 @@
+libc.TSRC += $(wildcard src/lib/io/*.c)
+
+# Build some object files separately (not included in libraries)
+.MODULE :=
+.TKIND	:= aout
+.TSRC.386 := src/lib/io/386/binmode.s
+.TSRC	:= $(.TSRC.$(CPU))
+include common.smak
+
+.OBJS += $(patsubst %.o,%.obj,$(subst /aout/,/omf/,$(.OBJS)))
+.DIRS := $(sort $(dir $(.OBJS)))
+TARGDIRS += $(.DIRS)
+
+libc: $(.DIRS) $(.OBJS)
+
+INS.FILES += $(addprefix $(INS)lib/,$(notdir $(.OBJS)))
+$(addprefix $(INS)lib/,$(notdir $(.OBJS))): $(.OBJS)
+	$(call CP,$^,$(dir $@))
+
+include comend.smak
+
+# Additional dependency to help make make omf version.
+$.omf/src/lib/io/386/binmode.obj: $.aout/src/lib/io/386/binmode.o

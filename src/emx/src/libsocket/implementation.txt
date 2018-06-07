@@ -1,0 +1,76 @@
+
+
+
+Added by this socket layer:
+
+Not implemented:
+    getaddrinfo()
+
+
+DONE:
+
+
+TODO:
+    h_errno()
+
+
+--------------------------------------
+ Header Files
+--------------------------------------
+g:\gccos2\tree\src\emx\include\sys\ioctl.h
+g:\gccos2\tree\src\emx\include\sys\sockio.h
+g:\gccos2\tree\src\emx\include\sys\so_ioctl.h
+
+done:
+g:\gccos2\tree\src\emx\include\arpa\ftp.h
+g:\gccos2\tree\src\emx\include\arpa\inet.h
+g:\gccos2\tree\src\emx\include\arpa\nameser.h
+g:\gccos2\tree\src\emx\include\arpa\telnet.h
+g:\gccos2\tree\src\emx\include\machine\endian.h
+g:\gccos2\tree\src\emx\include\net\if.h
+g:\gccos2\tree\src\emx\include\net\if_arp.h
+g:\gccos2\tree\src\emx\include\net\route.h
+g:\gccos2\tree\src\emx\include\netdb.h
+g:\gccos2\tree\src\emx\include\netinet\if_ether.h
+g:\gccos2\tree\src\emx\include\netinet\igmp.h
+g:\gccos2\tree\src\emx\include\netinet\in.h
+g:\gccos2\tree\src\emx\include\netinet\in_systm.h
+g:\gccos2\tree\src\emx\include\netinet\ip.h
+g:\gccos2\tree\src\emx\include\netinet\ip_icmp.h
+g:\gccos2\tree\src\emx\include\netinet\tcp.h
+g:\gccos2\tree\src\emx\include\netinet\tcp_var.h
+g:\gccos2\tree\src\emx\include\netinet\udp.h
+g:\gccos2\tree\src\emx\include\netinet\udp_var.h
+g:\gccos2\tree\src\emx\include\netnb\nb.h
+g:\gccos2\tree\src\emx\include\resolv.h
+g:\gccos2\tree\src\emx\include\sys\cdefs.h
+g:\gccos2\tree\src\emx\include\sys\param.h
+g:\gccos2\tree\src\emx\include\sys\socket.h
+g:\gccos2\tree\src\emx\include\sys\time.h
+g:\gccos2\tree\src\emx\include\sys\uio.h
+g:\gccos2\tree\src\emx\include\sys\un.h
+g:\gccos2\tree\src\emx\include\unistd.h
+
+redo:
+g:\gccos2\tree\src\emx\include\sys\select.h
+
+to add:
+machine\ansi.h
+machine\types.h
+net\if_dl.h
+netinet\icmp_var.h
+netinet\igmp_var.h
+netinet\ip_mrout.h
+netinet\ip_var.h
+netinet\tcpip.h
+netinet\tcp_time.h
+arpa/tftp.h
+protocol\routed.h
+protocol\rwhod.h
+protocol\talkd.h
+protocol\timed.h
+
+arpa/nameser_compat.h?
+utils.h?
+socks.h?
+types.h?

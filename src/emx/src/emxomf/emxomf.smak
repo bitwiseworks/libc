@@ -1,0 +1,46 @@
+.MODULE	:= emxomf
+.MDESC	:= a.out to OMF object file conversion utility
+.INSDIR	:= bin/
+.MDEP	:= omflib@omf moddef@omf
+
+.TARGET	:= emxomf.exe
+.TKIND	:= $(TOOLFMT)
+.TSRC	:= $(addprefix src/emxomf/,emxomf.c stabshll.c grow.c)
+.TCF	:= $(CFLAGS.DEF.VERSION)
+.TDEP	:= @O@libomflib$A
+.TLDF   := -liberty
+include mkexe.smak
+
+.TARGET	:= emxomfar.exe
+.TKIND	:= $(TOOLFMT)
+.TSRC	:= src/emxomf/emxomfar.c
+.TCF	:= $(CFLAGS.DEF.VERSION)
+.TDEP	:= @O@libomflib$A
+include mkexe.smak
+
+.TARGET := emxomfld.exe
+.TKIND	:= $(TOOLFMT)
+.TSRC	:= $(addprefix src/emxomf/,emxomfld.c grow.c weakld.c)
+.TCF	:= $(CFLAGS.DEF.VERSION)
+.TDEP	:= @O@libmoddef$A
+.TLDF	:= -liberty
+include mkexe.smak
+
+.TARGET := emxaout.exe
+.TKIND	:= $(TOOLFMT)
+.TSRC	:= $(addprefix src/emxomf/,emxaout.c grow.c)
+.TCF	:= $(CFLAGS.DEF.VERSION)
+include mkexe.smak
+
+.TARGET := listomf.exe
+.TKIND	:= $(TOOLFMT)
+.TSRC	:= src/emxomf/listomf.c
+.TCF	:= $(CFLAGS.DEF.VERSION)
+include mkexe.smak
+
+.TARGET := stripomf.exe
+.TKIND	:= $(TOOLFMT)
+.TSRC	:= src/emxomf/stripomf.c
+.TCF	:= $(CFLAGS.DEF.VERSION)
+include mkexe.smak
+

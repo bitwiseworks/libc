@@ -1,0 +1,15 @@
+;
+; som-data.imp
+;
+SOMClassCClassData              som        2 ?
+SOMClassClassData               som        3 ?
+SOMClassInitFuncName            som        4 ?
+SOMClassMgrCClassData           som        5 ?
+SOMClassMgrClassData            som        6 ?
+SOMClassMgrObject               som        7 ?
+SOMObjectCClassData             som       13 ?
+SOMObjectClassData              som       14 ?
+SOM_AssertLevel                 som       17 ?
+SOM_TraceLevel                  som       18 ?
+SOM_WarnLevel                   som       19 ?
+

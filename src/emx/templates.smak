@@ -1,0 +1,71 @@
+
+
+# Generate compilation rule for a c file
+define def_compile_c
+$$.$(call OBJFILE,$(1)): $(1) | $(dir $$.$(call OBJFILE,$(1)))
+	$$(call DO.COMPILE.c,$(.TCF) $(.TCF.$(1)))
+endef
+
+# Generate compilation rule for a S file
+define def_compile_S
+$$.$(call OBJFILE,$(1)): $(1) | $(dir $$.$(call OBJFILE,$(1)))
+	$$(call DO.COMPILE.s,$(.TSF) $(.TSF.$(1)))
+endef	
+
+# Generate compilation rule for an asm files
+define def_compile_asm
+$$.$(call OBJFILE,$(1)): $(1) | $(dir $$.$(call OBJFILE,$(1)))
+	$$(call DO.COMPILE.asm,$(.TAF) $(.TAF.$(1)))
+endef
+
+# Linking rule for an EXE.
+define def_link_exe
+$$.$(.TARG): $(.OBJS) $(.DEPS)
+	$$(call DO.LINK.exe,$(.TLDF))
+endef
+
+# Linking rule for a DLL.
+define def_link_dll
+$$.$(.TARG): $(.OBJS) $(.DEPS) $(.TDEF)
+	$$(call DO.LINK.dll,$(.TLDF))
+endef
+
+# generic rule for building libs.
+define def_lib
+$$.$(.TARG): $(.OBJS) $(.DEPS)
+	$$(DO.LIBRARY)
+endef
+	
+# The rule for building an archive with lot's of arguments.
+define def_lib_ar
+$$.$(.TARG): $(.OBJS) $(.DEPS)
+ifdef KMK_VERSION
+	@kmk_builtin_append -tn $$@.ar-script \
+		"CREATE $$(@F)" \
+		$(foreach x, $(filter %.o, $(sort $(.OBJS) $(.DEPS))), "ADDMOD $(x)") \
+		"SAVE" \
+		"END"
+else
+	echo "CREATE $$(@F)" > $$@.ar-script
+	$(foreach x, $(filter %.o, $(sort $(.OBJS) $(.DEPS))), $(call def_lib_ar_addmod))
+	echo "SAVE" >> $$@.ar-script
+	echo "END" >> $$@.ar-script
+endif
+	rm -f $$(@F) $$@
+	ar -M < $$@.ar-script
+	mv $$(@F) $$@
+	
+endef
+
+# defined used by def_lib_ar to add a module to the script file. (blank line is imporant!)
+define def_lib_ar_addmod
+	echo "ADDMOD $(x)" >> $$@.ar-script
+	
+endef
+
+# The rule for building an archive with imports
+define def_implib
+$$.$(.TARG): $(.IMPS) $(.OBJS) $(.DEPS)
+	$$(call DO.IMPLIB)
+endef
+			

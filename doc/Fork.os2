@@ -1,0 +1,684 @@
+$Id: Fork.os2 1281 2004-03-06 21:48:26Z bird $
+
+Fork Design Draft
+--------------------
+
+1.0 Intro
+----------
+
+blah.
+
+
+1.1 The SuS fork() Description
+------------------------------
+
+NAME
+
+    fork - create a new process
+
+SYNOPSIS
+
+    #include <unistd.h>
+
+    pid_t fork(void);
+
+DESCRIPTION
+
+    The fork() function shall create a new process. The new process (child process) shall be an exact copy of the calling process (parent process) except as detailed below:
+
+        * The child process shall have a unique process ID.
+        * The child process ID also shall not match any active process
+		  group ID.
+        * The child process shall have a different parent process ID,
+		   which shall be the process ID of the calling process.
+        * The child process shall have its own copy of the parent's file
+		  descriptors. Each of the child's file descriptors shall refer
+		  to the same open file description with the corresponding file
+		  descriptor of the parent.
+        * The child process shall have its own copy of the parent's open
+		  directory streams. Each open directory stream in the child process
+		  may share directory stream positioning with the corresponding
+		  directory stream of the parent.
+        * [XSI] The child process shall have its own copy of the parent's
+		  message catalog descriptors.
+        * The child process' values of tms_utime, tms_stime, tms_cutime, and
+		  tms_cstime shall be set to 0.
+        * The time left until an alarm clock signal shall be reset to zero,
+		  and the alarm, if any, shall be canceled; see alarm() .
+        * [XSI] All semadj values shall be cleared.
+        * File locks set by the parent process shall not be inherited by
+		  the child process.
+        * The set of signals pending for the child process shall be
+		  initialized to the empty set.
+        * [XSI] Interval timers shall be reset in the child process.
+        * [SEM] Any semaphores that are open in the parent process shall
+		  also be open in the child process.
+        * [ML] The child process shall not inherit any address space memory
+		  locks established by the parent process via calls to mlockall()
+		  or mlock().
+        * [MF|SHM] Memory mappings created in the parent shall be retained
+		  in the child process. MAP_PRIVATE mappings inherited from the
+		  parent shall also be MAP_PRIVATE mappings in the child, and any
+		  modifications to the data in these mappings made by the parent
+		  prior to calling fork() shall be visible to the child. Any
+		  modifications to the data in MAP_PRIVATE mappings made by the
+		  parent after fork() returns shall be visible only to the parent.
+		  Modifications to the data in MAP_PRIVATE mappings made by the
+		  child shall be visible only to the child.
+        * [PS] For the SCHED_FIFO and SCHED_RR scheduling policies, the
+		  child process shall inherit the policy and priority settings
+		  of the parent process during a fork() function. For other s
+		  cheduling policies, the policy and priority settings on fork()
+		  are implementation-defined.
+        * [TMR] Per-process timers created by the parent shall not be
+		  inherited by the child process.
+        * [MSG] The child process shall have its own copy of the message
+		  queue descriptors of the parent. Each of the message descriptors
+		  of the child shall refer to the same open message queue
+		  description as the corresponding message descriptor of the parent.
+        * [AIO] No asynchronous input or asynchronous output operations
+		  shall be inherited by the child process.
+        * A process shall be created with a single thread. If a
+		  multi-threaded process calls fork(), the new process shall contain
+		  a replica of the calling thread and its entire address space,
+		  possibly including the states of mutexes and other resources.
+		  Consequently, to avoid errors, the child process may only execute
+		  async-signal-safe operations until such time as one of the exec
+		  functions is called. [THR]  Fork handlers may be established by
+		  means of the pthread_atfork() function in order to maintain
+		  application invariants across fork() calls.
+
+		  When the application calls fork() from a signal handler and any of
+		  the fork handlers registered by pthread_atfork() calls a function
+		  that is not asynch-signal-safe, the behavior is undefined.
+        * [TRC TRI] If the Trace option and the Trace Inherit option are
+		  both supported:
+		  If the calling process was being traced in a trace stream that
+		  had its inheritance policy set to POSIX_TRACE_INHERITED, the
+		  child process shall be traced into that trace stream, and the
+		  child process shall inherit the parent's mapping of trace event
+		  names to trace event type identifiers. If the trace stream in
+		  which the calling process was being traced had its inheritance
+		  policy set to POSIX_TRACE_CLOSE_FOR_CHILD, the child process
+		  shall not be traced into that trace stream. The inheritance
+		  policy is set by a call to the posix_trace_attr_setinherited()
+		  function.
+        * [TRC] If the Trace option is supported, but the Trace Inherit
+		  option is not supported:
+          The child process shall not be traced into any of the trace
+		  streams of its parent process.
+        * [TRC] If the Trace option is supported, the child process of
+		  a trace controller process shall not control the trace streams
+		  controlled by its parent process.
+        * [CPT] The initial value of the CPU-time clock of the child
+		  process shall be set to zero.
+        * [TCT] The initial value of the CPU-time clock of the single
+		  thread of the child process shall be set to zero.
+
+    All other process characteristics defined by IEEE Std 1003.1-2001 shall
+	be the same in the parent and child processes. The inheritance of
+	process characteristics not defined by IEEE Std 1003.1-2001 is
+	unspecified by IEEE Std 1003.1-2001.
+
+    After fork(), both the parent and the child processes shall be capable
+	of executing independently before either one terminates.
+
+RETURN VALUE
+
+    Upon successful completion, fork() shall return 0 to the child process
+	and shall return the process ID of the child process to the parent
+	process. Both processes shall continue to execute from the fork()
+	function. Otherwise, -1 shall be returned to the parent process, no
+	child process shall be created, and errno shall be set to indicate
+	the error.
+
+ERRORS
+
+    The fork() function shall fail if:
+
+    [EAGAIN]
+        The system lacked the necessary resources to create another
+		process, or the system-imposed limit on the total number of
+		processes under execution system-wide or by a single user
+		{CHILD_MAX} would be exceeded.
+
+    The fork() function may fail if:
+
+    [ENOMEM]
+        Insufficient storage space is available.
+
+
+													
+													
+2.0 Requirements and Assumptions Of The Implementation
+------------------------------------------------------
+
+The Innotek LIBC fork() implementation will require the following features
+in LIBC to work:
+	1. A shared process management internal to LIBC for communication to the
+	   child that a fork() is in progress.
+	2. A very generalized and varied set of fork helper functions to archive
+	   maximum flexibility of the implementation.
+	3. Extended versions of some memory related OS/2 APIs must be implemented.
+	
+The implementation will further make the following assumption about the
+operation of OS/2:
+	1. DosExecPgm will not return till all DLLs are initated successfully.
+	2. DosQueryMemState() is broken if more than one page is specified.
+       (no idea why/how/where it's broken, but testcase shows it is :/ )
+
+	
+3.0	The Shared Process Management
+---------------------------------
+
+The fork() implementation requires a method for telling the child process
+that it's being forked and must take a very different startup route. For
+some other LIBC apis there are need for parent -> child and child -> parent
+information exchange. More specifically, the inheritance of sockets,
+signals, the different scheduler actions of a posix_spawn[p]() call, and
+possibly some process group stuff related to posix_spawn too if we get it
+figured out eventually. All this was parent -> child during spawn/fork. A
+need also exist for child -> parent notification and possibly exchange for
+process termination. It might be necessary to reimplement the different
+wait apis and implement SIGCHLD, it's likely that those tasks will make
+such demands.
+
+The choice is now whether or not to make this shared process management
+specific to each LIBC version as a shared segement or try to make it
+survive normal LIBC updates. Making is specific have advantages in code
+size and memory footprint (no reserved fields), however it have certain
+disadvantages when LIBC is updated. The other option is to use a named
+shared memory object, defining the content with reserved space for later
+extensions so several versions of LIBC with more or less features
+implemented can co use the memory space.
+
+The latter option is prefered since it allows more applications to
+interoperate, it causes less shared memory waste, the shared memory
+can be located in high memory and it would be possible to fork
+processes using multiple versions of LIBC.
+
+The shared memory shall be named \SHAREMEM\INNOTEKLIBC.V01, the version
+number being the one of the shared memory layout and contents, it will
+only be increased when incompatible changes are made.
+
+The shared memory shall be protected by an standard OS/2 mutex semaphore.
+It shall not use any fast R3 semaphore since the the usage frequency is
+low and the result of a messup may be disastrous. Care must be take for
+avoiding creation races and owner died scenarios.
+
+The memory shall have a fixed size, since adding segments is very hard.
+Thus the size must be large enough to cope with a great deal of
+processes, while bearing in mind that OS/2 normally doesn't support more
+than a 1000 processes, with a theoritical max of some 4000 (being the
+max thread count). A very simplistic allocation scheme will be
+implemented. Practically speaking a fixed block size pool would do fine
+for the process structure, while for the misc structures like socket
+lists a linked list based heap would do fine.
+
+The process blocks shall be rounded up to in size adding a reasonable
+amount of space resevered for future extensions. Reserved space must be
+all zeroed.
+
+The fork() specific members of the process block shall be a pointer to
+the shared memory object for the fork operation (the fork handle) and
+list of forkable modules. The fork handle will it self contain
+information indicating whether or not another LIBC version have already
+started fork() handling in the child. The presense of the fork handle
+means that the child is being forked and normal dll init and startup
+will not be executed, but a registered callback will be called to do
+the forking of each module. (more details in section 4.0)
+
+The parent shall before spawn, fork and exec (essentially before DosExecPgm
+or DosStartSession) create a process block for the child to be born and
+link it into an embryo list in the shared memory block. The child shall
+find it's process block by searching the embryo list using the parent pid
+as key. All DosExecPgm and DosStartSession calls shall be serialized within
+one LIBC version. (If some empty headed programmer manages to link together
+a program which may end up using two or more LIBC versions and having two
+or more thread doing DosExecPgm at the very same time, well then he really
+deserves what ever trouble he gets! At least don't blame me!)
+
+Process blocks shall have to stay around after the process terminated
+(for child -> parent term exchange), a cleanup mechanism will be invoked
+whenever a free memory threshold is reached. All processes will register
+exit list handlers to mark the process block as zombie (and later
+perhaps setting error codes and notifying waiters/child-listeners).
+
+					
+
+4.0 The fork() Implementation
+-----------------------------
+
+
+The implementation is based on a fork handle and a set of primitives.
+The fork handle is a pointer to an shared memory object allocated for the
+occation and which will be freed before fork() returns. The primitives
+all operates on this handle and will be provided using a callback table
+in order to fully support multiple LIBC versions.
+
+
+4.1 Forkable Executable and DLLs
+--------------------------------
+
+The support for fork() is an optional feature of LIBC. The default
+executable produced with LIBC and GCC is not be forkable. The fork
+support will be based on registration of the DLLs and EXEs in their
+LIBC supplied startup code (crt0/dll0). A set of fork versions of these
+modules exist with the suffix 'fork.o'.
+
+The big differnece between the ordinary crt0/dll0 and the forkable
+crt0/dll0 is a per module structure, a call to register this, and the
+handling of the return code of that call.
+
+The fork module structure:
+    typedef struct __libc_ForkModule
+    {
+        /** Structure version. (Initially 'FMO1' as viewed in hex editor.) */
+        unsigned int    iMagic;
+        /** Fork callback function */
+        int           (*pfnAtFork)(__LIBC_FORKMODULE *pModule,
+            __LIBC_FORKHANDLE *pForkHandle, enum __LIBC_CALLBACKOPERATION enmOperation);
+        /** Pointer to the _CRT_FORK_PARENT1 set vector.
+         * It's formatted as {priority,callback}. */
+        void           *pvParentVector1;
+        /** Pointer to the _CRT_FORK_CHILD1 set vector.
+         * It's formatted as {priority,callback}. */
+        void           *pvChildVector1;
+        /** Data segment base address. */
+        void           *pvDataSegBase;
+        /** Data segment end address (exclusive). */
+        void           *pvDataSegEnd;
+        /** Reserved - must be zero. */
+        int             iReserved1;
+    } __LIBC_FORKMODULE, *__LIBC_PFORKMODULE; /* urg! conventions */
+
+
+The fork callback function which crt0/dll0 references when initializing
+the fork modules structure is called _atfork_callback. It takes the fork
+handle, module structure, and an operation enum as arguments. LIBC will
+contain a default implementation of _atfork_callback() which simply
+duplicates the data segment, and processes the two set vectors
+(_CRT_FORK_*1).
+
+crt0/dll0 will register the fork module structure and detect a forked
+child by calling __libc_ForkRegisterModule().
+
+Prototypes:
+    /**
+     * Register a forkable module. Called by crt0 and dll0.
+     *
+     * The call links pModule into the list of forkable modules
+     * which is maintained in the process block.
+     *
+     * @returns 0 on normal process startup.
+     * @returns 1 on forked child process startup.
+     *          The caller should respond by not calling any _DLL_InitTerm
+     *          or similar constructs.
+     * @returns negative on failure.
+     *          The caller should return from the dll init returning FALSE
+     *          or DosExit in case of crt0. _atfork_callback() will take
+     *          care of necessary module initiation.
+     * @param   pModule     Pointer to the fork module structure for the
+     *                      module which is to registered.
+     */
+    int __libc_ForkRegisterModule(__LIBC_FORKMODULE *pModule);
+
+
+
+
+
+4.2 Fork Primitives
+-------------------
+
+These primitives are provided by the fork implementation in the fork
+handle structure. We define a set of these primitives now, if later
+new ones are added the users of these must check that they are
+actually present.
+
+Example:
+	rc = pForkHandle->pOps->pfnDuplicatePages(pModule->pvDataBase, pModule->pvDataEnd, __LIBC_FORK_ONLY_DIRTY);
+	if (rc)
+		return rc; /* failure */
+	
+Prototypes:
+	/**
+	 * Duplicating a number of pages from pvStart to pvEnd.
+	 * @returns	0 on success.
+	 * @returns appropriate non-zero error code on failure.
+	 * @param   pForkHandle Handle of the current fork operation.
+	 * @param	pvStart		Pointer to start of the pages. Rounded down.
+	 * @param	pvEnd		Pointer to end of the pages. Rounded up.
+	 * @param	fFlags		__LIBC_FORK_ONLY_DIRTY means checking whether the
+	 *						pages are actually dirty before bothering touching
+	 *						and copying them. (Using the partically broken
+	 *						DosQueryMemState() API.)
+	 * 						__LIBC_FORK_ALL means not to bother checking, but
+	 *						just go ahead copying all the pages.
+	 */
+	int pfnDuplicatePages(__LIBC_FORKHANDLE *pForkHandle, void *pvStart, void *pvEnd, unsigned fFlags);
+	
+	/**
+	 * Invoke a function in the child process giving it an chunk of input.
+	 * The function is invoked the next time the fork buffer is flushed,
+	 * call pfnFlush() if the return code is desired.
+	 *
+	 * @returns	0 on success.
+	 * @returns appropriate non-zero error code on failure.
+	 * @param   pForkHandle Handle of the current fork operation.
+	 * @param	pfn			Pointer to the function to invoke in the child.
+	 *						The function gets the fork handle, pointer to
+	 *						the argument memory chunk and the size of that.
+	 *						The function must return 0 on success, and non-zero
+	 *						on failure.
+	 * @param	pvArg		Pointer to a block of memory of size cbArg containing
+	 *						input to be copied to the child and given to pfn upon
+	 *						invocation.
+	 */
+	int pfnInvoke(int *(pfn)(__LIBC_FORKHANDLE *pForkHandle, void *pvArg, size_t cbArg), void *pvArg, size_t cbArg);
+	
+	/**
+	 * Flush the fork() buffer. Meaning taking what ever is in the fork buffer
+	 * and let the child process it.
+	 * This might be desired to get the result of a pfnInvoke() in a near
+	 * synchornous way.
+	 * @returns	0 on success.
+	 * @returns appropriate non-zero error code on failure.
+	 * @param   pForkHandle Handle of the current fork operation.
+	 */
+	int pfnFlush(__LIBC_FORKHANDLE *pForkHandle);
+	
+    /**
+     * Register a fork() completion callback.
+     *
+     * Use this primitive to do post fork() cleanup.
+     * The callbacks are executed first in the child, then in the parent.
+     *
+	 * @returns	0 on success.
+	 * @returns appropriate non-zero error code on failure. (Usually ENOMEM.)
+	 * @param   pForkHandle Handle of the current fork operation.
+     * @param   pfnCallback Pointer to the function to call back.
+     *                      This will be called when fork() is about to
+     *                      complete (the fork() result is established so to
+     *                      speak). A zero rc argument indicates success,
+     *                      a non zero rc argument indicates failure.
+     * @param   pvArg       Argument to pass to pfnCallback as 3rd argument.
+     * @param   enmContext  __LIBC_FORKCTX_CHILD, __LIBC_FORKCTX_PARENT, or
+     *                      __LIBC_FORKCTX_BOTH.
+     *                      (mental note: check up the naming convention for enums!)
+	 * @remark	Use with care, the memory used to remember these is taken from the
+	 *          fork buffer.
+     */
+    int pfnCompletionCallback(__LIBC_FORKHANDLE *pForkHandle,
+        void (pfnCallback)(__LIBC_FORKHANDLE *, int rc, void *pvArg), void *pvArg,
+        __LIBC_PARENTCHILDCTX enmContext);
+	...
+	
+
+	
+4.3 The Flow Of A fork() Operation
+----------------------------------
+
+When a process simple process foo.exe calls fork() the following events occur.
+(The 'p:) indicates parent process while (c) indicates child process.):
+
+    - p: fork() is called. It starts by push all registers (including fpu)
+         onto the stack and recording the address of that stuff (in the
+         fork handle when it's initiated).
+    - p: fork() allocates the shared fork memory and initiatlizes it, thus
+         creating the fork handle.
+	- p: fork() calls helper for copying the memory allocations records
+	     to the fork buffer. (Those are FIFO and if there are too many for
+		 the fork buffer they should be completed after DosExecPgm returns.)
+    - p: fork() walks the list of registered modules and calls the callback
+         function asking if it's ok to fork now.
+         Note: This will work for processes with multiple libc dlls because
+		       the list head is in the process block.
+    - p: fork() allocates and initiates the process block of the child process
+         entering the fork handle and linking it into the embryo list.
+    - p: fork() takes the exec semaphore.
+    - p: fork() spawns a child process taking the executable name from the PIB
+         and giving it "!fork!" as argument.
+    - c: During DosExecPgm all dll0(hi)fork's will be called, and for forkable
+         modules __libc_ForkRegisterModule() is called and returns 1. The
+         init code will the return successfully and not call the _DLL_InitTerm()
+         or any other DLL init code.
+        - c: __libc_ForkRegisterModule() will first check if the process block
+             have been found (global LIBC pointer), and if not try locate it
+             or allocate a new one. It will the check the fork handle.
+             Once found it will add the module to the list of forkable modules.
+             If the fork handle member is not NULL a fork operation is in
+             progress and the module callback is called with a check if the
+             module still thing fork is ok and give it a chance to do dllinit
+             time preperations.
+             The operations returns 1 if we're working, 0 if we're not working
+             and -1 if we failed in some way the the dllinit should fail.
+			 - c: The first time the process block is found and it's forking
+			      a helper for processing the memory allocations in the
+				  for buffer is called.
+				  This *must* be done as early as possible!!!
+    - p: The child have successfully initiated, DosExecPgm/DosStartSession
+         returns NO_ERROR.
+    - c: Child blocks while trying to get access to the fork handle (crt0).
+         (Blocks on fork handle child event semaphore.)
+    - p: Parent sets the operation enum member of the fork handle to signal
+         an init operation. It resets the parent event sem member, releases
+         the mutex, and goes to sleep for a defined max fork() timeout on the
+         event sem. (The max could be, let's say, 30 seconds.)
+    - c: The child get the ownership of the fork handle mutex.
+    - c: If the process is statically linked the memory allocations should
+         be done now (meaning do it here if not done already).
+    - c: The child resets the child event sem, posts the parent event sem
+         and releases the mutex.
+	- p: fork() acquires the fork handle ownership and checks the return code
+         from the child.
+    - p: fork() walks the list of modules calling the callbacks with the
+         do parent fork operation. This means the each register module will
+         do what's necessary for replicting it self into the child process
+         so that it will work as expected there after the fork() returns.
+         This is done using the primitives. This is the only time the
+         parent can use the currently defined primitives.
+    - p: Buffer flush is preformed. This may happen multiple times, but
+         fork() will allways finish of by doing one after all callbacks
+         have been called.
+         The buffer flush means passing the current fork buffer content
+         to the child for processing. pfnFlush() does this.
+            - p: pfnFlush() sets the fork handle operation enum to
+                 process buffer, resets the parent event sem, signals the
+                 child event semaphore and releases the mutex.
+            - c: Child takes ownership of the fork handle and performs
+                 the actions recorded in the fork buffer.
+            - c: The total result is put in the result member, other stuff
+                 might may be put in the buffer but that's currently not
+                 defined. The fork buffer is then transfered to the parent.
+            - p: pfnFlush() wakes up and reclaims the fork handle ownership
+                 and returns the value of the result member.
+                 What it does if the buffer contains data is currently not
+                 defined.
+    - p: Once all callbacks have been successfully executed, the stack is
+         copied to the child. We copy all committed stack pages. The fork()
+         return stack address is also passed to the child.
+         NOTE: this step may be relocated to an earlier phase!
+    - c: Child gets the stack and copies it in two turns, first the upper
+         part (above current esp/fork return stack address), then it relocate
+         it self on the stack so that it's ready for returning, before it
+         copies the low part of the stack.
+         (low/high here is not address value but logical stack view.)
+    - c: Iterate the modules calling the callbacks signaling fork child
+         operation. the callbacks then have the option to iterate the
+         _CRT_FORK_CHILD1 vector.
+    - c: Calls any completion callbacks registered.
+    - c: Put's result code and passes the fork handle to parent after first
+         freeing its mapping of the shared memory and semphores (not all sems
+         first of course).
+    - c: Returns from fork() restoring all registers but setting eax (return
+         value) to zero indicating child.
+    - p: fork() calls any completion callbacks registered.
+    - p: fork() frees the fork handle and related resources and returns
+         the pid of the child process. (not restoring registers)
+
+
+
+4.4 Forking LIBC
+----------------
+
+To make LIBC forkable a bunch of things have to be fixed up in the child
+process. Some of these must be done in a certain order other doesn't have to.
+To solve this we are using set vectors (as we do for init and term, see
+emx/startup.h). The fork set vectors are be defined in InnoTekLIBC/fork.h
+and be called _CRT_FORK_PARENT1() and _CRT_FORK_CHILD1(). They take two
+arguments, the callback and the priority. Priority is 0 to 4G-1 where 4G-1
+is the highest priority. The set vectors are started in crt0/dll0 called
+___crtfork_parent1__, ___crtfork_chidl1__
+
+The _atfork_callback() iterates the set vectors when called for doing
+parent and child fork stuff.
+
+
+The _atfork_callback() have this prototype:
+    /**
+     * Called multiple times during fork() both in the parent and the child.
+     *
+     * The default LIBC implementation will:
+     *      1) schedule the data segment for duplication.
+     *      2) do ordered LIBC fork() stuff.
+     *      3) do unordered LIBC fork() stuff, _CRT_FORK1 vector.
+     *
+     * @returns 0 on success.
+     * @returns appropriate non-zero error code on failure.
+     * @param   pModule         Pointer to the module record which is being
+     *                          processed.
+	 * @param   pForkHandle     Handle of the current fork operation.
+     * @param   enmOperation    Which callback operation this is.
+     *                          Any value can be used, the implementation
+     *                          of this function must just respond to the
+     *                          one it knows and return successfully on the
+     *                          others.
+     *                          Operations:
+     *                              __LIBC_FORK_CHECK_PARENT
+     *                              __LIBC_FORK_CHECK_CHILD
+     *                              __LIBC_FORK_FORK_PARENT
+     *                              __LIBC_FORK_FORK_CHILD
+     */
+     int _atfork_callback(__LIBC_FORKMODULE *pModule, __LIBC_FORKHANDLE *pForkHandle,
+                          enum __LIBC_CALLBACKOPERATION enmOperation);
+
+The _CRT_FORK_*1() callbacks have this declaration:
+    /**
+     * Called once in the parent during fork().
+     * This function will use the fork primitives to move data and invoke
+     * functions in the child process.
+     *
+     * @returns 0 on success.
+     * @returns appropriate non-zero error code on failure.
+     * @param   pModule         Pointer to the module record which is being
+     *                          processed.
+	 * @param   pForkHandle     Handle of the current fork operation.
+     * @param   enmOperation    Which callback operation this is.
+     *                          !Important! Later versions of LIBC may call
+     *                          this callback more than once. This parameter
+     *                          will indicate what's going on.
+     */
+     int _atfork_callback(__LIBC_FORKMODULE *pModule, __LIBC_FORKHANDLE *pForkHandle,
+                          enum __LIBC_CALLBACKOPERATION enmOperation);
+
+	
+
+
+4.4.1 Heap Memory
+-----------------
+
+The LIBC heaps will use the extended DosAllocMemEx. This means that the
+memory used by the heaps will be reserved at LIBC init time and duplicated
+as the very first thing in the LIBC _atfork_callback().
+
+4.4.1.1 DosAllocMemEx
+---------------------
+
+TODO. Fixed address allocation and allocation recording.
+
+4.4.1.2 DosFreeMemEx
+--------------------
+
+TODO
+
+
+4.4.2 Semaphores
+----------------
+
+Use _CRT_FORK_*1() for each of the LIBC semaphores, or we'll make an extended
+API, DosCreateEventSemEx/DosCreateMutexSemEx, for semaphores as we do with
+memory APIs.
+
+There is a forkable class of semaphores, we might wanna kick that out if
+we decide to use extended APIs (which I guess we'll do).
+
+
+
+4.4.3 Filehandles
+-----------------
+
+Two imporant things, 1) _all_ handles are inherited (even the close-on-exec ones),
+and 2) non-OS/2 handles must be inherited too.
+
+For 1) we must temporarily change the inherit flag on all the close-on-exec
+flagged handles during the fork.
+The major question here is when we're gonna restore the OS/2 no inherit flag
+for close-on-exec handles. The simplest option option is a
+__LIBC_FORK_DONE_PARENT _atfork_callback() operation. The best option is to
+have a primitive to registering fork-done routines (which are called both
+on success and failure).
+
+For 2) we need to extend the libc filehandle operation interface to include
+atfork operation. This will be called for every non-standard handle and it
+must it self use the fork primitives to cause something to happen in the
+child. This is not the fastest way, but it's the most flexible one and it's
+one which is probably will work too.
+
+
+4.4.3.1 Sockets
+---------------
+
+Implement the atfork handle operation. Use the fork primitives to invoke
+a function in the child duplicating that handle. The function invoked in
+the child basically use adds the socket to the socket list of the new
+process (tcpip api for this).
+
+Note that WS4eB tcpip level have a bug in the api adding sockets to a
+process. The problem is that a socket cannot be added twice, it'll cause
+an breakpoint instruction.
+
+
+
+4.4.4 Locale/Iconv/Stuff
+------------------------
+
+Record and create once again in the child. Use _CRT_FORK_*1() to register
+callbacks. Requires a little bit of recording of create parameters in the
+iconv() case but that's nothing spectacular.
+
+
+
+
+
+8.0	Coding Conventions
+----------------------
+	
+New LIBC stuff uses these conventions:
+    - Full usage of hungarian prefixes. Details on this is found in the
+      old odin web pages and gradd docs (IIRC).
+    - As much as possible shall be static. I.e. static int internalhelper(void).
+    - Internal global function and variables shall be prefixed __libc_[a-z] or
+      _sys_ depending on what it implements. Will not be exported by LIBCxy.DLL.
+    - Non-standard LIBC functionality is prefixed __libc_[A-Z].
+    - Stuff defined in SuS is wrapped by _STD() so that we get __std_ prefix
+      and the usual two aliases (plain and underscored).
+    - No warnings.
+	
+
+9.0 Abbreviation and such
+-------------------------
+
+SuS
+    The Single Unix Specification version 6 as published on www.opengroup.org.
+	
+	
