@@ -213,9 +213,9 @@ static int __fcntl_getfd(__LIBC_PFH pFH, int fh, int *pfFlags)
             LIBC_ASSERTM_FAILED("Inherit flags are out of sync for file fh %d (%#x)! fulState=%08lx fFlags=%08x\n",
                                 fh, fh, fulState, fFlags);
             if (fulState & OPEN_FLAGS_NOINHERIT)
-                fFlags |= O_NOINHERIT | FD_CLOEXEC;
+                fFlags |= O_NOINHERIT | (FD_CLOEXEC << __LIBC_FH_FDFLAGS_SHIFT);
             else
-                fFlags &= ~(O_NOINHERIT | FD_CLOEXEC);
+                fFlags &= ~(O_NOINHERIT | (FD_CLOEXEC << __LIBC_FH_FDFLAGS_SHIFT));
             __atomic_xchg(&pFH->fFlags, fFlags);
         }
 
