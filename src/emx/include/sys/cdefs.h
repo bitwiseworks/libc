@@ -260,7 +260,7 @@
 #define	__func__	NULL
 #endif
 
-#if (defined(__INTEL_COMPILER) || (defined(__GNUC__) && __GNUC__ >= 2)) && !defined(__STRICT_ANSI__) || __STDC_VERSION__ >= 199901
+#if (defined(__INTEL_COMPILER) || (defined(__GNUC__) && __GNUC__ >= 2)) && !defined(__STRICT_ANSI__) || __STDC_VERSION__ >= 199901 || (defined(__cplusplus) && __cplusplus >= 201103L)
 #define	__LONG_LONG_SUPPORTED
 #endif
 
