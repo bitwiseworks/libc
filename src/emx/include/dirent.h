@@ -48,6 +48,7 @@
  * the getdirentries(2) system call.
  */
 #include <sys/cdefs.h>
+#include <sys/types.h>
 #include <sys/dirent.h>
 
 #if __BSD_VISIBLE || __XSI_VISIBLE
@@ -74,7 +75,7 @@ struct _dircontents
   unsigned short        _d_time;
   unsigned short        _d_date;
   unsigned short        _d_attr;
-  unsigned char         _d_type;
+  ino_t                 _d_ino;
 };
 
 /* structure describing an open directory. */

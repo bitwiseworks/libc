@@ -148,6 +148,7 @@ struct dirent {
 #define A_LABEL   0x08
 #define A_DIR     0x10
 #define A_ARCHIVE 0x20
+#define A_SYMLINK 0x80
 #endif
 
 #endif /* not SYS_DIRENT_H */

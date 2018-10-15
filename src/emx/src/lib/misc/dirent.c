@@ -146,6 +146,7 @@ DIR *_STD(opendir)(const char *name)
         dp->_d_attr = find.attr;
         dp->_d_time = find.time;
         dp->_d_date = find.date;
+        dp->_d_ino  = find.ino;
 
         /*
          * Next entry.
@@ -183,10 +184,15 @@ int _STD(readdir_r)(DIR *dirp, struct dirent *pdent, struct dirent **ppdent)
     memcpy(pdent->d_name, pd->_d_entry, cch + 1);
     pdent->d_namlen = cch;
     pdent->d_reclen = pdent->d_namlen;
-    pdent->d_ino = _readdir_ino++;
-    if (_readdir_ino == 0)
-        _readdir_ino = 1;
-    pdent->d_type = (pd->_d_attr & A_DIR) ? DT_DIR : DT_REG;
+    if (pd->_d_ino)
+        pdent->d_ino = pd->_d_ino;
+    else
+    {
+        pdent->d_ino = _readdir_ino++;
+        if (_readdir_ino == 0)
+            _readdir_ino = 1;
+    }
+    pdent->d_type = (pd->_d_attr & A_DIR) ? DT_DIR : (pd->_d_attr & A_SYMLINK) ? DT_LNK : DT_REG;
     pdent->d_size = pd->_d_size;
     pdent->d_time = pd->_d_time;
     pdent->d_date = pd->_d_date;

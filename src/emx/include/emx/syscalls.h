@@ -50,12 +50,10 @@ struct _find
     unsigned short  date;
     /** File attributes. */
     unsigned char   attr;
-#if 0 /// @todo DT_LNK & d_ino
-    /** Directory entry type. */
-    unsigned char   dt_type;
-#endif
     /** File name */
     char            szName[257];
+    /** inode number or 0. */
+    ino_t           ino;
 };
 #pragma pack()
 

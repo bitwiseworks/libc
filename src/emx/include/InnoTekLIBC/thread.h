@@ -41,6 +41,7 @@
 *   Header Files                                                               *
 *******************************************************************************/
 #include <sys/cdefs.h>
+#include <sys/syslimits.h>
 #include <time.h>                       /* struct tm; */
 #include <signal.h>
 
@@ -248,6 +249,8 @@ typedef struct __libc_thread
                 const char     *pchNext;
                 /** Buffer. */
                 char            achBuffer[2048];
+                /** Search pattern. */
+                char            szNativePath[PATH_MAX];
             } fd;
         } sys;
     } b;

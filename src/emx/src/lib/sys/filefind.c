@@ -14,12 +14,32 @@
 #include <string.h>
 #include <errno.h>
 #include <limits.h>
+#include <sys/stat.h>
+#include <sys/dirent.h>
 #include <emx/syscalls.h>
 #include "syscalls.h"
 #include <InnoTekLIBC/thread.h>
 #include <InnoTekLIBC/pathrewrite.h>
 #define __LIBC_LOG_GROUP __LIBC_LOG_GRP_BACK_IO
 #include <InnoTekLIBC/logstrict.h>
+
+/**
+ * Read Unix EAs for the given find entry.
+ * @param   pFD     The directory find data.
+ * @param   pszFile File name.
+ * @param   st      Stat structure to fill with symlink & inode info (rest is zeroed).
+ * @returns 0 on success or error code from __libc_back_fsUnixAttribsGet.
+ */
+static int find_unix_eas(struct find_data *pFD, const char *pszFileName, struct stat *st)
+{
+    char szFilePath[PATH_MAX + CCHMAXPATHCOMP];
+    strcpy(szFilePath, pFD->szNativePath);
+    strcpy(_getname(szFilePath), pszFileName);
+
+    memset(st, 0, sizeof(*st));
+
+    return __libc_back_fsUnixAttribsGet(-1, szFilePath, st);
+}
 
 /**
  * Close a directory find session.
@@ -77,17 +97,23 @@ static int find_conv(struct find_data *pFD, struct _find *fp)
      */
     fp->time = XUSHORT(u.pFindbuf4->ftimeLastWrite);
     fp->date = XUSHORT(u.pFindbuf4->fdateLastWrite);
+    fp->ino = 0;
 #if OFF_MAX > LONG_MAX
     if (pFD->fType == FIL_QUERYEASIZEL)
     {
         fp->cbFile = u.pFindbuf4L->cbFile;
         fp->attr   = (unsigned char)u.pFindbuf4L->attrFile;
         strcpy(fp->szName, &u.pFindbuf4L->achName[0]);
-#if 0 //@todo DT_LNK
-        if (u.pFindbuf4L->cbList >= LIBC_UNIX_EA_MIN
-            && find_is_symlink(u.pFindbuf4L->achName))
-            fp->attr |= 0xf0;
-#endif
+        if (u.pFindbuf4L->cbList >= LIBC_UNIX_EA_MIN)
+        {
+            struct stat st;
+            if (find_unix_eas(pFD, u.pFindbuf4L->achName, &st) == 0)
+            {    
+                if ((st.st_mode & S_IFMT) == S_IFLNK)
+                    fp->attr |= A_SYMLINK;
+                fp->ino = st.st_ino;
+            }
+        }
     }
     else
 #endif
@@ -95,6 +121,16 @@ static int find_conv(struct find_data *pFD, struct _find *fp)
         fp->cbFile = u.pFindbuf4->cbFile;
         fp->attr   = (unsigned char)u.pFindbuf4->attrFile;
         strcpy(fp->szName, &u.pFindbuf4->achName[0]);
+        if (u.pFindbuf4->cbList >= LIBC_UNIX_EA_MIN)
+        {
+            struct stat st;
+            if (find_unix_eas(pFD, u.pFindbuf4->achName, &st) == 0)
+            {    
+                if ((st.st_mode & S_IFMT) == S_IFLNK)
+                    fp->attr |= A_SYMLINK;
+                fp->ino = st.st_ino;
+            }
+        }
     }
 
     /*
@@ -128,14 +164,13 @@ int __findfirst(const char *pszName, int attr, struct _find *fp)
 {
     LIBCLOG_ENTER("pszName=%s attr=%#x fp=%p\n", pszName, attr, (void *)fp);
     int                 rc;
-    char                szNativePath[PATH_MAX];
     struct find_data   *pFD = &__libc_threadCurrent()->b.sys.fd;
     FS_VAR();
 
     /*
      * Rewrite the specified file path.
      */
-    rc = __libc_back_fsResolve(pszName, BACKFS_FLAGS_RESOLVE_PARENT, &szNativePath[0], NULL);
+    rc = __libc_back_fsResolve(pszName, BACKFS_FLAGS_RESOLVE_PARENT, &pFD->szNativePath[0], NULL);
     if (rc)
     {
         errno = -rc;
@@ -170,7 +205,7 @@ int __findfirst(const char *pszName, int attr, struct _find *fp)
 #endif
     FS_SAVE_LOAD();
     bzero(&pFD->achBuffer[0], sizeof(pFD->achBuffer));
-    rc = DosFindFirst((PCSZ)&szNativePath[0],
+    rc = DosFindFirst((PCSZ)&pFD->szNativePath[0],
                       &pFD->hdir,
                       attr & (FILE_NORMAL | FILE_READONLY | FILE_HIDDEN | FILE_SYSTEM | FILE_DIRECTORY | FILE_ARCHIVED),
                       &pFD->achBuffer[0],
