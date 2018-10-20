@@ -389,10 +389,28 @@ static void waitThread(void *pvIgnore)
                 fInternalTerm = 1;
 
             /*
-             * Leave semaphore protection and wait again unless someone's hinting it's time to quit...
+             * Leave semaphore protection, raize SIGCHLD and wait again unless someone's hinting it's time to quit...
              */
             if (!rc)
                 waitSemRelease();
+
+            /*
+             * Note: It's important to raise the signal *after* we've added WAITINFO to the list of zombies to
+             * guarantee that a wait[pid] call in a SIGCHLD handler always succeeds with this child's pid.
+             * See https://github.com/bitwiseworks/libc/issues/10.
+             */
+            siginfo_t SigInfo = {0};
+            waitInfoToSigInfo(&Wait, &SigInfo);
+            SigInfo.si_flags = __LIBC_SI_QUEUED | __LIBC_SI_INTERNAL | __LIBC_SI_NO_NOTIFY_CHILD;
+
+            int rc2 = __libc_back_signalSemRequest();
+            if (!rc2)
+            {
+                rc2 = __libc_back_signalRaiseInternal(__libc_threadCurrent(), SIGCHLD, &SigInfo, NULL, __LIBC_BSRF_QUEUED | __LIBC_BSRF_EXTERNAL);
+                LIBC_ASSERTM(rc2 >= 0, "failed raising SIGCHLD. rc=%d\n", rc2);
+                __libc_back_signalSemRelease();
+            }
+
             if (fInternalTerm)
                 break;
             continue;
@@ -440,7 +458,6 @@ static void waitThread(void *pvIgnore)
  * Wait for process(es) using the OS/2 API.
  * @returns 0 if child was added
  * @returns OS/2 error code (positive).
- * @returns Negative errno on semaphore failure. Child was reaped, but failed to insert anything.
  */
 static int waitChild(PWAITINFO pWait, int fNoWait, pid_t pidWait)
 {
@@ -539,21 +556,6 @@ static int waitChild(PWAITINFO pWait, int fNoWait, pid_t pidWait)
                 LIBCLOG_MSG2("Unknown death reason %d\n", Notify.enmDeathReason);
                 break;
         }
-    }
-
-    /*
-     * Raise signal.
-     */
-    siginfo_t SigInfo = {0};
-    waitInfoToSigInfo(pWait, &SigInfo);
-    SigInfo.si_flags = __LIBC_SI_QUEUED | __LIBC_SI_INTERNAL | __LIBC_SI_NO_NOTIFY_CHILD;
-
-    rc = __libc_back_signalSemRequest();
-    if (!rc)
-    {
-        rc = __libc_back_signalRaiseInternal(__libc_threadCurrent(), SIGCHLD, &SigInfo, NULL, __LIBC_BSRF_QUEUED | __LIBC_BSRF_EXTERNAL);
-        LIBC_ASSERTM(rc >= 0, "failed raising SIGCHLD. rc=%d\n", rc);
-        __libc_back_signalSemRelease();
     }
 
     return 0;
