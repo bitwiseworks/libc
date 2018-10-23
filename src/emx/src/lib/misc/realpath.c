@@ -64,7 +64,7 @@ char	*_STD(realpath)(const char *path, char resolved_path[])
         char *psz = malloc(PATH_MAX);
         if (psz)
         {
-            rc = __libc_Back_fsPathResolve(path, psz, PATH_MAX, __LIBC_BACKFS_FLAGS_RESOLVE_FULL_MAYBE);
+            rc = __libc_Back_fsPathResolve(path, psz, PATH_MAX, __LIBC_BACKFS_FLAGS_RESOLVE_FULL);
             if (!rc)
             {
                 int cch = strlen(psz) + 1;
@@ -83,7 +83,7 @@ char	*_STD(realpath)(const char *path, char resolved_path[])
     }
 
     char *pszRet = resolved_path;
-    rc = __libc_Back_fsPathResolve(path, resolved_path, PATH_MAX, __LIBC_BACKFS_FLAGS_RESOLVE_FULL_MAYBE);
+    rc = __libc_Back_fsPathResolve(path, resolved_path, PATH_MAX, __LIBC_BACKFS_FLAGS_RESOLVE_FULL);
     if (!rc)
         LIBCLOG_RETURN_MSG(pszRet, "ret %p - resolved_path=%p:{%s}\n", pszRet, resolved_path, resolved_path);
     errno = -rc;
