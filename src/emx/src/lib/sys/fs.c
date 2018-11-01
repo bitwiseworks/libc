@@ -927,8 +927,8 @@ int __libc_back_fsResolve(const char *pszUserPath, unsigned fFlags, char *pszNat
  */
 static int fsResolveUnix(const char *pszUserPath, unsigned fFlags, char *pszNativePath, int *pfInUnixTree)
 {
-    LIBCLOG_ENTER("pszUserPath=%p:{%s} pszNativePath=%p *pfInUnixTree=%p\n",
-                  (void *)pszUserPath, pszUserPath, (void *)pszNativePath, (void *)pfInUnixTree);
+    LIBCLOG_ENTER("pszUserPath=%p:{%s} fFlags=%#x pszNativePath=%p *pfInUnixTree=%p\n",
+                  (void *)pszUserPath, pszUserPath, fFlags, (void *)pszNativePath, (void *)pfInUnixTree);
     const char     *pszUserPathIn = pszUserPath;
     char            _achBuffer[SIZEOF_ACHBUFFER + 4];
     char           *pachBuffer = (char *)((uintptr_t)&_achBuffer[3] & ~3);
@@ -1283,8 +1283,7 @@ static int fsResolveUnix(const char *pszUserPath, unsigned fFlags, char *pszNati
              * Find the correct name and to check if it is a directory or not.
              * This'll of course also provide proper verification of the path too. :-)
              *
-             * This is a little bit messed up since we'll have to use wildcard for
-             * getting the casing resolved.
+             * Use DosFindFirst to get the casing resolved.
              *
              * The two find buffers are assumed to be equal down thru attrFile.
              */
@@ -1292,20 +1291,14 @@ static int fsResolveUnix(const char *pszUserPath, unsigned fFlags, char *pszNati
             PFILEFINDBUF4 pFindBuf4 = (PFILEFINDBUF4)pachBuffer;
             PFILEFINDBUF3 pFindBuf3 = (PFILEFINDBUF3)pachBuffer;
             ULONG cFiles = 1;
-            char chNext = psz[1];
-            psz[0] = '?';
-            psz[1] = '\0';
             int rc = DosFindFirst((PCSZ)pszNativePath, &hDir, FILE_READONLY | FILE_HIDDEN | FILE_SYSTEM | FILE_DIRECTORY | FILE_ARCHIVED,
                                   pachBuffer, SIZEOF_ACHBUFFER, &cFiles, fUnixEAs ? FIL_QUERYEASIZE : FIL_STANDARD);
-            psz[0] = '\0';
-            psz[1] = chNext;
-            if (rc || cFiles == 0)
-                hDir = HDIR_CREATE;
-            while (!rc && cFiles == 1 && (fUnixEAs ? pFindBuf4->cchName : pFindBuf3->cchName) != psz - pszPrev)
-                rc = DosFindNext(hDir, pachBuffer, SIZEOF_ACHBUFFER, &cFiles);
+            if (!rc)
+                DosFindClose(hDir);
+            hDir = HDIR_CREATE;
             if (rc || cFiles == 0)
             {
-                LIBCLOG_MSG("DosFindFirst/Next('%s',,,,,) -> %d resolving '%s'\n", pszNativePath, rc, pszUserPathIn);
+                LIBCLOG_MSG("DosFindFirst('%s',,,,,) -> %d resolving '%s'\n", pszNativePath, rc, pszUserPathIn);
                 if ((fFlags & BACKFS_FLAGS_RESOLVE_FULL_MAYBE_) && !chSlash)
                 {
                     *psz = chSlash;
