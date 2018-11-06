@@ -1082,6 +1082,13 @@ int __libc_FHClose(int fh)
         {
             gpapFHs[fh] = NULL;
             fhFreeHandle(pFH);
+            /*
+             * Reset the error as from the LIBC point of view it's a success
+             * (the file hangle is gone).
+             * Check https://github.com/bitwiseworks/libcx/issues/60 for a
+             * consequence of not doing this.
+             */
+            rc = 0;
         }
     }
 
