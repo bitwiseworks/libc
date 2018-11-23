@@ -55,7 +55,7 @@ int  __libc_Back_ldrClose(void *pvModule)
     {
         FS_VAR();
         FS_SAVE_LOAD();
-        int rc = DosFreeModuleEx((HMODULE)pvModule);
+        rc = DosFreeModuleEx((HMODULE)pvModule);
         FS_RESTORE();
     }
     if (!rc)
