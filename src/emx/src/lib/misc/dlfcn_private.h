@@ -27,7 +27,7 @@
 *   Defined Constants And Macros                                               *
 *******************************************************************************/
 /** Max native error info length. */
-#define DLFCN_MAX_ERROR         64
+#define DLFCN_MAX_ERROR         260
 /** Max error string returned by dlerror. */
 #define DLFCN_MAX_ERROR_STR     (DLFCN_MAX_ERROR + 64)
 
