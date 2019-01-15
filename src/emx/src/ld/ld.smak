@@ -26,7 +26,7 @@ include comend.smak
 .TDEP	:= src/ld/ldstub.def
 # link386 -> ilink
 #.TLDF	:= -nostdlib -los2 -s -Zlinker /align:1 -Zlinker /nosectoraligncode
-ifeq ($(EMXOMFLD_TYPE),wlink)
+ifneq ($(filter wlink WLINK,$(EMXOMFLD_TYPE)),)
 .TLDF	:= -nostdlib -los2 -lend -s -Zlinker "OPTION ALIGN=4096"
 else # ilink:
 .TLDF	:= -nostdlib -los2 -lend -s -Zlinker /align:1

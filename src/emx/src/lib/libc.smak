@@ -81,7 +81,7 @@ include mklib.smak
 #------------------------------------------------------
 .TKIND	        := omf
 LIBC.STUB		:= $(wildcard $.omf/os2stub.bin)
-ifeq ($(EMXOMFLD_TYPE),wlink)
+ifneq ($(filter wlink WLINK,$(EMXOMFLD_TYPE)),)
 LIBC.STUBARG	:= $(if $(LIBC.STUB),-Zlinker "OPTION STUB=$(LIBC.STUB)")
 else
 LIBC.STUBARG	:= $(if $(LIBC.STUB),-Zlinker -STUB:$(LIBC.STUB))
@@ -207,7 +207,7 @@ $(LIBC.DEF): $(LIBC.LIBS) src/lib/libc.def src/lib/libstdc++.def version.smak
 	$(call DO.EMXEXP,$(filter %.lib,$^),$@)
 	sed  -e "/\"___pfn/d" -e "/\"__sys_/d" -e "/\"___sys_/d" -e "/\"___libc_[a-z]/d" -e "/\"__nsyy/d" $@ > $@.tmp
 	mv -f $@.tmp $@
-	krx.exe src/lib/dlllegacy.cmd -e "_DLL_InitTerm" $@ src/lib/libc.def
+	src/lib/dlllegacy.cmd -e "_DLL_InitTerm" $@ src/lib/libc.def
 	mv -f $@ $@.tmp
 	cat "src/lib/libstdc++.def" >> $@.tmp
 	mv -f $@.tmp $@

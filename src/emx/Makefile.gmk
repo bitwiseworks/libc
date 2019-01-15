@@ -99,7 +99,7 @@ CFLAGS.INC  += -Isrc/include
 CFLAGS.INC  += -Isrc/lib/bsd/include
 CFLAGS      = -Wall -Wundef -Wmissing-prototypes -mstack-arg-probe $(CFLAGS.INC) $(CFLAGS.$(MODE)) $(CFLAGS.KIND)
 # The additional C compiler flags for different build modes
-CFLAGS.opt  = -g -O3 -mcpu=pentium -mpreferred-stack-boundary=4 -malign-strings=2 -falign-loops=2 -falign-jumps=2 -falign-functions=3
+CFLAGS.opt  = -g -O3 -mtune=pentium -mpreferred-stack-boundary=4 -falign-loops=2 -falign-jumps=2 -falign-functions=3
 CFLAGS.dbg  = -g -DDEBUG
 CFLAGS.prf  = $(CFLAGS.opt) -pg
 CFLAGS.aout = -Zaout
@@ -118,13 +118,13 @@ DO.COMPILE.s = $(CC) -x assembler-with-cpp $(strip $(CFLAGS) $1) -o $@ $(srcdir)
 LD = gcc
 # Linker flags
 LDFLAGS     = $(LDFLAGS.$(MODE)) $(LDFLAGS.KIND) -Zmap -Zstack 1024 -Zhigh-mem $(LIBS)
-LDFLAGS.DLL = $(LDFLAGS) -Zdll -Zfork
+LDFLAGS.DLL = $(LDFLAGS) -Zdll
 # Linker flags for different build modes
-LDFLAGS.opt = -g -Zcrtdll=c_dll
-LDFLAGS.prf = -g -Zcrtdll=c_dll -lkProfile -LG:/kTaskMgr/Tree/lib/debug
+LDFLAGS.opt = -g
+LDFLAGS.prf = -g -lkProfile -LG:/kTaskMgr/Tree/lib/debug
 LDFLAGS.dbg = -g
 LDFLAGS.aout = -Zaout
-ifeq ($(EMXOMFLD_TYPE),wlink)
+ifneq ($(filter wlink WLINK,$(EMXOMFLD_TYPE)),)
 LDFLAGS.omf = -Zomf
 else
 LDFLAGS.omf = -Zomf -Zlinker /PM:VIO -Zlinker /LINENUMBERS
