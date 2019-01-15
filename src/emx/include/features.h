@@ -369,8 +369,9 @@
 #endif	/* !ASSEMBLER */
 
 /* Decide whether we can define 'extern inline' functions in headers.  */
-#if __GNUC_PREREQ (2, 7) && !__GNUC_PREREQ (4, 3) && defined __OPTIMIZE__ \
-    && !defined __OPTIMIZE_SIZE__ && !defined __NO_INLINE__
+#if __GNUC_PREREQ (2, 7) && defined __OPTIMIZE__ \
+    && !defined __OPTIMIZE_SIZE__ && !defined __NO_INLINE__ \
+    && defined __extern_inline
 # define __USE_EXTERN_INLINES	1
 #endif
 

@@ -290,6 +290,28 @@
 #endif
 #endif                  /* bird */
 
+/* GCC 4.3 and above with -std=c99 or -std=gnu99 implements ISO C99
+   inline semantics, unless -fgnu89-inline is used.  Using __GNUC_STDC_INLINE__
+   or __GNUC_GNU_INLINE is not a good enough check for gcc because gcc versions
+   older than 4.3 may define these macros and still not guarantee GNU inlining
+   semantics.
+
+   clang++ identifies itself as gcc-4.2, but has support for GNU inlining
+   semantics, that can be checked for by using the __GNUC_STDC_INLINE_ and
+   __GNUC_GNU_INLINE__ macro definitions.  */
+#if (!defined __cplusplus || __GNUC_PREREQ (4,3) \
+     || (defined __clang__ && (defined __GNUC_STDC_INLINE__ \
+			       || defined __GNUC_GNU_INLINE__)))
+# if defined __GNUC_STDC_INLINE__ || defined __cplusplus
+#  define __extern_inline extern __inline __attribute__ ((__gnu_inline__))
+#  define __extern_always_inline \
+  extern __always_inline __attribute__ ((__gnu_inline__))
+# else
+#  define __extern_inline extern __inline
+#  define __extern_always_inline extern __always_inline
+# endif
+#endif
+
 /* It is possible to compile containing GCC extensions even if GCC is
    run in pedantic mode if the uses are carefully marked using the
    `__extension__' keyword.  But this is not generally available before

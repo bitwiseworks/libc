@@ -529,18 +529,18 @@ int _rmtmp (void);
 #include <features.h>
 #ifdef __USE_EXTERN_INLINES
 
-extern __inline__ int feof (FILE *_s)
+__extern_inline int feof (FILE *_s)
 {
   return (_s->_flags & _IOEOF ? 1 : 0);
 }
 
-extern __inline__ int ferror (FILE *_s)
+__extern_inline int ferror (FILE *_s)
 {
   return (_s->_flags & _IOERR ? 1 : 0);
 }
 
-extern __inline__ int getchar (void) { return getc (stdin); }
-extern __inline__ int putchar (int _c) { return putc (_c, stdout); }
+__extern_inline int getchar (void) { return getc (stdin); }
+__extern_inline int putchar (int _c) { return putc (_c, stdout); }
 
 #endif /* __USE_EXTERN_INLINES */
 

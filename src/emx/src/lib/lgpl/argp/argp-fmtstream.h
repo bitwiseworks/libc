@@ -215,7 +215,7 @@ extern int __argp_fmtstream_ensure (argp_fmtstream_t __fs, size_t __amount);
 #endif /* !__IN_INNOTEK_LIBC__ */
 
 #ifndef ARGP_FS_EI
-#define ARGP_FS_EI extern inline
+#define ARGP_FS_EI __extern_inline
 #endif
 
 ARGP_FS_EI size_t

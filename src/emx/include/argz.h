@@ -164,7 +164,7 @@ extern char *argz_next (__const char *__restrict __argz, size_t __argz_len,
 			__const char *__restrict __entry) __THROW;
 
 #ifdef __USE_EXTERN_INLINES
-extern inline char *
+__extern_inline char *
 __NTH (__argz_next (__const char *__argz, size_t __argz_len,
 		    __const char *__entry))
 {
@@ -178,7 +178,7 @@ __NTH (__argz_next (__const char *__argz, size_t __argz_len,
   else
     return __argz_len > 0 ? (char *) __argz : 0;
 }
-extern inline char *
+__extern_inline char *
 __NTH (argz_next (__const char *__argz, size_t __argz_len,
 		  __const char *__entry))
 {
