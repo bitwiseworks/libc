@@ -28,8 +28,8 @@ Boston, MA 02111-1307, USA.  */
 #include <ar.h>
 #include <sys/omflib.h>
 #include <a_out.h>
+#include <demangle.h>
 #include "defs.h"
-#include "demangle.h"
 
 struct bss_list
 {
@@ -151,7 +151,7 @@ static void error (const char *fmt, ...)
 /* Allocate N bytes of memory.  Quit on failure.  This function is
    used like malloc(), but we don't have to check the return value. */
 
-static void *xmalloc (size_t n)
+static void *ymalloc (size_t n)
 {
   void *p;
 
@@ -166,7 +166,7 @@ static void *xmalloc (size_t n)
    function is used like realloc(), but we don't have to check the
    return value. */
 
-static void *xrealloc (void *ptr, size_t n)
+static void *yrealloc (void *ptr, size_t n)
 {
   void *p;
 
@@ -181,11 +181,11 @@ static void *xrealloc (void *ptr, size_t n)
    This function is used like strdup(), but we don't have to check the
    return value. */
 
-static char *xstrdup (const char *s)
+static char *ystrdup (const char *s)
 {
   char *p;
 
-  p = xmalloc (strlen (s) + 1);
+  p = ymalloc (strlen (s) + 1);
   strcpy (p, s);
   return p;
 }
@@ -235,8 +235,8 @@ static void new_export (const char *name, const char *segname, int fweak, int fc
   if (!psym)
     {
       /* create new symbol node */
-      psym = xmalloc(sizeof(*psym));
-      psym->name = xstrdup(name);
+      psym = ymalloc(sizeof(*psym));
+      psym->name = ystrdup(name);
 
       /* insert into hash */
       psym->nexthash = new_hashtable[uhash];
@@ -280,10 +280,10 @@ static void new_export (const char *name, const char *segname, int fweak, int fc
        /* new or old ? */
        if (!psymgrp)
          {
-           psymgrp = xmalloc(sizeof(*psymgrp));
-           psymgrp->name = segname ? xstrdup(segname) : NULL;
-           psymgrp->head = xmalloc(sizeof(*psymgrp->head));
-           psymgrp->tail = xmalloc(sizeof(*psymgrp->tail));
+           psymgrp = ymalloc(sizeof(*psymgrp));
+           psymgrp->name = segname ? ystrdup(segname) : NULL;
+           psymgrp->head = ymalloc(sizeof(*psymgrp->head));
+           psymgrp->tail = ymalloc(sizeof(*psymgrp->tail));
            memset(psymgrp->head, 0, sizeof(*psymgrp->head));
            memset(psymgrp->tail, 0, sizeof(*psymgrp->tail));
            psymgrp->head->fdummy = 1;
@@ -410,8 +410,8 @@ static void export_bss (const char *name)
       for (p = bss_list; p != NULL; p = p->next)
         if (strcmp (p->name, name) == 0)
           return;
-      p = xmalloc (sizeof (*p));
-      p->name = xmalloc (strlen (name) + 1);
+      p = ymalloc (sizeof (*p));
+      p->name = ymalloc (strlen (name) + 1);
       strcpy (p->name, name);
       p->next = bss_list;
       bss_list = p;
@@ -433,7 +433,7 @@ static void process_aout (FILE *inp_file, long size)
 
   new_mod = TRUE;
 
-  inp_buf = xmalloc (size);
+  inp_buf = ymalloc (size);
   size = fread (inp_buf, 1, size, inp_file);
 
   a_out_h = (struct exec *)inp_buf;
@@ -680,8 +680,8 @@ static void omf_lnames (void)
     {
       unsigned len = get_byte ();
       if (!(num_lnames % 64))
-        lnames = xrealloc(lnames, sizeof(lnames[0]) * (num_lnames + 64));
-      lnames[num_lnames] = xmalloc(len + 1);
+        lnames = yrealloc(lnames, sizeof(lnames[0]) * (num_lnames + 64));
+      lnames[num_lnames] = ymalloc(len + 1);
       get_mem(lnames[num_lnames], len);
       lnames[num_lnames][len] = '\0';
       num_lnames++;
@@ -716,7 +716,7 @@ static void omf_segdef (void)
 
   /* add it */
   if (!(num_segdefs % 64))
-    segdefs = xrealloc (segdefs, sizeof(segdefs[0]) * (num_segdefs + 64));
+    segdefs = yrealloc (segdefs, sizeof(segdefs[0]) * (num_segdefs + 64));
   if (nameidx != 0 && nameidx < num_lnames)
     segdefs[num_segdefs].name = lnames[nameidx];
   else
@@ -733,10 +733,10 @@ static void process_omf (FILE *inp_file)
 
   /* init */
   new_mod = TRUE;
-  lnames = xmalloc(sizeof(lnames[0])* 64);
+  lnames = ymalloc(sizeof(lnames[0])* 64);
   lnames[0] = NULL;
   num_lnames = 1;                       /* dummy entry */
-  segdefs = xmalloc(sizeof(segdefs[0])* 64);
+  segdefs = ymalloc(sizeof(segdefs[0])* 64);
   memset(&segdefs[0], 0, sizeof(segdefs[0]));
   num_segdefs = 1;
 
@@ -854,7 +854,7 @@ static void process (void)
               if (size != 0)
                 {
                   long_names_size = (size_t)size;
-                  long_names = xmalloc (long_names_size);
+                  long_names = ymalloc (long_names_size);
                   size = fread (long_names, 1, long_names_size, inp_file);
                   if (ferror (inp_file))
                     error ("Cannot read `%s'", inp_fname);

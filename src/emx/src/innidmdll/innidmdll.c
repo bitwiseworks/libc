@@ -37,8 +37,6 @@
 #include <stdlib.h>
 #include <demangle.h>
 
-#include "demangle.h"
-
 
 /*******************************************************************************
 *   Defined Constants And Macros                                               *
