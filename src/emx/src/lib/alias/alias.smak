@@ -43,7 +43,7 @@ $.$(.TARG): $.libc-std.h src/lib/alias/alias.smak
 		else \
 			echo "Aliasing _$$fun1 to _$$fun ..."; \
 			echo ".stabs \"_$${fun1}\",11,0,0,0;.stabs \"_$${fun}\",1,0,0,0;" > $.aliases/_$$fun1.s; \
-			if as -o $.aliases/_$$fun1.o $.aliases/_$$fun1.s; then \
+			if as -o $.aliases/_$$fun1.o $.aliases/_$$fun1.s; then :; \
 			else exit 1; \
 			fi; \
 			fun1=; \
@@ -53,14 +53,14 @@ $.$(.TARG): $.libc-std.h src/lib/alias/alias.smak
 	for i in $(ALIAS.FUNCS); do \
 		echo "Aliasing _$$i to __std_$$i ..."; \
         echo ".stabs \"_$$i\",11,0,0,0;.stabs \"__std_$$i\",1,0,0,0;" > $.aliases/_$$i.s; \
-        if test -f $.aliases/_$$i.o || as -o $.aliases/_$$i.o $.aliases/_$$i.s; then \
+        if test -f $.aliases/_$$i.o || as -o $.aliases/_$$i.o $.aliases/_$$i.s; then :; \
 		else exit 1; \
 		fi \
 	done
 	for i in $(ALIAS._FUNCS); do \
 		echo "Aliasing __$$i to __std_$$i ..."; \
 		echo ".stabs \"__$$i\",11,0,0,0;.stabs \"__std_$$i\",1,0,0,0;" > $.aliases/__$$i.s; \
-		if test -f $.aliases/__$$i.o || as -o $.aliases/__$$i.o $.aliases/__$$i.s; then \
+		if test -f $.aliases/__$$i.o || as -o $.aliases/__$$i.o $.aliases/__$$i.s; then :; \
 		else exit 1; \
 		fi \
 	done
