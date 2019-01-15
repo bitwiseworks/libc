@@ -86,9 +86,9 @@ ifndef BUILD.RULES
 # rather than expand-value-on-reference.
 BUILD.RULES :=
 endif
-.TSRC := $(filter-out $(BUILD.RULES),$(join $(addsuffix :,$(.OBJS)),$(.TSRC)))
+.TSRC := $(filter-out $(BUILD.RULES),$(join $(addsuffix >,$(.OBJS)),$(.TSRC)))
 BUILD.RULES += $(.TSRC)
-.TSRC := $(filter-out $(.OBJS),$(subst :, ,$(.TSRC)))
+.TSRC := $(filter-out $(.OBJS),$(subst >, ,$(.TSRC)))
 
 # Generate compilation rules for C files
 $(foreach x,$(filter %.c,$(.TSRC)), $(eval $(call def_compile_c,$(x))))
