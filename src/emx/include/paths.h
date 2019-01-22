@@ -47,45 +47,45 @@
 #include <sys/cdefs.h>
 
 /* Default search path. */
-#define	_PATH_DEFPATH	"/@unixroot/usr/bin:/@unixroot/bin"
+#define	_PATH_DEFPATH	"/@unixroot/usr/bin"
 /* All standard utilities path. */
 #define	_PATH_STDPATH \
-	"/@unixroot/usr/bin:/@unixroot/bin:/@unixroot/usr/sbin:/@unixroot/sbin:"
+	"/@unixroot/usr/bin:/@unixroot/usr/sbin"
 /* Locate system binaries */
 #define _PATH_SYSPATH	\
-	"/@unixroot/sbin:/@unixroot/usr/sbin"
+	"/@unixroot/usr/sbin"
 
 #define	_PATH_AUTHCONF	"/@unixroot/etc/auth.conf"
-#define	_PATH_BSHELL	"/@unixroot/bin/sh"
+#define	_PATH_BSHELL	"/@unixroot/usr/bin/sh"
 #define	_PATH_CAPABILITY	"/@unixroot/etc/capability"
 #define	_PATH_CAPABILITY_DB	"/@unixroot/etc/capability.db"
 #define	_PATH_CONSOLE	"/dev/con"
-#define	_PATH_CP	"/@unixroot/bin/cp"
-#define	_PATH_CSHELL	"/@unixroot/bin/csh"
+#define	_PATH_CP	"/@unixroot/usr/bin/cp"
+#define	_PATH_CSHELL	"/@unixroot/usr/bin/csh"
 #define	_PATH_DEFTAPE	"/@unixroot/dev/sa0"
 #define	_PATH_DEVNULL	"/dev/null"
 #define	_PATH_DEVZERO	"/@unixroot/dev/zero"
 #define	_PATH_DRUM	"/@unixroot/dev/drum"
 #define	_PATH_ETC	"/@unixroot/etc"
 #define	_PATH_FTPUSERS	"/@unixroot/etc/ftpusers"
-#define	_PATH_HALT	"/@unixroot/sbin/halt"
-#define	_PATH_IFCONFIG	"/@unixroot/sbin/ifconfig"
+#define	_PATH_HALT	"/@unixroot/usr/sbin/halt"
+#define	_PATH_IFCONFIG	"/@unixroot/usr/sbin/ifconfig"
 #define	_PATH_KMEM	"/@unixroot/dev/kmem"
 #define	_PATH_LIBMAP_CONF	"/@unixroot/etc/libmap.conf"
 #define	_PATH_LOCALE	"/@unixroot/usr/share/locale"
 #define	_PATH_LOGIN	"/@unixroot/usr/bin/login"
 #define	_PATH_MAILDIR	"/@unixroot/var/mail"
 #define	_PATH_MAN	"/@unixroot/usr/share/man"
-#define	_PATH_MDCONFIG	"/@unixroot/sbin/mdconfig"
+#define	_PATH_MDCONFIG	"/@unixroot/usr/sbin/mdconfig"
 #define	_PATH_MEM	"/@unixroot/dev/mem"
-#define	_PATH_MKSNAP_FFS	"/@unixroot/sbin/mksnap_ffs"
-#define	_PATH_MOUNT	"/@unixroot/sbin/mount"
-#define	_PATH_NEWFS	"/@unixroot/sbin/newfs"
+#define	_PATH_MKSNAP_FFS	"/@unixroot/usr/sbin/mksnap_ffs"
+#define	_PATH_MOUNT	"/@unixroot/usr/sbin/mount"
+#define	_PATH_NEWFS	"/@unixroot/usr/sbin/newfs"
 #define	_PATH_NOLOGIN	"/@unixroot/var/run/nologin"
-#define	_PATH_RCP	"/@unixroot/bin/rcp"
-#define	_PATH_REBOOT	"/@unixroot/sbin/reboot"
+#define	_PATH_RCP	"/@unixroot/usr/bin/rcp"
+#define	_PATH_REBOOT	"/@unixroot/usr/sbin/reboot"
 #define	_PATH_RLOGIN	"/@unixroot/usr/bin/rlogin"
-#define	_PATH_RM	"/@unixroot/bin/rm"
+#define	_PATH_RM	"/@unixroot/usr/bin/rm"
 #define	_PATH_RSH	"/@unixroot/usr/bin/rsh"
 #define	_PATH_SENDMAIL	"/@unixroot/usr/sbin/sendmail"
 #define	_PATH_SHELLS	"/@unixroot/etc/shells"
@@ -110,11 +110,11 @@ __END_DECLS
 
 #ifdef RESCUE
 #undef	_PATH_DEFPATH
-#define	_PATH_DEFPATH	"/@unixroot/rescue:/@unixroot/usr/bin:/@unixroot/bin"
+#define	_PATH_DEFPATH	"/@unixroot/rescue:/@unixroot/usr/bin"
 #undef	_PATH_STDPATH
-#define	_PATH_STDPATH	"/@unixroot/rescue:/@unixroot/usr/bin:/@unixroot/bin:/@unixroot/usr/sbin:/@unixroot/sbin"
+#define	_PATH_STDPATH	"/@unixroot/rescue:/@unixroot/usr/bin:/@unixroot/usr/sbin"
 #undef	_PATH_SYSPATH
-#define	_PATH_SYSPATH	"/@unixroot/rescue:/@unixroot/sbin:/@unixroot/usr/sbin"
+#define	_PATH_SYSPATH	"/@unixroot/rescue:/@unixroot/usr/sbin"
 #undef	_PATH_BSHELL
 #define	_PATH_BSHELL	"/@unixroot/rescue/sh"
 #undef	_PATH_CP

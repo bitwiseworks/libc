@@ -51,16 +51,16 @@ int __libc_Back_processGetDefaultShell(char *pszShell, size_t cbShell, size_t *p
     {
         struct stat st;
         fIsUnixShell = 1;
-        pszEnv = "/@unixroot/bin/sh.exe";
+        pszEnv = "/@unixroot/usr/bin/sh.exe";
         if (stat(pszEnv, &st) != 0)
         {
             pszEnv = NULL;
-            if (stat("/@unixroot/bin/", &st) == 0)
+            if (stat("/@unixroot/usr/bin/", &st) == 0)
             {
-                pszEnv = "/@unixroot/bin/ash.exe";
+                pszEnv = "/@unixroot/usr/bin/ash.exe";
                 if (stat(pszEnv, &st) < 0)
                 {
-                    pszEnv = "/@unixroot/bin/bash.exe";
+                    pszEnv = "/@unixroot/usr/bin/bash.exe";
                     if (stat(pszEnv, &st) < 0)
                     {
                         fIsUnixShell = -1;
