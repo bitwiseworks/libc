@@ -136,27 +136,31 @@ LIBC.OBJS.COMMON := \
 	$.omf/src/lib/sys/sbrk.obj \
 	$.omf/src/lib/sys/heap.obj \
 	$.omf/src/lib/sys/__init.obj
+LIBC.OBJS.STARTUP := \
+	$.omf/src/lib/startup/386/dll0hi.obj
 LIBC.OBJS       := \
-	$.omf/src/lib/startup/386/dll0hi.obj \
+	$(LIBC.OBJS.STARTUP) \
 	$(LIBC.OBJS.COMMON)
 LIBC.LIBS       := $.omf/libc_s.lib $.omf/libc_app.lib $.omf/libc_omf386.lib
-LIBC.DEPS       := $(LIBC.STUB) $.omf/libc_alias.lib $.omf/liblazyimp.lib $.omf-lazy/libos2_unicode_lazy.lib $.omf/libos2.lib $.omf/libend.lib
+LIBC.DEPS.BASE  := $.omf/libc_alias.lib $.omf-lazy/libos2_unicode_lazy.lib $.omf/libend.lib
+LIBC.DEPS.COMMON := $.omf/liblazyimp.lib $.omf/libos2.lib
+LIBC.DEPS       := $(LIBC.STUB) $(LIBC.DEPS.BASE) $(LIBC.DEPS.COMMON)
 LIBC.DLL.OBJS   :=
 LIBC.DIRS       := $(sort $(dir $(LIBC.OBJS) $(LIBC.DEPS) $(LIBC.DLL.OBJS)))
 
 LIBC.PRF.DLL	:= $(LIBC.DLL:.dll=.prf)
 LIBC.PRF.DEF    := $.omf/libc.prf.def
 LIBC.PRF.OBJS   := \
-	$.omf/src/lib/startup/386/dll0hi.obj \
+	$(LIBC.OBJS.STARTUP) \
 	$(subst /omf/,/omf-prof/,$(LIBC.OBJS.COMMON))
 LIBC.PRF.LIBS   := $.omf-prof/libc_p_s.lib $.omf-prof/libc_app_p.lib $.omf/libc_omf386.lib
-LIBC.PRF.DEPS   := $(LIBC.STUB) $.omf/libc_alias.lib $.omf-prof/liblazyimp_p.lib $.omf-lazy/libos2_unicode_lazy.lib $.omf-prof/libos2_p.lib $.omf/libend.lib
+LIBC.PRF.DEPS   := $(LIBC.STUB) $(LIBC.DEPS.BASE) $(subst /omf/,/omf-prof/,$(LIBC.DEPS.COMMON:.lib=_p.lib))
 LIBC.PRF.DIRS   := $(sort $(dir $(LIBC.PRF.OBJS) $(LIBC.PRF.DEPS)))
 
 LIBC.ELH.DLL	:= $(LIBC.DLL:.dll=.elh)
 LIBC.ELH.DEF    := $.omf/libc.elh.def
 LIBC.ELH.OBJS   := \
-	$.omf/src/lib/startup/386/dll0hi.obj \
+	$(LIBC.OBJS.STARTUP) \
 	$.omf/src/lib/startup/dllinit.obj
 LIBC.ELH.LIBS   := $(LIBC.LIBS)
 LIBC.ELH.DEPS   := $(LIBC.DEPS)
@@ -165,7 +169,7 @@ LIBC.ELH.DIRS   :=
 LIBC.LOG.DLL	:= $(LIBC.DLL:.dll=.logchk)
 LIBC.LOG.DEF    := $(LIBC.DEF)
 LIBC.LOG.OBJS   := \
-	$.omf/src/lib/startup/386/dll0hi.obj \
+	$(LIBC.OBJS.STARTUP) \
 	$(subst /omf/,/omf-log/,$(LIBC.OBJS.COMMON))
 LIBC.LOG.LIBS   := $.omf-log/libc_l_s.lib $.omf-log/libc_app_l.lib $.omf/libc_omf386.lib
 LIBC.LOG.DEPS   := $(LIBC.DEPS)
@@ -197,7 +201,7 @@ ifeq ($(MODE),opt)
 endif
 
 # LIBC .def file
-$(LIBC.DEF): $(LIBC.LIBS) src/lib/libc.def src/lib/libstdc++.def version.smak
+$(LIBC.DEF): $(LIBC.LIBS) src/lib/libc.def version.smak
 	$(call RM,$@)
 	@$(call FECHO,$@,LIBRARY libc$(VH)$(VM)$(VL) INITINSTANCE TERMINSTANCE)
 	@$(call FECHO,$@,DESCRIPTION \"kLIBC version $(VERSION) $(INNOTEK_VERSION)\")
@@ -208,9 +212,6 @@ $(LIBC.DEF): $(LIBC.LIBS) src/lib/libc.def src/lib/libstdc++.def version.smak
 	sed  -e "/\"___pfn/d" -e "/\"__sys_/d" -e "/\"___sys_/d" -e "/\"___libc_[a-z]/d" -e "/\"__nsyy/d" $@ > $@.tmp
 	mv -f $@.tmp $@
 	src/lib/dlllegacy.cmd -e "_DLL_InitTerm" $@ src/lib/libc.def
-	mv -f $@ $@.tmp
-	cat "src/lib/libstdc++.def" >> $@.tmp
-	mv -f $@.tmp $@
 
 
 # LIBC import libraries with dllinit, libsocket and libsyslog.
@@ -465,12 +466,23 @@ libc.TDEP :=
 $.omf/fwdstub.obj: src/lib/fwdstub.asm
 	$(call DO.COMPILE.asm)
 
+$.omf/libstdc++5.lib $.omf/libgcc3.lib $.omf/libgcc3_eh.lib: stuff/gcc335csd6_libs.zip
+	$(call RM,$@)
+	unzip $< $(notdir $@) -d $(dir $@)
+	touch $@
+
+FWDLIB.DEPS := $.omf/fwdstub.obj $.omf/libc066.lib
+
+FWDLIB.DEPS.CPP := \
+	$(LIBC.OBJS.STARTUP) $(LIBC.DEPS.BASE) $(LIBC.DEPS.COMMON) \
+	$.omf/libstdc++5.lib $.omf/libgcc3.lib $.omf/libgcc3_eh.lib
+
 # libc06
 $.omf/libc06.def: src/lib/libc06.def
 	$(call RM,$@)
 	cat $^ >> $@
 	@$(call FECHO,$@,DESCRIPTION \"kLIBC version $(VERSION) $(INNOTEK_VERSION)\")
-$.omf/libc06.dll: $.omf/libc06.def $.omf/fwdstub.obj $.omf/libc_dll.lib
+$.omf/libc06.dll: $.omf/libc06.def $(FWDLIB.DEPS)
 	gcc -Zomf -o $@ -nostdlib -Zdll $^
 $(INS)lib/libc06.dll: $.omf/libc06.dll
 	if test -f $@; then rm -f $@ || (unlock $(subst /,\\,$@) && rm -f $@); fi
@@ -483,7 +495,7 @@ $.omf/libc061.def: src/lib/libc061.def
 	$(call RM,$@)
 	cat $^ > $@
 	@$(call FECHO,$@,DESCRIPTION \"kLIBC version $(VERSION) $(INNOTEK_VERSION)\")
-$.omf/libc061.dll: $.omf/libc061.def $.omf/fwdstub.obj $.omf/libc_dll.lib
+$.omf/libc061.dll: $.omf/libc061.def $(FWDLIB.DEPS)
 	gcc -Zomf -o $@ -nostdlib -Zdll $^
 $(INS)lib/libc061.dll: $.omf/libc061.dll
 	if test -f $@; then rm -f $@ || (unlock $(subst /,\\,$@) && rm -f $@); fi
@@ -496,7 +508,7 @@ $.omf/libc062.def: src/lib/libc062.def src/lib/libstdc++.def
 	$(call RM,$@)
 	cat $^ > $@
 	@$(call FECHO,$@,DESCRIPTION \"kLIBC version $(VERSION) $(INNOTEK_VERSION)\")
-$.omf/libc062.dll: $.omf/libc062.def $.omf/fwdstub.obj $.omf/libc_dll.lib
+$.omf/libc062.dll: $.omf/libc062.def $(FWDLIB.DEPS)
 	gcc -Zomf -o $@ -nostdlib -Zdll $^
 $(INS)lib/libc062.dll: $.omf/libc062.dll
 	if test -f $@; then rm -f $@ || (unlock $(subst /,\\,$@) && rm -f $@); fi
@@ -509,7 +521,7 @@ $.omf/libc063.def: src/lib/libc063.def src/lib/libstdc++.def
 	$(call RM,$@)
 	cat $^ > $@
 	@$(call FECHO,$@,DESCRIPTION \"kLIBC version $(VERSION) $(INNOTEK_VERSION)\")
-$.omf/libc063.dll: $.omf/libc063.def $.omf/fwdstub.obj $.omf/libc_dll.lib
+$.omf/libc063.dll: $.omf/libc063.def $(FWDLIB.DEPS)
 	gcc -Zomf -o $@ -nostdlib -Zdll $^
 $(INS)lib/libc063.dll: $.omf/libc063.dll
 	if test -f $@; then rm -f $@ || (unlock $(subst /,\\,$@) && rm -f $@); fi
@@ -522,7 +534,7 @@ $.omf/libc064.def: src/lib/libc064.def src/lib/libstdc++.def
 	$(call RM,$@)
 	cat $^ > $@
 	@$(call FECHO,$@,DESCRIPTION \"kLIBC version $(VERSION) $(INNOTEK_VERSION)\")
-$.omf/libc064.dll: $.omf/libc064.def $.omf/fwdstub.obj $.omf/libc_dll.lib
+$.omf/libc064.dll: $.omf/libc064.def $(FWDLIB.DEPS)
 	gcc -Zomf -o $@ -nostdlib -Zdll $^
 $(INS)lib/libc064.dll: $.omf/libc064.dll
 	if test -f $@; then rm -f $@ || (unlock $(subst /,\\,$@) && rm -f $@); fi
@@ -535,13 +547,28 @@ $.omf/libc065.def: src/lib/libc065.def src/lib/libstdc++.def
 	$(call RM,$@)
 	cat $^ > $@
 	@$(call FECHO,$@,DESCRIPTION \"kLIBC version $(VERSION) $(INNOTEK_VERSION)\")
-$.omf/libc065.dll: $.omf/libc065.def $.omf/fwdstub.obj $.omf/libc_dll.lib
+$.omf/libc065.dll: $.omf/libc065.def $(FWDLIB.DEPS)
 	gcc -Zomf -o $@ -nostdlib -Zdll $^
 $(INS)lib/libc065.dll: $.omf/libc065.dll
 	if test -f $@; then rm -f $@ || (unlock $(subst /,\\,$@) && rm -f $@); fi
 	$(call CP,$<,$@)
 INS.FILES += $(INS)lib/libc065.dll
 libc-dll: $.omf/libc065.dll
+
+# libc066 (provides Standard C++ library from GCC3 and is used by all other forwarders)
+$.omf/libc066.def: src/lib/libc066.def src/lib/libstdc++.def
+	$(call RM,$@)
+	cat $^ > $@
+	@$(call FECHO,$@,DESCRIPTION \"kLIBC version $(VERSION) $(INNOTEK_VERSION)\")
+$.omf/libc066.dll: $.omf/libc066.def $.omf/libc_dll.lib $(FWDLIB.DEPS.CPP)
+	gcc -Zomf -o $@ -nostdlib -Zdll -Zmap $^
+$.omf/libc066.lib: $.omf/libc066.dll
+	emximp $< -o $@
+$(INS)lib/libc066.dll: $.omf/libc066.dll
+	if test -f $@; then rm -f $@ || (unlock $(subst /,\\,$@) && rm -f $@); fi
+	$(call CP,$<,$@)
+INS.FILES += $(INS)lib/libc066.dll
+libc-dll: $.omf/libc066.dll
 
 
 # Some parallel building hacks (kmk only as vanilla make doesn't support this syntax).
