@@ -60,7 +60,12 @@ typedef enum __LIBC_FORKCTX
     /** The callback is only called in the parent context. */
     __LIBC_FORK_CTX_PARENT = 1,
     /** The callback is called in both parent and child contexts. */
-    __LIBC_FORK_CTX_BOTH = 2
+    __LIBC_FORK_CTX_BOTH = 2,
+    /** The mask for the calling context values. */
+    __LIBC_FORK_CTX_MASK = 0xf,
+    /** Flag for pfnCompletionCallback to add a callback to the end of the
+     * list so that it will be called last. */
+    __LIBC_FORK_CTX_FLAGS_LAST = 0x1000
 } __LIBC_FORKCTX;
 
 /**
@@ -379,7 +384,10 @@ typedef struct __libc_ForkHandle
      *                      a non zero rc argument indicates failure.
      * @param   pvArg       Argument to pass to pfnCallback as 3rd argument.
      * @param   enmContext  __LIBC_FORK_CTX_CHILD, __LIBC_FORK_CTX_PARENT, or
-     *                      __LIBC_FORK_CTX_BOTH.
+     *                      __LIBC_FORK_CTX_BOTH. May be ORed with
+     *                      __LIBC_FORK_CTX_FLAGS_LAST to add the callback to
+     *                      the end of the list so that it will be called after
+     *                      all other registered callbacks. 
      *
      * @remark  Use with care, the memory used to remember these is taken from the
      *          fork buffer.

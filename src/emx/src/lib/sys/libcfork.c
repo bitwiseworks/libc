@@ -2199,7 +2199,10 @@ int forkPrmFlush(__LIBC_PFORKHANDLE pForkHandle)
  *                      a non zero rc argument indicates failure.
  * @param   pvArg       Argument to pass to pfnCallback as 3rd argument.
  * @param   enmContext  __LIBC_FORK_CTX_CHILD, __LIBC_FORK_CTX_PARENT, or
- *                      __LIBC_FORK_CTX_BOTH.
+ *                      __LIBC_FORK_CTX_BOTH. May be ORed with
+ *                      __LIBC_FORK_CTX_FLAGS_LAST to add the callback to
+ *                      the end of the list so that it will be called after
+ *                      all other registered callbacks. 
  *
  * @remark  Use with care, the memory used to remember these is taken from the
  *          fork buffer.
@@ -2219,6 +2222,9 @@ int forkPrmCompletionCallback(__LIBC_PFORKHANDLE pForkHandle, __LIBC_PFNCOMPLETI
             LIBCLOG_RETURN_INT(rc);
     }
 
+    int fLast = enmContext & __LIBC_FORK_CTX_FLAGS_LAST;
+    enmContext &= __LIBC_FORK_CTX_MASK;
+
     /*
      * Add it to the completion callbacks.
      * These are eating of the buffer from the end of it.
@@ -2227,9 +2233,23 @@ int forkPrmCompletionCallback(__LIBC_PFORKHANDLE pForkHandle, __LIBC_PFNCOMPLETI
     pForkHandle->cbBufLeft  -= sizeof(__LIBC_FORKCOMPLETIONCALLBACK);
     pForkHandle->cCompletionCallbacks++;
     pForkHandle->papfnCompletionCallbacks--;
-    pForkHandle->papfnCompletionCallbacks->pfnCallback  = pfnCallback;
-    pForkHandle->papfnCompletionCallbacks->enmContext   = enmContext;
-    pForkHandle->papfnCompletionCallbacks->pvArg        = pvArg;
+    if (fLast)
+    {
+        /* Add to the tail of the list to have it executed last */
+        unsigned cCallbacks = pForkHandle->cCompletionCallbacks - 1;
+        memmove(pForkHandle->papfnCompletionCallbacks, pForkHandle->papfnCompletionCallbacks + 1,
+                sizeof(__LIBC_FORKCOMPLETIONCALLBACK) * cCallbacks);
+        pForkHandle->papfnCompletionCallbacks[cCallbacks].pfnCallback  = pfnCallback;
+        pForkHandle->papfnCompletionCallbacks[cCallbacks].enmContext   = enmContext;
+        pForkHandle->papfnCompletionCallbacks[cCallbacks].pvArg        = pvArg;
+    }
+    else
+    {
+        /* Add to the head of the list to have it executed first */
+        pForkHandle->papfnCompletionCallbacks->pfnCallback  = pfnCallback;
+        pForkHandle->papfnCompletionCallbacks->enmContext   = enmContext;
+        pForkHandle->papfnCompletionCallbacks->pvArg        = pvArg;
+    }
 
     LIBCLOG_RETURN_INT(0);
 }
