@@ -414,7 +414,7 @@ void __libc_LogGroupInit(__LIBC_PLOGGROUPS pGroups, const char *pszEnvVar)
         /* Prefixes (blanks, + and -). */
         while ((ch = *pszEnv) == '+' || ch == '-' || ch == ' ' || ch == '\t' || ch == ';')
         {
-            if (ch == '+' || ch == '-' || ';')
+            if (ch == '+' || ch == '-' || ch == ';')
                 fEnabled = ch != '-';
             pszEnv++;
         }
@@ -456,7 +456,7 @@ void __libc_LogGroupInit(__LIBC_PLOGGROUPS pGroups, const char *pszEnvVar)
                     while (CHLOWER(*psz1) == CHLOWER(*psz2))
                     {
                         psz1++;
-                        if (--cchLeft)
+                        if (!--cchLeft)
                         {   /* done */
                             if (!*psz1)
                             {
