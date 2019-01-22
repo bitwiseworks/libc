@@ -3,7 +3,7 @@ MAKEFILE_DIR := $(patsubst %/, %, $(dir $(realpath $(lastword $(MAKEFILE_LIST)))
 OUT := $(MAKEFILE_DIR)-build/
 INS := $(MAKEFILE_DIR)-install/
 
-ASM := /@unixroot/usr/bin/ml.exe
+ASM := $(realpath $(MAKEFILE_DIR)/bin/ml.exe)
 
 ifeq ($(realpath $(ASM)),)
 $(error ASM points to non-existing file [$(ASM)])
