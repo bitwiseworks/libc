@@ -210,7 +210,7 @@ static int parse_args(const char *src, char **argv, char *pool)
             /* copying */
             while (*src)
             {
-                LIBC_ASSERT((unsigned)*src & __KLIBC_ARG_NONZERO);
+                LIBC_ASSERTM((unsigned)*src & __KLIBC_ARG_NONZERO, "flags=%x", (unsigned)*src);
                 argc++;
                 *argv++ = pool + 1;
                 do
@@ -224,7 +224,7 @@ static int parse_args(const char *src, char **argv, char *pool)
             /* counting */
             while (*src)
             {
-                LIBC_ASSERT((unsigned)*src & __KLIBC_ARG_NONZERO);
+                LIBC_ASSERTM((unsigned)*src & __KLIBC_ARG_NONZERO, "flags=%x", (unsigned)*src);
                 argc++;
                 do
                 {

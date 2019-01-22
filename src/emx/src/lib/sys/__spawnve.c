@@ -303,7 +303,7 @@ int __spawnve(struct _new_proc *np)
         for (i = 1; i < np->arg_count; ++i)
         {
             unsigned char chFlags = *pszSrc++;
-            chFlags &= __KLIBC_ARG_MASK;
+            chFlags &= ~__KLIBC_ARG_MASK;
             chFlags |= __KLIBC_ARG_ARGV;
             cch = strlen(pszSrc) + 1;
             ADD(cch + 1);
