@@ -531,11 +531,11 @@ static void threadForkCompletion(void *pvArg, int rc, __LIBC_FORKCTX enmCtx)
 
     if (!gfForkCleanupDone)
     {
-        LIBCLOG_MSG("Unlocking the thread DB.\n");
         if (enmCtx == __LIBC_FORK_CTX_PARENT)
+        {
+            LIBCLOG_MSG("Unlocking the thread DB.\n");
             _fmutex_release(&gmtxThrdDB);
-        else
-            _fmutex_release_fork(&gmtxThrdDB);
+        }
         gfForkCleanupDone = 1;
     }
     LIBCLOG_RETURN_VOID();
@@ -576,3 +576,53 @@ static int threadForkParent1(__LIBC_PFORKHANDLE pForkHandle, __LIBC_FORKOP enmOp
 
 _FORK_PARENT1(0xffffff02, threadForkParent1)
 
+
+/**
+ * Child fork callback for ressetting gPreAllocThrd (normally used for
+ * thread 1) and other global thread data variables to their initial state.
+ *
+ * @note This callback must be registered with a priority higher than
+ * fhForkChild1 and any other callback that might call LIBC thread functions.
+ *
+ * @returns 0 on success.
+ * @returns -errno on failure.
+ * @param   pForkHandle     Pointer to fork handle.
+ * @param   enmOperation    Fork operation.
+ */
+static int threadForkChild1(__LIBC_PFORKHANDLE pForkHandle, __LIBC_FORKOP enmOperation)
+{
+    LIBCLOG_ENTER("pForkHandle=%p enmOperation=%d\n", (void *)pForkHandle, enmOperation);
+
+    if (enmOperation != __LIBC_FORK_OP_FORK_CHILD)
+        LIBCLOG_RETURN_INT(0);
+
+    /*
+     * Release the mutex locked in parent. Note that we do it here rather than
+     * in threadForkCompletion as that one called too late and this mutex
+     * can be used earlier (e.g. when accessing LIBC thread data).
+     */
+    _fmutex_release_fork(&gmtxThrdDB);
+
+    /*
+     * Reset other global thread variables.
+     */
+    gpThrdDB = NULL;
+    gcThrdDBEntries = 0;
+    gpThrdDBZombies = NULL;
+    gcThrdDBZombies = 0;
+    gpTermHead = NULL;
+    gpTermTail = NULL;
+    gsmtxTerm = '\0';
+
+    /*
+     * Cause the main thread to be re-iniitialized as new.
+     */
+    gfPreAllocThrd = 0;
+    *__libc_gpTLS = NULL;
+    __libc_threadCurrentSlow();
+
+    LIBCLOG_RETURN_INT(0);
+}
+
+
+_FORK_CHILD1(0xffffff02, threadForkChild1)
