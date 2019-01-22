@@ -23,6 +23,7 @@ extern "C" {
 #endif
 
 
+#if 0 /* Don't pretend we're BSD (see below) */
 /** @group BSD version defines.
  * OS2: The toolkit headers define these. Resent FreeBSD release does too.
  * Warning! Be aware that config scripts and programs may check for these and
@@ -43,6 +44,7 @@ extern "C" {
 #define BSD4_4  1
 #endif
 /** @} */
+#endif
 
 
 #ifndef LOCORE

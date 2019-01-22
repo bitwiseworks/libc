@@ -23,7 +23,9 @@
 
 #define NIL ((char *) 0)
 #define PZERO 0
+#if 0 /* Don't pretend we're BSD (see sys/param.h) */
 #define BSD 43
+#endif
 #ifndef TRUE
 #define TRUE 1
 #endif
