@@ -227,6 +227,7 @@ int allocAtAddress(void *pvReq, ULONG cbReq, ULONG fReq)
              * So, we'll have loop and retry till all such holes are filled.
              */
             apvTmps[iTmp] = pvNew;
+            cbTmp = cbReq;
         }
     }
 
