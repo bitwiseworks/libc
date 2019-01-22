@@ -823,7 +823,7 @@ static int          libLoadUndefSymbols(PWLD pWld, PWLDLIB pLib, PWLDSYM pSym, u
             } u, u1, u2;
 
             /** macro for getting a OMF index out of the buffer */
-            #define OMF_GETINDEX()  (*u.puch & 0x80 ? ((*u.pch++ & 0x7f) << 8) + *u.pch++ : *u.pch++)
+            #define OMF_GETINDEX()  (*u.puch & 0x80 ? ((*u.pch++ & 0x7f) << 8) + *u.puch++ : *u.pch++)
             #define OMF_BYTE()      (*u.puch++)
             #define OMF_WORD()      (*u.pus++)
             #define OMF_24BITWORD() (OMF_BYTE() | (OMF_WORD() << 8))
@@ -2298,7 +2298,7 @@ static unsigned     pass1ReadOMFMod(PWLD pWld, PWLDMOD pMod, int fLibSearch)
         } u, u1, u2, u3;
 
         /** macro for getting a OMF index out of the buffer */
-        #define OMF_GETINDEX()  (*u.puch & 0x80 ? ((*u.pch++ & 0x7f) << 8) + *u.pch++ : *u.pch++)
+        #define OMF_GETINDEX()  (*u.puch & 0x80 ? ((*u.pch++ & 0x7f) << 8) + *u.puch++ : *u.pch++)
         #define OMF_BYTE()      (*u.puch++)
         #define OMF_WORD()      (*u.pus++)
         #define OMF_24BITWORD() (OMF_BYTE() | (OMF_WORD() << 8))
