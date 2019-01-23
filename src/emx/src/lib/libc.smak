@@ -195,9 +195,11 @@ $(LIBC.DLL): $(LIBC.OBJS) $(LIBC.LIBS) $(LIBC.DEF) $(LIBC.DEPS)
 		$(LIBC.LIBS) \
 		$(filter %.lib,$(LIBC.DEPS)) \
 		-L$.omf -lstdc++ -lgcc -lgcc_eh $(LIBC.STUBARG)
+ifndef NO_STRIP
 ifeq ($(MODE),opt)
 	cp $@ $(@:.dll=.dbg)
 	lxlite $(LXLITE.FLAGS) $(subst /,\\,$@)
+endif
 endif
 
 # LIBC .def file
@@ -407,11 +409,13 @@ $(INS)lib/$(notdir $(LIBC.ELH.DLL)): $(LIBC.ELH.DLL)
 $(INS)lib/$(notdir $(LIBC.ELH.DLL).map): $(LIBC.ELH.DLL).map
 	$(call CP,$<,$@)
 
+ifndef NO_STRIP
 ifeq ($(MODE),opt)
 INS.FILES       += $(INS)lib/$(notdir $(LIBC.DLL:.dll=.dbg))
 
 $(INS)lib/$(notdir $(LIBC.DLL:.dll=.dbg)): $(LIBC.DLL:.dll=.dbg)
 	$(call CP,$<,$@)
+endif
 endif
 
 $(addprefix $(INS)lib/,$(notdir $(LIBC.IMPLIB))): $(LIBC.IMPLIB)

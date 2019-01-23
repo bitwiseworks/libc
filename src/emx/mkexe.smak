@@ -10,6 +10,7 @@ tools: $(.MODULE)
 $(eval $(call def_link_exe))
 
 # Add unstripped copy.					
+ifndef NO_STRIP
 ifeq ($(MODE),opt)
 ifdef .TARGET
 ifneq ($(.TARGET),$(.TARGET:.exe=.dbg))
@@ -19,6 +20,7 @@ $(INS)$(.INSDIR)$(.TARGET:.exe=.dbg): $.$(.TARG:.exe=.dbg)
 endif	
 endif	
 endif				
+endif
 
 # don't install map file - unstripped is enough.
 ## Map file.

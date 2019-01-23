@@ -20,6 +20,7 @@ libs: $(.MODULE)
 $(eval $(call def_implib))
 
 ## Rule for stripping debug info.
+#ifndef NO_STRIP
 #ifdef .NOINST
 #INS.FILES += $(INS)$(.INSDIR)$(.TARGET)
 #$(INS)$(.INSDIR)$(.TARGET): $.$(.TARG)
@@ -30,7 +31,8 @@ $(eval $(call def_implib))
 #	mkdir -p $(INS)$(.INSDIR)dbg
 #	$(call CP,$<,$@)
 #endif	
-								
+#endif
+
 include mkomflib.smak
 include comend.smak
 .NOINST :=

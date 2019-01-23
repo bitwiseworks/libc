@@ -9,7 +9,8 @@ tools: $(.MODULE)
 # Linking rule
 $(eval $(call def_link_dll))
 
-# Add unstripped copy.					
+# Add unstripped copy.
+ifndef NO_STRIP
 ifeq ($(MODE),opt)
 ifdef .TARGET
 ifneq ($(.TARGET),$(.TARGET:.dll=.dbg))
@@ -19,6 +20,7 @@ $(INS)$(.INSDIR)$(.TARGET:.dll=.dbg): $.$(.TARG:.dll=.dbg)
 endif	
 endif	
 endif				
+endif
 
 # Map file.
 ifdef .TARGET

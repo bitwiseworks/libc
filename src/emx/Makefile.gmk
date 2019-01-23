@@ -148,10 +148,12 @@ DO.LINK.dll = $(LD) $(strip $(LDFLAGS.DLL) $(filter-out -l%,$1)) -o $@ $(^O) $(^
 #       For further optimzations, we align pages on 4kb boundaries since this
 #		is the JFS block size and thus should be most the efficient unit to read. </rant>
 # URG! we must not do this for ldstub.bin!
+ifndef NO_STRIP
 ifeq ($(MODE),opt)
 LXLITE.FLAGS = /F+ /AP:4096 /MRN /MLN /MF1
 DO.LINK.exe += $(if $(findstring .exe,$@), $(NL)cp $@ $(basename $@).dbg $(NL)lxlite /X /AS $(subst /,\\,$@))
 DO.LINK.dll += $(NL)cp $@ $(basename $@).dbg $(NL)lxlite $(LXLITE.FLAGS) $(subst /,\\,$@)
+endif
 endif
 
 # emxbind tool

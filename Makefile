@@ -9,7 +9,7 @@ ifeq ($(realpath $(ASM)),)
 $(error ASM points to non-existing file [$(ASM)])
 endif
 
-MAKE_DEFS := "OUT=$(OUT)" "INS=$(INS)" "ASM=$(ASM) -c" "SHELL=/@unixroot/usr/bin/sh.exe"
+MAKE_DEFS := "NO_STRIP=1" "OUT=$(OUT)" "INS=$(INS)" "ASM=$(ASM) -c" "SHELL=/@unixroot/usr/bin/sh.exe"
 
 all: release
 
@@ -20,3 +20,6 @@ release-tools:
 
 release-libs:
 	$(MAKE) -C src/emx MODE=opt $(MAKE_DEFS) libs
+
+release-install:
+	$(MAKE) -C src/emx MODE=opt $(MAKE_DEFS) install
