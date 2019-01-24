@@ -18,8 +18,17 @@ release: release-tools release-libs
 release-tools:
 	$(MAKE) -C src/emx MODE=opt $(MAKE_DEFS) -j1 tools
 
-release-libs:
+# NOTE: There is a bug in kmk's .NOTPARALLEL processing triggered by $(_STD_WILDWILD) deps for
+# $.stmp-libc-std that cause it to generate libc-std.h out of order so that files including it
+# build earlier. A workaround is to generate this file up front in a separate invocation.
+release-libs-common:
+	$(MAKE) -C src/emx MODE=opt $(MAKE_DEFS) -f libonly.gmk libc-std.h
+
+release-libs: release-libs-common
 	$(MAKE) -C src/emx MODE=opt $(MAKE_DEFS) libs
+
+release-libs-core: release-libs-common
+	$(MAKE) -C src/emx MODE=opt $(MAKE_DEFS) LIBC_CORE_ONLY=1 libs
 
 release-install:
 	$(MAKE) -C src/emx MODE=opt $(MAKE_DEFS) install

@@ -445,11 +445,11 @@ _STD_WILDWILD = \
 	src/lib/lgpl/sysdeps/generic/*.c \
 	src/lib/lgpl/sysdeps/ieee754/ldbl-96/*.c
 $.stmp-libc-std: $(wildcard $(_STD_WILDWILD))
-	cd src/lib && gawk -f ./mkstd.awk $(patsubst src/lib/%,%,$^) > ../../__tmp__
-	$(call UPDATE,__tmp__,$.libc-std.h)
+	cd src/lib && gawk -f ./mkstd.awk $(patsubst src/lib/%,%,$^) > $.libc-std.h.tmp
+	$(call UPDATE,$.libc-std.h.tmp,$.libc-std.h)
 	$(call TOUCH,$@)
 
-libc-std.h: $.stmp-libc-std
+libc-std.h: $. $.stmp-libc-std
 
 # dependencies to help make (baka, baka, baka)
 $.omf-prof/src/lib/startup/dllinit.obj: $.aout-prof/src/lib/startup/dllinit.o
