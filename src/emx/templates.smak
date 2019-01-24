@@ -51,10 +51,8 @@ else
 	echo "SAVE" >> $$@.ar-script
 	echo "END" >> $$@.ar-script
 endif
-	rm -f $$(@F) $$@
-	ar -M < $$@.ar-script
-	mv $$(@F) $$@
-	
+	rm -f $$@
+	cd $$(@D) && ar -M < $$@.ar-script
 endef
 
 # defined used by def_lib_ar to add a module to the script file. (blank line is imporant!)

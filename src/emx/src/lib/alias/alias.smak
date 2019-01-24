@@ -83,9 +83,8 @@ $.$(.TARG): $.libc-std.h src/lib/alias/alias.smak
 	done
 	echo "SAVE" >> $@.ar-script
 	echo "END" >> $@.ar-script
-	rm -f $(@F) $@
-	ar -M < $@.ar-script
-	mv $(@F) $@
+	rm -f $@
+	cd $(@D) && ar -M < $@.ar-script
 
 include mkomflib.smak
 include comend.smak
