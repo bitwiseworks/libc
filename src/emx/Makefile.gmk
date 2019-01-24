@@ -89,6 +89,8 @@ GETTOOL ?= $.$(TOOLFMT)/$1$E
 # Use the tool we built if present
 GETTOOL2 ?= `test -f '$.$(TOOLFMT)/$1$E' && echo '$.$(TOOLFMT)/'`$1$E
 
+OPTIMIZE_FLAGS ?= -O3 -mtune=pentium
+
 # The C compiler
 CC = gcc -c -Zmt -fmessage-length=0
 # The C compiler flags
@@ -99,7 +101,7 @@ CFLAGS.INC  += -Isrc/include
 CFLAGS.INC  += -Isrc/lib/bsd/include
 CFLAGS      = -Wall -Wundef -Wmissing-prototypes -mstack-arg-probe $(CFLAGS.INC) $(CFLAGS.$(MODE)) $(CFLAGS.KIND)
 # The additional C compiler flags for different build modes
-CFLAGS.opt  = -g -O3 -mtune=pentium -mpreferred-stack-boundary=4 -falign-loops=2 -falign-jumps=2 -falign-functions=3
+CFLAGS.opt  = -g $(OPTIMIZE_FLAGS) -mpreferred-stack-boundary=4 -falign-loops=2 -falign-jumps=2 -falign-functions=3
 CFLAGS.dbg  = -g -DDEBUG
 CFLAGS.prf  = $(CFLAGS.opt) -pg
 CFLAGS.aout = -Zaout
