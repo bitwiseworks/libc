@@ -1,15 +1,24 @@
 MAKEFILE_DIR := $(patsubst %/, %, $(dir $(realpath $(lastword $(MAKEFILE_LIST)))))
 
-OUT := $(MAKEFILE_DIR)-build/
-INS := $(MAKEFILE_DIR)-install/
+LIBC_OUTPUT_DIR ?= $(MAKEFILE_DIR)-build/
+LIBC_INSTALL_DIR ?= $(MAKEFILE_DIR)-install/
 
-ASM := $(realpath $(MAKEFILE_DIR)/bin/ml.exe)
+LIBC_ASM_EXE ?= $(realpath $(MAKEFILE_DIR)/bin/ml.exe)
 
-ifeq ($(realpath $(ASM)),)
-$(error ASM points to non-existing file [$(ASM)])
+ifeq ($(realpath $(LIBC_ASM_EXE)),)
+$(error ASM points to non-existing file [$(LIBC_ASM_EXE)])
 endif
 
-MAKE_DEFS := "NO_STRIP=1" "OUT=$(OUT)" "INS=$(INS)" "ASM=$(ASM) -c" "SHELL=/@unixroot/usr/bin/sh.exe"
+MAKE_DEFS := \
+  "NO_STRIP=1" \
+  "OUT=$(LIBC_OUTPUT_DIR)" \
+  "INS=$(LIBC_INSTALL_DIR)" \
+  "ASM=$(LIBC_ASM_EXE) -c" \
+  "SHELL=/@unixroot/usr/bin/sh.exe"
+
+ifdef LIBC_OPTIMIZE_FLAGS
+  MAKE_DEFS += "OPTIMIZE_FLAGS=$(LIBC_OPTIMIZE_FLAGS)"
+endif
 
 all: release
 
