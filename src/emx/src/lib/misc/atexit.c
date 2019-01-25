@@ -117,7 +117,7 @@ __LIBC_PATEXIT __libc_atexit_new(void *pvCallback)
     do
     {
         pChunk->pNext = __libc_gAtExitHead;
-    } while (__atomic_cmpxchg32((uint32_t volatile *)(void *)&__libc_gAtExitHead, (uint32_t)pChunk, (uint32_t)pChunk->pNext)); /** @todo atomic cmpxchg for ptrs! */
+    } while (!__atomic_cmpxchg32((uint32_t volatile *)(void *)&__libc_gAtExitHead, (uint32_t)pChunk, (uint32_t)pChunk->pNext)); /** @todo atomic cmpxchg for ptrs! */
 
     return &pChunk->a[0];
 }
