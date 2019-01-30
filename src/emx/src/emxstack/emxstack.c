@@ -339,8 +339,8 @@ static void process_file (struct file *f)
       if (len != 0)
         my_read (name, len, f);
       name[len] = 0;
-      if (stricmp (name, "EMX") == 0 || stricmp (name, "EMXLIBC") == 0
-          || stricmp (name, "EMXWRAP") == 0)
+      if (stricmp ((char *)name, "EMX") == 0 || stricmp ((char *)name, "EMXLIBC") == 0
+          || stricmp ((char *)name, "EMXWRAP") == 0)
         {
           uses_emx = TRUE;
           break;

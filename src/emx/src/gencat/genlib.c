@@ -162,12 +162,10 @@ getmsg(int fd, char *cptr, char quote)
     static size_t	msglen = 0;
     size_t		clen, i;
     char		*tptr;
-    int			needq;
 
     if (quote && *cptr == quote) {
-	needq = TRUE;
 	++cptr;
-    } else needq = FALSE;
+    }
 
     clen = strlen(cptr) + 1;
     if (clen > msglen) {

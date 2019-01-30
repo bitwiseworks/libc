@@ -20,6 +20,8 @@ the Free Software Foundation, 59 Temple Place - Suite 330,
 Boston, MA 02111-1307, USA.  */
 
 
+#pragma GCC diagnostic ignored "-Wunused-but-set-variable"
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdarg.h>
@@ -496,7 +498,7 @@ static void conv_lnames (void)
     {
       get_string (string);
       i = GROW_ADD (lnames);
-      lnames[i] = xstrdup (string);
+      lnames[i] = xstrdup ((char *)string);
     }
 }
 
@@ -685,7 +687,7 @@ static void conv_pubdef (void)
       offset = get_word_or_dword ();
       type = get_index ();
       i = GROW_ADD (pubdefs);
-      pubdefs[i].name   = xstrdup (underscores ? name + 1 : name);
+      pubdefs[i].name   = xstrdup ((char *)(underscores ? name + 1 : name));
       pubdefs[i].group  = group;
       pubdefs[i].seg    = seg;
       pubdefs[i].frame  = frame;
@@ -716,7 +718,7 @@ static void conv_extdef (void)
       get_string (name+1);
       type = get_index ();
       i = GROW_ADD (extdefs);
-      extdefs[i].name = xstrdup (underscores ? name + 1 : name);
+      extdefs[i].name = xstrdup ((char *)(underscores ? name + 1 : name));
       extdefs[i].sym  = 0;
       extdefs[i].size = 0;      /* EXTDEF */
     }
@@ -772,7 +774,7 @@ static void conv_comdef (void)
       if (comm_count == 0 || comm_len == 0)
         error2 ("COMDEF: size is zero");
       i = GROW_ADD (extdefs);
-      extdefs[i].name = xstrdup (underscores ? name + 1 : name);
+      extdefs[i].name = xstrdup ((char *)(underscores ? name + 1 : name));
       extdefs[i].sym  = 0;
       extdefs[i].size = comm_count * comm_len;
     }

@@ -41,6 +41,8 @@
  *
  */
 
+#pragma GCC diagnostic ignored "-Wunused-but-set-variable"
+
 /*******************************************************************************
 *   Defined Constants And Macros                                               *
 *******************************************************************************/
@@ -880,7 +882,7 @@ static int          libLoadUndefSymbols(PWLD pWld, PWLDLIB pLib, PWLDSYM pSym, u
                                     ul = 0;                         /* ordinal */
                                     if (uch & 1)
                                         ul = OMF_WORD();
-                                    if (symMatchUnDef(pWld, u1.pch, pSym))
+                                    if (symMatchUnDef(pWld, u1.puch, pSym))
                                         fLoad = 1;
                                     break;
                                 }
@@ -900,7 +902,7 @@ static int          libLoadUndefSymbols(PWLD pWld, PWLDLIB pLib, PWLDSYM pSym, u
                         u1 = u; u.pch += 1 + *u.puch;   /* public name */
                         ul = OMF_IS32BIT() ? OMF_DWORD() : OMF_WORD();
                         us = OMF_GETINDEX();            /* typeindex */
-                        if (symMatchUnDef(pWld, u1.pch, pSym))
+                        if (symMatchUnDef(pWld, u1.puch, pSym))
                             fLoad = 1;
                     }
                     break;
@@ -912,7 +914,7 @@ static int          libLoadUndefSymbols(PWLD pWld, PWLDLIB pLib, PWLDSYM pSym, u
                     {
                         u1 = u; u.pch += 1 + *u.puch;   /* alias name */
                         u2 = u; u.pch += 1 + *u.puch;   /* substitutt name. */
-                        if (symMatchUnDef(pWld, u1.pch, pSym))
+                        if (symMatchUnDef(pWld, u1.puch, pSym))
                             fLoad = 1;
                     }
                     break;
@@ -939,7 +941,7 @@ static int          libLoadUndefSymbols(PWLD pWld, PWLDLIB pLib, PWLDSYM pSym, u
                                 libErr(pLib, "Invalid COMDEF type %x.", (int)uch2);
                                 return -1;
                         }
-                        if (symMatchUnDef(pWld, u1.pch, pSym))
+                        if (symMatchUnDef(pWld, u1.puch, pSym))
                             fLoad = 1;
                     }
                     break;
@@ -1457,7 +1459,7 @@ static void         symPrintUnDefs(PWLD pWld)
 static int          symMatchUnDef(PWLD pWld, const unsigned char *pachPascalString, PWLDSYM pSym)
 {
     int         cchName = *pachPascalString;
-    const char *pszName = pachPascalString + 1;
+    const char *pszName = (const char *)pachPascalString + 1;
     const char *psz;
     unsigned    fFlags = 0;
     unsigned    uHash = 0;
@@ -1515,7 +1517,7 @@ static const char *symGetDescr(PWLDSYM pSym)
         case WLDSF_UNDEF:   psz += sprintf(psz, "UNDEF"); break;
         case WLDSF_WKEXT:   psz += sprintf(psz, "WKEXT"); break;
         case WLDSF_EXP_NM:  psz += sprintf(psz, "EXPORT"); break;
-        default:            psz += sprintf(psz, "!!!internal error!!! "); asm("int $3"); break;
+        default:            psz += sprintf(psz, "!!!internal error!!! "); __asm__("int $3"); break;
     }
     if (pSym->fFlags & WLDSF_WEAK)
         psz += sprintf(psz, " WEAK");
@@ -2289,11 +2291,11 @@ static unsigned     pass1ReadOMFMod(PWLD pWld, PWLDMOD pMod, int fLibSearch)
         union
         {
             unsigned char *     puch;
-            signed char *       pch;
+            char *              pch;
             unsigned short *    pus;
-            signed short *      ps;
+            short *             ps;
             unsigned long *     pul;
-            signed long *       pl;
+            long *              pl;
             void *              pv;
         } u, u1, u2, u3;
 
@@ -2481,7 +2483,7 @@ static unsigned     pass1ReadOMFMod(PWLD pWld, PWLDMOD pMod, int fLibSearch)
                 {
                     u1 = u; u.pch += 1 + *u.puch;
                     ul = OMF_GETINDEX(); /* typeindex */
-                    pSym = symAddUnDef(pWld, pMod, fLibSearch, u1.puch + 1, *u1.puch);
+                    pSym = symAddUnDef(pWld, pMod, fLibSearch, u1.pch + 1, *u1.puch);
                     if (!pSym) goto failure;
                     SYMDBG(pSym, "EXTDEF");
                     /* put into array of externals */
@@ -2503,7 +2505,7 @@ static unsigned     pass1ReadOMFMod(PWLD pWld, PWLDMOD pMod, int fLibSearch)
                     u1 = u; u.pch += 1 + *u.puch;   /* public name */
                     ul = OMF_IS32BIT() ? OMF_DWORD() : OMF_WORD();
                     us = OMF_GETINDEX();            /* typeindex */
-                    pSym = symAddPublic(pWld, pMod, fLibSearch, u1.puch + 1, *u1.puch,
+                    pSym = symAddPublic(pWld, pMod, fLibSearch, u1.pch + 1, *u1.puch,
                                         ul, us3, us2);
                     if (!pSym) goto failure;
                     SYMDBG(pSym, "PUBDEF");
@@ -2518,8 +2520,8 @@ static unsigned     pass1ReadOMFMod(PWLD pWld, PWLDMOD pMod, int fLibSearch)
                     u1 = u; u.pch += 1 + *u.puch;   /* alias name */
                     u2 = u; u.pch += 1 + *u.puch;   /* substitutt name. */
                     pSym = symAddAlias(pWld, pMod, fLibSearch,
-                                       u1.puch + 1, *u1.puch,
-                                       u2.puch + 1, *u2.puch);
+                                       u1.pch + 1, *u1.puch,
+                                       u2.pch + 1, *u2.puch);
                     if (!pSym) goto failure;
                     SYMDBG(pSym, "ALIAS");
                 }
@@ -2549,7 +2551,7 @@ static unsigned     pass1ReadOMFMod(PWLD pWld, PWLDMOD pMod, int fLibSearch)
                     }
 
                     pSym = symAddComdef(pWld, pMod, fLibSearch,
-                                        u1.puch + 1, *u1.puch,
+                                        u1.pch + 1, *u1.puch,
                                         l2, l3);
                     if (!pSym) goto failure;
                     SYMDBG(pSym, "ALIAS");
@@ -2567,7 +2569,7 @@ static unsigned     pass1ReadOMFMod(PWLD pWld, PWLDMOD pMod, int fLibSearch)
                 goto failure;
             default:
                 fprintf(stderr, "we shall not be here!!\n");
-                asm ("int $3");
+                __asm__("int $3");
                 break;
         }
 

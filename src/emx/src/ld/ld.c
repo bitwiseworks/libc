@@ -23,10 +23,13 @@
 /* Written by Richard Stallman with some help from Eric Albert.
    Set, indirect, and warning symbol features added by Randy Smith.  */
 
+#pragma GCC diagnostic ignored "-Wunused-but-set-variable"
+
 #include <ar.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdarg.h>
+#include <limits.h>
 #include <io.h>
 #include <process.h>
 #include <errno.h>
@@ -4455,7 +4458,11 @@ perform_relocation (data, pc_relocation, data_size, reloc_info, reloc_size, entr
       relocation >>= RELOC_VALUE_RIGHTSHIFT(p);
 
       /* Unshifted mask for relocation */
+#if WORD_BIT == RELOC_TARGET_BITSIZE(p)
+      mask = ~0;
+#else
       mask = (1 << RELOC_TARGET_BITSIZE(p)) - 1;
+#endif
       relocation &= mask;
 
       /* Shift everything up to where it's going to be used */

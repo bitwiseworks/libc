@@ -72,7 +72,7 @@ usage(void)
 int
 main(int argc, char *argv[])
 {
-    int		ofd, ifd, i;
+    int		ofd = -1, ifd, i;
     char	*catfile = NULL;
     char	*input = NULL;
     int		lang = MCLangC;

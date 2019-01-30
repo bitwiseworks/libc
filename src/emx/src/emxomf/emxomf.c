@@ -545,7 +545,6 @@ static inline int strip_underscore (const char *name)
 const struct nlist *find_symbol_ex (const char *name, int not_entry, int fext)
 {
   int i, j, n, len, t;
-  const byte *s;
 
   i = 4; len = strlen (name);
 
@@ -553,7 +552,6 @@ const struct nlist *find_symbol_ex (const char *name, int not_entry, int fext)
   while (i < str_size)
     {
       int sym_ofs = i;
-      s = (const byte *)name;
       if (strip_underscore ((const char *)(str_ptr + i)))
         ++i;
       if (memcmp (name, str_ptr+i, len+1) == 0)
@@ -1362,7 +1360,7 @@ static void write_pubdef_main ()
           if (   (sym_ptr[i].n_type & N_EXT)
               && !strcmp(name, "_main"))
             {
-              int big = ((address >= 0x10000 || force_big) == big);
+              int big = address >= 0x10000 || force_big;
 
               name++; /* skip the underscore */
               if (out_lib != NULL)

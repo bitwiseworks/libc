@@ -20,6 +20,9 @@ the Free Software Foundation, 59 Temple Place - Suite 330,
 Boston, MA 02111-1307, USA.  */
 
 
+#pragma GCC diagnostic ignored "-Wunused-but-set-variable"
+#pragma GCC diagnostic ignored "-Wstrict-aliasing" // char[] is packed into bytes on OS/2
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdarg.h>
@@ -1067,7 +1070,7 @@ static void read_lib (const char *fname)
                   n = buf[i++];
                   if (i + n > next) goto bad;
                   if (n == 0)
-                    strcpy (proc_name, func_name);
+                    strcpy ((char *)proc_name, (char *)func_name);
                   else
                     {
                       memcpy (proc_name, buf+i, n);
@@ -1088,8 +1091,8 @@ static void read_lib (const char *fname)
                 {
                 case M_LIB_TO_IMP:
                   if (ordinal != -1)
-                    sprintf (proc_name, "%3d", ordinal);
-                  if (strncmp (func_name, "_16_", 4) != 0)
+                    sprintf ((char *)proc_name, "%3d", ordinal);
+                  if (strncmp ((char *)func_name, "_16_", 4) != 0)
                     fprintf (out_file, "%-23s %-8s %s ?\n",
                              func_name, mod_name, proc_name);
                   else
@@ -1100,9 +1103,9 @@ static void read_lib (const char *fname)
                   break;
                 case M_LIB_TO_A:
                   if (ordinal == -1)
-                    write_a_import (func_name, mod_name, ordinal, proc_name);
+                    write_a_import ((char *)func_name, (char *)mod_name, ordinal, (char *)proc_name);
                   else
-                    write_a_import (func_name, mod_name, ordinal, NULL);
+                    write_a_import ((char *)func_name, (char *)mod_name, ordinal, NULL);
                   break;
                 default:
                   abort ();

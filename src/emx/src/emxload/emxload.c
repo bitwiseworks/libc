@@ -155,8 +155,8 @@ static void s_load (const char *name, time_t stop)
      EXEC_LOAD, but emxload lost its children under certain
      circumstances, perhaps due to a bug in the OS/2 kernel. */
 
-  rc = DosExecPgm (objbuf, sizeof (objbuf), EXEC_TRACE, args, NULL,
-                   &result, name);
+  rc = DosExecPgm (objbuf, sizeof (objbuf), EXEC_TRACE, (PSZ)args, NULL,
+                   &result, (PCSZ)name);
   if (rc == 0)
     {
       /* Now connect to the debuggee.  If we didn't do this, the child
@@ -233,7 +233,7 @@ static void s_unload_all (void)
 static void auto_unload (void)
 {
   int i, next_set, more;
-  ULONG timeout, post_count, rc;
+  ULONG timeout, post_count;
   time_t now, next;
 
   for (;;)
@@ -281,8 +281,8 @@ static void auto_unload (void)
          process table. */
 
       timeout = (next_set ? (next - now) * 1000 : SEM_INDEFINITE_WAIT);
-      rc = DosWaitEventSem (hevReady, timeout);
-      rc = DosResetEventSem (hevReady, &post_count);
+      DosWaitEventSem (hevReady, timeout);
+      DosResetEventSem (hevReady, &post_count);
     }
 }
 
@@ -445,14 +445,12 @@ static void read_pipe (void)
 
 static void connections (void)
 {
-  ULONG rc;
-
   for (;;)
     {
-      rc = DosConnectNPipe (hp);
+      DosConnectNPipe (hp);
       debug ("Connected\n");
       read_pipe ();
-      rc = DosDisConnectNPipe (hp);
+      DosDisConnectNPipe (hp);
       debug ("Disconnected\n");
     }
 }
@@ -526,18 +524,18 @@ static void server (void)
                   && datalen == 1 && data[0] == 1)
                 {
                   dir[0] = (CHAR)('A' + drive);
-                  rc = DosSetCurrentDir (dir);
+                  rc = DosSetCurrentDir ((PCSZ)dir);
                   debug ("DosSetCurrentDir(%s) -> %lu\n", dir, rc);
                 }
             }
       }
-    DosSetCurrentDir ("\\");
+    DosSetCurrentDir ((PCSZ)"\\");
     DosError (FERR_ENABLEHARDERR | FERR_ENABLEEXCEPTION);
   }
 
   /* Create the named pipe. */
 
-  rc = DosCreateNPipe (pipe_name, &hp, NP_NOINHERIT|NP_ACCESS_DUPLEX,
+  rc = DosCreateNPipe ((PCSZ)pipe_name, &hp, NP_NOINHERIT|NP_ACCESS_DUPLEX,
                        NP_WAIT|NP_TYPE_MESSAGE|NP_READMODE_MESSAGE|1,
                        0x1000, 0x1000, 0);
   if (rc == ERROR_PIPE_BUSY)

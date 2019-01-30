@@ -214,7 +214,7 @@ static void map_symbols (void)
           if (seg != 0)
             {
               grow_map_sym_table ();
-              name = sym_image[i].n_un.n_strx + str_image;
+              name = sym_image[i].n_un.n_strx + (char *)str_image;
               map_sym_table[map_sym_count].seg = seg;
               map_sym_table[map_sym_count].addr = addr;
               map_sym_table[map_sym_count].name = name;

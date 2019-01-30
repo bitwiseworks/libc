@@ -70,7 +70,7 @@ int omflib_copy_module (struct omflib *dst_lib, FILE *dst_file,
               return -1;
             }
           buf[1+buf[0]] = 0;
-          omflib_module_name (theadr_name, buf + 1);
+          omflib_module_name (theadr_name, (char*)buf + 1);
           state = OS_EMPTY; cur_rt = RT_THEADR;
           break;
 
@@ -120,7 +120,7 @@ int omflib_copy_module (struct omflib *dst_lib, FILE *dst_file,
                   return -1;
                 }
               buf[3+buf[2]] = 0;
-              omflib_module_name (libmod_name, buf + 3);
+              omflib_module_name (libmod_name, (char*)buf + 3);
               state = OS_OTHER;
             }
           else
@@ -174,13 +174,13 @@ int omflib_copy_module (struct omflib *dst_lib, FILE *dst_file,
       if (state != OS_SIMPLE)
         {
           if (caller_name[0] != 0)
-            strcpy (buf2, caller_name);
+            strcpy ((char*)buf2, caller_name);
           else if (libmod_name[0] != 0)
-            strcpy (buf2, libmod_name);
+            strcpy ((char*)buf2, libmod_name);
           else
-            strcpy (buf2, theadr_name);
-          strcat (buf2, "!");
-          if (omflib_add_pub (dst_lib, buf2, page, error) != 0)
+            strcpy ((char*)buf2, theadr_name);
+          strcat ((char*)buf2, "!");
+          if (omflib_add_pub (dst_lib, (char*)buf2, page, error) != 0)
             return -1;
         }
       if (dst_file != NULL

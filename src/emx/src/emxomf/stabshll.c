@@ -1687,14 +1687,14 @@ static struct type *parse_type (const char *type_name)
   char ch;
   struct type t, *result, *t1, *t2, *t3, **tlist;
   int i, n, class_flag, is_void;
-  long num1, num2, size, lo, hi, valid, offset, width, code;
+  long num1, num2, size, lo, hi, offset, width, code;
   long long range_lo, range_hi;
   struct tmp_field *tmp_fields, *tf;
   struct value *tmp_values, *tv;
   struct grow g1 = GROW_INIT;
   enum type_tag tt;
 
-  valid = TRUE; result = NULL;
+  result = NULL;
   t.index = -1;
   switch (*parse_ptr)
     {
@@ -3067,7 +3067,7 @@ static int concat_symbols (int *index, const char **str)
   len = 0;
   for (i = *index; i < sym_count; ++i)
     {
-      p = str_ptr + sym_ptr[i].n_un.n_strx;
+      p = (char *)str_ptr + sym_ptr[i].n_un.n_strx;
       n = strlen (p);
       if (n > 0 && p[n-1] == '\\')
         len += n - 1;
@@ -3079,7 +3079,7 @@ static int concat_symbols (int *index, const char **str)
     }
   if (i == *index)
     {
-      *str = str_ptr + sym_ptr[i].n_un.n_strx;
+      *str = (char *)str_ptr + sym_ptr[i].n_un.n_strx;
       return FALSE;
     }
   else
@@ -3088,7 +3088,7 @@ static int concat_symbols (int *index, const char **str)
       *str = new;
       for (i = *index; i < sym_count; ++i)
         {
-          p = str_ptr + sym_ptr[i].n_un.n_strx;
+          p = (char *)str_ptr + sym_ptr[i].n_un.n_strx;
           n = strlen (p);
           if (n > 0 && p[n-1] == '\\')
             {
@@ -3155,6 +3155,8 @@ static void parse_typedef (int *index)
           printf ("  type: ");
           show_type (t);
           printf ("\n");
+#else
+          (void)t;
 #endif
           break;
 
@@ -3169,6 +3171,8 @@ static void parse_typedef (int *index)
           printf ("  type: ");
           show_type (t);
           printf ("\n");
+#else
+          (void)t;
 #endif
           break;
 
@@ -3179,6 +3183,8 @@ static void parse_typedef (int *index)
           printf ("  type: ");
           show_type (t);
           printf ("\n");
+#else
+          (void)t;
 #endif
           break;
         }
@@ -3254,7 +3260,7 @@ static int is_fun (const struct nlist *s)
 
   if (s->n_type != N_FUN)
     return FALSE;
-  p = nextcolon (str_ptr + s->n_un.n_strx);
+  p = nextcolon ((char *)str_ptr + s->n_un.n_strx);
   if (p == NULL)
     return FALSE;
   return (p[1] == 'F' || p[1] == 'f');
@@ -3361,7 +3367,7 @@ static void define_fun (const struct nlist *symbol)
   size_t cchName, cchMnglName;
   int ti, ticlass;
 
-  str = str_ptr + symbol->n_un.n_strx;
+  str = (char *)str_ptr + symbol->n_un.n_strx;
   p = nextcolon (str);
   if (p == NULL)
     abort ();
@@ -3406,7 +3412,7 @@ static void define_fun (const struct nlist *symbol)
               {
               case N_LSYM:
                 {
-                  str = str_ptr + sym_ptr[i].n_un.n_strx;
+                  str = (char *)str_ptr + sym_ptr[i].n_un.n_strx;
                   p = nextcolon (str);
                   if (p && p[1] == 'T' && p[2] == 't')
                     {
@@ -3576,7 +3582,7 @@ static void parse_symbol (int *index, int where, const char *msg, int flag)
               && *index >= 1
               && symbol[-1].n_type == 0xfe)
             {
-              sym2 = find_symbol_ex (symbol[-1].n_un.n_strx + str_ptr, *index - 1, 1);
+              sym2 = find_symbol_ex (symbol[-1].n_un.n_strx + (char *)str_ptr, *index - 1, 1);
               if (!sym2)
                 {
                   warning ("Cannot find address of communal/external variable %s", name);

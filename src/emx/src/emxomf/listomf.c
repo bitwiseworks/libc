@@ -19,6 +19,8 @@ the Free Software Foundation, 59 Temple Place - Suite 330,
 Boston, MA 02111-1307, USA.  */
 
 
+#pragma GCC diagnostic ignored "-Wunused-but-set-variable"
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -330,7 +332,7 @@ static void show_name (int index)
   if (index < 1 || index > lname_count)
     printf ("#%d", index);
   else
-    show_string (lname_list[index-1]);
+    show_string ((byte *)lname_list[index-1]);
 }
 
 
@@ -364,7 +366,7 @@ static void show_ext (int index)
     printf ("#%d", index);
   else
   { /* bird: both please */
-    show_string (ext_list[index-1].name);
+    show_string ((byte *)ext_list[index-1].name);
     printf ("(#%d)", index);
   }
 }
@@ -441,7 +443,7 @@ static void add_ext (const byte *name)
       ext_alloc += 16;
       ext_list = xrealloc (ext_list, ext_alloc * sizeof (*ext_list));
     }
-  ext_list[ext_count++].name = xstrdup (name);
+  ext_list[ext_count++].name = xstrdup ((char *)name);
 }
 
 
@@ -525,7 +527,7 @@ static void list_coment (void)
             {
               get_string (string3);
               if (string3[0] == 0)
-                strcpy (string3, string);
+                strcpy ((char *)string3, (const char *)string);
               printf ("%s %s.%s", string, string2, string3);
             }
           break;
@@ -646,7 +648,7 @@ static void list_lnames (void)
           lname_list = xrealloc (lname_list,
                                  lname_alloc * sizeof (*lname_list));
         }
-      lname_list[lname_count] = xstrdup (string);
+      lname_list[lname_count] = xstrdup ((char *)string);
       ++lname_count;
       printf ("  #%d: ", lname_count);
       show_string (string);

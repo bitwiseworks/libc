@@ -19,6 +19,9 @@ the Free Software Foundation, 59 Temple Place - Suite 330,
 Boston, MA 02111-1307, USA.  */
 
 
+#pragma GCC diagnostic ignored "-Wunused-but-set-variable"
+#pragma GCC diagnostic ignored "-Wstrict-aliasing" // char[] is packed into bytes on OS/2
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdarg.h>
@@ -222,7 +225,7 @@ static void new_export (const char *name, const char *segname, int fweak, int fc
   const char *        psz;
 
   /* compute hash */
-  for (uhash = 0, psz = name; *psz; *psz++)
+  for (uhash = 0, psz = name; *psz; psz++)
     uhash = uhash * 65599 + *psz;
   uhash %= sizeof(new_hashtable) / sizeof(new_hashtable[0]);
 
@@ -459,7 +462,7 @@ static void process_aout (FILE *inp_file, long size)
          (sym_ptr[i].n_type == N_WEAKT ||
           sym_ptr[i].n_type == N_WEAKD)))
       {
-        name = str_ptr + sym_ptr[i].n_un.n_strx;
+        name = (char *)str_ptr + sym_ptr[i].n_un.n_strx;
         if (legacy_mode)
           export (name);
         else
@@ -471,7 +474,7 @@ static void process_aout (FILE *inp_file, long size)
              sym_ptr[i].n_type == (N_BSS|N_EXT) ||
              ((!legacy_mode || weak_flag) && sym_ptr[i].n_type == N_WEAKB))
       {
-        name = str_ptr + sym_ptr[i].n_un.n_strx;
+        name = (char *)str_ptr + sym_ptr[i].n_un.n_strx;
         if (legacy_mode)
           export_bss (name);
         else
@@ -612,11 +615,11 @@ static void omf_pubdef (void)
       get_string (name);
       offset = get_word_or_dword ();
       type = get_index ();
-      weak = strstr(name, "$w$");
+      weak = strstr((char *)name, "$w$");
       if (legacy_mode)
         {
           if (!weak || weak_flag)
-            export (name);
+            export ((char*)name);
         }
       else
         {
@@ -625,7 +628,7 @@ static void omf_pubdef (void)
               memmove(weak + 1, weak, strlen(weak) + 1);
               *weak++ = '\0';
             }
-          new_export (name, segdefs[seg].name, weak != NULL, FALSE);
+          new_export ((char *)name, segdefs[seg].name, weak != NULL, FALSE);
         }
     }
 }
@@ -655,11 +658,11 @@ static void omf_comdef (void)
           bad_omf ();
         }
 
-      weak = strstr(name, "$w$");
+      weak = strstr((char *)name, "$w$");
       if (legacy_mode)
         {
           if (!weak || weak_flag)
-            export_bss (name);
+            export_bss ((char *)name);
         }
       else
         {
@@ -668,7 +671,7 @@ static void omf_comdef (void)
               memmove(weak + 1, weak, strlen(weak) + 1);
               *weak++ = '\0';
             }
-          new_export (name, "BSS32", weak != NULL, TRUE);
+          new_export ((char *)name, "BSS32", weak != NULL, TRUE);
         }
     }
 }

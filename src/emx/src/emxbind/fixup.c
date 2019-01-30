@@ -64,7 +64,7 @@ static int *sym_hash_next = NULL;
    at an '=' character to be able to use hashing for finding import
    symbols. */
 
-static unsigned sym_hash (const unsigned char *name)
+static unsigned sym_hash (const char *name)
 {
   unsigned hash;
 
@@ -89,7 +89,7 @@ void build_sym_hash_table (void)
     sym_hash_next[i] = -1;
   for (i = 0; i < sym_count; ++i)
     {
-      name = sym_image[i].n_un.n_strx + str_image;
+      name = sym_image[i].n_un.n_strx + (char *)str_image;
       hash = sym_hash (name);
       sym_hash_next[i] = sym_hash_table[hash];
       sym_hash_table[hash] = i;
@@ -111,7 +111,7 @@ struct nlist *find_symbol (const char *name)
   for (j = sym_hash_table[sym_hash (name1)]; j != -1;
        j = sym_hash_next[j])
     {
-      const char *name2 = sym_image[j].n_un.n_strx + str_image;
+      const char *name2 = sym_image[j].n_un.n_strx + (char *)str_image;
 
       if (memcmp (name1, name2, len) == 0)
       {
@@ -529,14 +529,14 @@ static void import_reloc (const struct relocation_info *table, long tab_size,
             x = *(dword *)(image + r->r_address);
             if (r->r_pcrel)
               x += seg_base + r->r_address + 4;
-            name1 = sym_image[r->r_symbolnum].n_un.n_strx + str_image;
+            name1 = sym_image[r->r_symbolnum].n_un.n_strx + (char *)str_image;
             len = strlen (name1);
             ok = FALSE;
             for (j = sym_hash_table[sym_hash (name1)]; j != -1;
                  j = sym_hash_next[j])
               if (sym_image[j].n_type == (N_IMP2|N_EXT))
                 {
-                  name2 = sym_image[j].n_un.n_strx + str_image;
+                  name2 = sym_image[j].n_un.n_strx + (char *)str_image;
                   if (memcmp (name1, name2, len) == 0 && name2[len] == '=')
                     {
                       import_symbol (seg_obj, r, name1, len, x, name2);
