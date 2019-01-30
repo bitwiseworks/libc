@@ -55,9 +55,7 @@ extern BOOL _Optlink kHeapDbgException(void *    pvAccess,
                                        ENMACCESS enmAccess,
                                        void *    pvIP,
                                        void *    pvOS);
-/* Weak on _Optlink and _System doesn't work because of underscoring. */
-asm (".weak kHeapDbgException");
-
+#pragma weak kHeapDbgException
 
 
 /**
