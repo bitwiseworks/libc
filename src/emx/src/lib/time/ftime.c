@@ -16,8 +16,6 @@ void _STD(ftime)(struct timeb *ptr)
         tzset();
 
     __ftime(ptr);
-    time_t t_loc;
-    t_loc = ptr->time;
     ptr->dstflag = _loc2gmt(&ptr->time, -1);
     ptr->timezone = _tzi.tz / 60;
 

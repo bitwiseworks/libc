@@ -182,7 +182,6 @@ void _STD(tzset) (void)
   struct timeb tb;
   char *p;
   int offset;
-  time_t t_loc;
 
   p = getenv ("TZ");
   if (p == NULL || *p == 0)
@@ -243,7 +242,6 @@ void _STD(tzset) (void)
   _compute_dst_table ();
 
   __ftime (&tb);
-  t_loc = tb.time;
 /*  _STD(daylight) = _loc2gmt (&tb.time, -1); */
   _STD(timezone) = _tzi.tz;
 

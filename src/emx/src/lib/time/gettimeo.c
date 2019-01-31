@@ -13,13 +13,11 @@ int _STD(gettimeofday)(struct timeval *tp, struct timezone *tzp)
 {
     LIBCLOG_ENTER("tp=%p tzp=%p\n", (void *)tp, (void *)tzp);
     struct timeb tb;
-    time_t t_loc;
     int dst;
 
     if (!_tzset_flag)
         tzset();
     __ftime(&tb);
-    t_loc = tb.time;
     dst = _loc2gmt(&tb.time, -1);
     if (tp != NULL)
     {
