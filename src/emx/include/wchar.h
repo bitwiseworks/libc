@@ -128,7 +128,7 @@ size_t	mbrlen(const char * __restrict, size_t, mbstate_t * __restrict);
 size_t	mbrtowc(wchar_t * __restrict, const char * __restrict, size_t,
 	    mbstate_t * __restrict);
 int	mbsinit(const mbstate_t *);
-size_t	mbsrtowcs(wchar_t * __restrict, const char ** __restrict, size_t,
+size_t	mbsrtowcs(wchar_t * __restrict, const char * __restrict * __restrict, size_t,
 	    mbstate_t * __restrict);
 /** @todo wint_t	putwc(wchar_t, struct __sFILE *); */
 /** @todo wint_t	putwchar(wchar_t); */
@@ -157,19 +157,19 @@ int	wcsncmp(const wchar_t *, const wchar_t *, size_t) __pure;
 wchar_t	*wcsncpy(wchar_t * __restrict , const wchar_t * __restrict, size_t);
 wchar_t	*wcspbrk(const wchar_t *, const wchar_t *) __pure;
 wchar_t	*wcsrchr(const wchar_t *, wchar_t) __pure;
-size_t	wcsrtombs(char * __restrict, const wchar_t ** __restrict, size_t,
+size_t	wcsrtombs(char * __restrict, const wchar_t * __restrict * __restrict, size_t,
 	    mbstate_t * __restrict);
 size_t	wcsspn(const wchar_t *, const wchar_t *) __pure;
 wchar_t	*wcsstr(const wchar_t * __restrict, const wchar_t * __restrict)
 	    __pure;
 size_t	wcsxfrm(wchar_t * __restrict, const wchar_t * __restrict, size_t);
 int	wctob(wint_t);
-double	wcstod(const wchar_t * __restrict, wchar_t ** __restrict);
+double	wcstod(const wchar_t * __restrict, wchar_t * __restrict * __restrict);
 wchar_t	*wcstok(wchar_t * __restrict, const wchar_t * __restrict,
-	    wchar_t ** __restrict);
-long	 wcstol(const wchar_t * __restrict, wchar_t ** __restrict, int);
+	    wchar_t * __restrict * __restrict);
+long	 wcstol(const wchar_t * __restrict, wchar_t * __restrict * __restrict, int);
 unsigned long
-	 wcstoul(const wchar_t * __restrict, wchar_t ** __restrict, int);
+	 wcstoul(const wchar_t * __restrict, wchar_t * __restrict * __restrict, int);
 wchar_t	*wmemchr(const wchar_t *, wchar_t, size_t) __pure;
 int	wmemcmp(const wchar_t *, const wchar_t *, size_t) __pure;
 wchar_t	*wmemcpy(wchar_t * __restrict, const wchar_t * __restrict, size_t);
@@ -196,16 +196,16 @@ wchar_t	*wmemset(wchar_t *, wchar_t, size_t);
 /** @todo int	vswscanf(const wchar_t * __restrict, const wchar_t * __restrict,
 	    __va_list); */
 /** @todo int	vwscanf(const wchar_t * __restrict, __va_list); */
-float	wcstof(const wchar_t * __restrict, wchar_t ** __restrict);
+float	wcstof(const wchar_t * __restrict, wchar_t * __restrict * __restrict);
 long double
-	wcstold(const wchar_t * __restrict, wchar_t ** __restrict);
+	wcstold(const wchar_t * __restrict, wchar_t * __restrict * __restrict);
 #ifdef __LONG_LONG_SUPPORTED
 /* LONGLONG */
 long long
-	wcstoll(const wchar_t * __restrict, wchar_t ** __restrict, int);
+	wcstoll(const wchar_t * __restrict, wchar_t * __restrict * __restrict, int);
 /* LONGLONG */
 unsigned long long
-	 wcstoull(const wchar_t * __restrict, wchar_t ** __restrict, int);
+	 wcstoull(const wchar_t * __restrict, wchar_t * __restrict * __restrict, int);
 #endif
 #endif	/* __ISO_C_VISIBLE >= 1999 */
 
@@ -217,9 +217,9 @@ int	wcwidth(wchar_t);
 
 #if __BSD_VISIBLE
 /** @todo wchar_t	*fgetwln(struct __sFILE * __restrict, size_t * __restrict); */
-size_t	mbsnrtowcs(wchar_t * __restrict, const char ** __restrict, size_t,
+size_t	mbsnrtowcs(wchar_t * __restrict, const char * __restrict * __restrict, size_t,
 	    size_t, mbstate_t * __restrict);
-size_t	wcsnrtombs(char * __restrict, const wchar_t ** __restrict, size_t,
+size_t	wcsnrtombs(char * __restrict, const wchar_t * __restrict * __restrict, size_t,
 	    size_t, mbstate_t * __restrict);
 size_t	wcslcat(wchar_t *, const wchar_t *, size_t);
 size_t	wcslcpy(wchar_t *, const wchar_t *, size_t);

@@ -44,7 +44,7 @@ __FBSDID("$FreeBSD: src/lib/libc/string/wcstok.c,v 1.2 2003/03/12 06:41:49 tjr E
 
 wchar_t *
 _STD(wcstok)(wchar_t * __restrict s, const wchar_t * __restrict delim,
-    wchar_t ** __restrict last)
+    wchar_t * __restrict * __restrict last)
 {
 	const wchar_t *spanp;
 	wchar_t *tok;

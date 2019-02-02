@@ -65,9 +65,9 @@ typedef struct __libc_localeCTypeFuncs
 {
     int     (*pfnmbsinit)(const __mbstate_t *);
     size_t  (*pfnmbrtowc)(__wchar_t * __restrict, const char * __restrict, size_t, __mbstate_t * __restrict);
-    size_t  (*pfnmbsnrtowcs)(__wchar_t * __restrict, const char ** __restrict, size_t, size_t, __mbstate_t * __restrict);
+    size_t  (*pfnmbsnrtowcs)(__wchar_t * __restrict, const char * __restrict * __restrict, size_t, size_t, __mbstate_t * __restrict);
     size_t  (*pfnwcrtomb)(char * __restrict, __wchar_t, __mbstate_t * __restrict);
-    size_t  (*pfnwcsnrtombs)(char * __restrict, const __wchar_t ** __restrict, size_t, size_t, __mbstate_t * __restrict);
+    size_t  (*pfnwcsnrtombs)(char * __restrict, const __wchar_t * __restrict * __restrict, size_t, size_t, __mbstate_t * __restrict);
 } __LIBC_LOCALECTYPEFUNCS;
 /** Pointer to multibyte/wide character conversion functions. */
 typedef __LIBC_LOCALECTYPEFUNCS *__LIBC_PLOCALECTYPEFUNCS;
@@ -287,16 +287,16 @@ extern void __libc_localeFuncsUTF8(__LIBC_PLOCALECTYPEFUNCS pFuncs);
 extern void __libc_localeFuncsDefault(__LIBC_PLOCALECTYPEFUNCS pFuncs);
 
 extern size_t  __libc_localeFuncsGeneric_mbsnrtowcs(size_t  (*pfnmbrtowc)(__wchar_t * __restrict, const char * __restrict, size_t, __mbstate_t * __restrict),
-                                                    __wchar_t * __restrict dst, const char ** __restrict src, size_t nms, size_t len, __mbstate_t * __restrict ps);
+                                                    __wchar_t * __restrict dst, const char * __restrict * __restrict src, size_t nms, size_t len, __mbstate_t * __restrict ps);
 extern size_t  __libc_localeFuncsGeneric_wcsnrtombs(size_t  (*pfnwcrtomb)(char * __restrict, __wchar_t, __mbstate_t * __restrict),
-                                                    char * __restrict dst, const __wchar_t ** __restrict src, size_t nwc, size_t len, __mbstate_t * __restrict ps);
+                                                    char * __restrict dst, const __wchar_t * __restrict * __restrict src, size_t nwc, size_t len, __mbstate_t * __restrict ps);
 
 extern void     __libc_localeFuncsNone(__LIBC_PLOCALECTYPEFUNCS pFuncs);
 extern size_t   __libc_locale_none_mbrtowc(__wchar_t * __restrict, const char * __restrict, size_t, __mbstate_t * __restrict);
 extern int      __libc_locale_none_mbsinit(const __mbstate_t *);
-extern size_t   __libc_locale_none_mbsnrtowcs(__wchar_t * __restrict dst, const char ** __restrict src, size_t nms, size_t len, __mbstate_t * __restrict ps __unused);
+extern size_t   __libc_locale_none_mbsnrtowcs(__wchar_t * __restrict dst, const char * __restrict * __restrict src, size_t nms, size_t len, __mbstate_t * __restrict ps __unused);
 extern size_t   __libc_locale_none_wcrtomb(char * __restrict, __wchar_t, __mbstate_t * __restrict);
-extern size_t   __libc_locale_none_wcsnrtombs(char * __restrict, const __wchar_t ** __restrict, size_t, size_t, __mbstate_t * __restrict);
+extern size_t   __libc_locale_none_wcsnrtombs(char * __restrict, const __wchar_t * __restrict * __restrict, size_t, size_t, __mbstate_t * __restrict);
 
 
 /** Handy macros for working with the au2MBCSPrefixs members of

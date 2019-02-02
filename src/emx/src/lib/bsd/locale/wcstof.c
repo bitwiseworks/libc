@@ -36,7 +36,7 @@ __FBSDID("$FreeBSD: src/lib/libc/locale/wcstof.c,v 1.3 2004/04/07 09:47:56 tjr E
  * See wcstod() for comments as to the logic used.
  */
 float
-_STD(wcstof)(const wchar_t * __restrict nptr, wchar_t ** __restrict endptr)
+_STD(wcstof)(const wchar_t * __restrict nptr, wchar_t * __restrict * __restrict endptr)
 {
 	static const mbstate_t initial;
 	mbstate_t mbs;

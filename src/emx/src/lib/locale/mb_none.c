@@ -96,7 +96,7 @@ __libc_locale_none_wcrtomb(char * __restrict s, wchar_t wc,
 }
 
 size_t
-__libc_locale_none_mbsnrtowcs(wchar_t * __restrict dst, const char ** __restrict src,
+__libc_locale_none_mbsnrtowcs(wchar_t * __restrict dst, const char * __restrict * __restrict src,
                  size_t nms, size_t len, mbstate_t * __restrict ps __unused)
 {
     const char *s;
@@ -124,7 +124,7 @@ __libc_locale_none_mbsnrtowcs(wchar_t * __restrict dst, const char ** __restrict
 }
 
 size_t
-__libc_locale_none_wcsnrtombs(char * __restrict dst, const wchar_t ** __restrict src,
+__libc_locale_none_wcsnrtombs(char * __restrict dst, const wchar_t * __restrict * __restrict src,
                  size_t nwc, size_t len, mbstate_t * __restrict ps __unused)
 {
     const wchar_t *s;

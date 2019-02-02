@@ -36,7 +36,7 @@ __FBSDID("$FreeBSD: src/lib/libc/locale/wcsnrtombs.c,v 1.2 2004/07/22 02:57:29 t
 #include "mblocal.h"
 
 size_t
-_STD(wcsnrtombs)(char * __restrict dst, const wchar_t ** __restrict src, size_t nwc,
+_STD(wcsnrtombs)(char * __restrict dst, const wchar_t * __restrict * __restrict src, size_t nwc,
     size_t len, mbstate_t * __restrict ps)
 {
 	static mbstate_t mbs;
@@ -47,7 +47,7 @@ _STD(wcsnrtombs)(char * __restrict dst, const wchar_t ** __restrict src, size_t 
 }
 
 size_t
-__wcsnrtombs_std(char * __restrict dst, const wchar_t ** __restrict src,
+__wcsnrtombs_std(char * __restrict dst, const wchar_t * __restrict * __restrict src,
     size_t nwc, size_t len, mbstate_t * __restrict ps)
 {
 	mbstate_t mbsbak;

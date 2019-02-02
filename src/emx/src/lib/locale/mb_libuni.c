@@ -271,12 +271,12 @@ static size_t libuni_wcrtomb(char * __restrict s, __wchar_t wc, __mbstate_t * __
     return -1;
 }
 
-static size_t  libuni_mbsnrtowcs(__wchar_t * __restrict dst, const char ** __restrict src, size_t nms, size_t len, __mbstate_t * __restrict ps)
+static size_t  libuni_mbsnrtowcs(__wchar_t * __restrict dst, const char * __restrict * __restrict src, size_t nms, size_t len, __mbstate_t * __restrict ps)
 {
     return __libc_localeFuncsGeneric_mbsnrtowcs(libuni_mbrtowc, dst, src, nms, len, ps);
 }
 
-static size_t  libuni_wcsnrtombs(char * __restrict dst, const __wchar_t ** __restrict src, size_t nwc, size_t len, __mbstate_t * __restrict ps)
+static size_t  libuni_wcsnrtombs(char * __restrict dst, const __wchar_t * __restrict * __restrict src, size_t nwc, size_t len, __mbstate_t * __restrict ps)
 {
     return __libc_localeFuncsGeneric_wcsnrtombs(libuni_wcrtomb, dst, src, nwc, len, ps);
 }
@@ -297,7 +297,7 @@ void __libc_localeFuncsDefault(__LIBC_PLOCALECTYPEFUNCS pFuncs)
 
 
 size_t  __libc_localeFuncsGeneric_mbsnrtowcs(size_t  (*pfnmbrtowc)(__wchar_t * __restrict, const char * __restrict, size_t, __mbstate_t * __restrict),
-                                             __wchar_t * __restrict dst, const char ** __restrict src, size_t nms, size_t len, __mbstate_t * __restrict ps)
+                                             __wchar_t * __restrict dst, const char * __restrict * __restrict src, size_t nms, size_t len, __mbstate_t * __restrict ps)
 {
     const char *pch = *src;
     size_t      cbIn = nms;
@@ -358,7 +358,7 @@ size_t  __libc_localeFuncsGeneric_mbsnrtowcs(size_t  (*pfnmbrtowc)(__wchar_t * _
 
 
 size_t  __libc_localeFuncsGeneric_wcsnrtombs(size_t  (*pfnwcrtomb)(char * __restrict, __wchar_t, __mbstate_t * __restrict),
-                                             char * __restrict dst, const __wchar_t ** __restrict src, size_t nwc, size_t len, __mbstate_t * __restrict ps)
+                                             char * __restrict dst, const __wchar_t * __restrict * __restrict src, size_t nwc, size_t len, __mbstate_t * __restrict ps)
 {
     char            achTmp[MB_LEN_MAX];
     const __wchar_t  *pwcs = *src;

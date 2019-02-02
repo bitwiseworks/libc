@@ -43,10 +43,10 @@ __FBSDID("$FreeBSD: src/lib/libc/locale/utf8.c,v 1.11 2004/07/27 06:29:48 tjr Ex
 size_t	_UTF8_mbrtowc(wchar_t * __restrict, const char * __restrict, size_t,
 	    mbstate_t * __restrict);
 int	_UTF8_mbsinit(const mbstate_t *);
-size_t	_UTF8_mbsnrtowcs(wchar_t * __restrict, const char ** __restrict,
+size_t	_UTF8_mbsnrtowcs(wchar_t * __restrict, const char * __restrict * __restrict,
 	    size_t, size_t, mbstate_t * __restrict);
 size_t	_UTF8_wcrtomb(char * __restrict, wchar_t, mbstate_t * __restrict);
-size_t	_UTF8_wcsnrtombs(char * __restrict, const wchar_t ** __restrict,
+size_t	_UTF8_wcsnrtombs(char * __restrict, const wchar_t * __restrict * __restrict,
 	    size_t, size_t, mbstate_t * __restrict);
 
 typedef struct {
@@ -219,7 +219,7 @@ _UTF8_mbrtowc(wchar_t * __restrict pwc, const char * __restrict s, size_t n,
 }
 
 size_t
-_UTF8_mbsnrtowcs(wchar_t * __restrict dst, const char ** __restrict src,
+_UTF8_mbsnrtowcs(wchar_t * __restrict dst, const char * __restrict * __restrict src,
     size_t nms, size_t len, mbstate_t * __restrict ps)
 {
 	_UTF8State *us;
@@ -369,7 +369,7 @@ _UTF8_wcrtomb(char * __restrict s, wchar_t wc, mbstate_t * __restrict ps)
 }
 
 size_t
-_UTF8_wcsnrtombs(char * __restrict dst, const wchar_t ** __restrict src,
+_UTF8_wcsnrtombs(char * __restrict dst, const wchar_t * __restrict * __restrict src,
     size_t nwc, size_t len, mbstate_t * __restrict ps)
 {
 	_UTF8State *us;

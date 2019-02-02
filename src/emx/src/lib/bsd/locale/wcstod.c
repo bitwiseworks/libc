@@ -42,7 +42,7 @@ __FBSDID("$FreeBSD: src/lib/libc/locale/wcstod.c,v 1.4 2004/04/07 09:47:56 tjr E
  * for at least the digits, radix character and letters.
  */
 double
-_STD(wcstod)(const wchar_t * __restrict nptr, wchar_t ** __restrict endptr)
+_STD(wcstod)(const wchar_t * __restrict nptr, wchar_t * __restrict * __restrict endptr)
 {
 	static const mbstate_t initial;
 	mbstate_t mbs;

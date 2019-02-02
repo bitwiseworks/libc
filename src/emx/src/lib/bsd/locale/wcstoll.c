@@ -51,7 +51,7 @@ __FBSDID("$FreeBSD: src/lib/libc/locale/wcstoll.c,v 1.1 2002/09/22 08:06:45 tjr 
  * Convert a wide character string to a long long integer.
  */
 long long
-_STD(wcstoll)(const wchar_t * __restrict nptr, wchar_t ** __restrict endptr, int base)
+_STD(wcstoll)(const wchar_t * __restrict nptr, wchar_t * __restrict * __restrict endptr, int base)
 {
 	const wchar_t *s;
 	unsigned long long acc;
