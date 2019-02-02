@@ -318,7 +318,6 @@ int __libc_Back_signalTimer(int iWhich, const struct itimerval *pValue, struct i
         LIBCLOG_ERROR_RETURN(-EINVAL, "ret -EINVAL - Invalid timer iWhich=%d!\n", iWhich);
     if (!pValue && !pOldValue)
         LIBCLOG_ERROR_RETURN(-EFAULT, "ret -EFAULT - both pointers are NULL - will fault on BSD!\n");
-    struct itimerval    OldValue = {{0,0},{0,0}};
     struct itimerval    Value = {{0,0},{0,0}};
     unsigned            uNext = 0;
     unsigned            uInterval = 0;
@@ -393,15 +392,15 @@ int __libc_Back_signalTimer(int iWhich, const struct itimerval *pValue, struct i
     {
         if (gfArmed)
         {
-            OldValue.it_interval.tv_sec = guInterval / 1000;
-            OldValue.it_interval.tv_usec = (guInterval % 1000) * 1000;
+            pOldValue->it_interval.tv_sec = guInterval / 1000;
+            pOldValue->it_interval.tv_usec = (guInterval % 1000) * 1000;
 
             unsigned u = guNext;
             u -= signalTimerClock();
             if (u <= guInterval)
             {
-                OldValue.it_value.tv_sec = u / 1000;
-                OldValue.it_value.tv_usec = (u % 1000) * 1000;
+                pOldValue->it_value.tv_sec = u / 1000;
+                pOldValue->it_value.tv_usec = (u % 1000) * 1000;
             }
         }
         else
