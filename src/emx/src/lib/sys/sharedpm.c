@@ -2577,7 +2577,7 @@ static VOID APIENTRY spmExitList(ULONG ulReason)
             case TC_KILLPROCESS:enmDeathReason = __LIBC_EXIT_REASON_KILL;       iExitCode = -3; break;
             case TC_EXCEPTION:  enmDeathReason = __LIBC_EXIT_REASON_XCPT;       iExitCode = -4; break;
         }
-        __libc_spmTerm(ulReason, iExitCode);
+        __libc_spmTerm(enmDeathReason, iExitCode);
 
         /*
          * Clean up the current process.
