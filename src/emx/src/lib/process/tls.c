@@ -87,7 +87,7 @@ int     __libc_TLSAlloc(void)
      */
     if (__atomic_increment_max(&gcTLSAllocated, __LIBC_TLS_MAX))
     {
-        errno -ENOMEM;
+        errno = ENOMEM;
         LIBCLOG_ERROR_RETURN(-1, "ret -1 - Out of TLS entries! cur=%d max=%d\n", gcTLSAllocated, __LIBC_TLS_MAX);
     }
 
