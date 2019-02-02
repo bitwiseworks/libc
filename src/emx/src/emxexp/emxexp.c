@@ -20,7 +20,6 @@ Boston, MA 02111-1307, USA.  */
 
 
 #pragma GCC diagnostic ignored "-Wunused-but-set-variable"
-#pragma GCC diagnostic ignored "-Wstrict-aliasing" // char[] is packed into bytes on OS/2
 
 #include <stdio.h>
 #include <stdlib.h>
