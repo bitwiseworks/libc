@@ -214,7 +214,9 @@ static int fsStatInternal(const char *pszMountPoint, struct statfs *pStatFs)
             int fDefDevName = 0;
             if (/*!strcmp(pStatFs->f_fstypename, "LAN") && */pfsq->cbFSAData)
             {
+#pragma GCC diagnostic ignored "-Warray-bounds"
                 strncpy(pStatFs->f_mntfromname, (char *)&pfsq->szName[pfsq->cbName + 1 + pfsq->cbFSDName + 1] /* FSDData */, sizeof(pStatFs->f_mntfromname) - 1);
+#pragma GCC diagnostic pop
                 /* convert UNC labels */
                 if (    pStatFs->f_mntfromname[0] == '\\'
                     &&  pStatFs->f_mntfromname[1] == '\\'

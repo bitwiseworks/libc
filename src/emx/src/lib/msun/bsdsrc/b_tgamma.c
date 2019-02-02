@@ -151,7 +151,7 @@ tgamma(x)
 	else if (x > -1.e-17) {
 		if (x == 0.0)
 			return (one/x);
-		one+1e-20;		/* Raise inexact flag. */
+		(void)(one+1e-20);		/* Raise inexact flag. */
 		return (one/x);
 	} else if (!finite(x))
 		return (x*x);		/* x = NaN, -Inf */

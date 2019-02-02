@@ -526,6 +526,9 @@ extern void memcpy_D2A ANSI((void*, const void*, size_t));
  */
 #define	dtoa		__dtoa
 #define	gdtoa		__gdtoa
+#define ldtoa		__ldtoa
+#define hldtoa		__hldtoa
+#define hdtoa		__hdtoa
 #define	freedtoa	__freedtoa
 #define	strtodg		__strtodg
 #define	g_ddfmt		__g_ddfmt
@@ -626,7 +629,13 @@ extern void memcpy_D2A ANSI((void*, const void*, size_t));
 			int *decpt, int *sign, char **rve));
  extern void freedtoa ANSI((char*));
  extern char *gdtoa ANSI((FPI *fpi, int be, ULong *bits, int *kindp,
-			  int mode, int ndigits, int *decpt, char **rve));
+			int mode, int ndigits, int *decpt, char **rve));
+ extern char* hdtoa ANSI((double d, const char *xdigs, int ndigits, int *decpt,
+			int *sign, char **rve));
+ extern char* ldtoa ANSI((long double *ld, int mode, int ndigits, int *decpt,
+			int *sign, char **rve));
+ extern char* hldtoa ANSI((long double e, const char *xdigs, int ndigits,
+			int *decpt, int *sign, char **rve));
  extern char *g__fmt ANSI((char*, char*, char*, int, ULong));
  extern int gethex ANSI((CONST char**, FPI*, Long*, Bigint**, int));
  extern void hexdig_init_D2A(Void);
@@ -667,6 +676,7 @@ extern void memcpy_D2A ANSI((void*, const void*, size_t));
  extern int strtoIx ANSI((CONST char *, char **, void *, void *));
  extern int strtoIxL ANSI((CONST char *, char **, void *, void *));
  extern double strtod ANSI((const char *s00, char **se));
+ extern int strtodI ANSI((CONST char *, char **, double *));
  extern int strtopQ ANSI((CONST char *, char **, Void *));
  extern int strtopf ANSI((CONST char *, char **, float *));
  extern int strtopd ANSI((CONST char *, char **, double *));

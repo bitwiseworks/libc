@@ -2027,7 +2027,7 @@ static void signalTerminateAbnormal(int iSignalNo, void *pvXcptParams)
     else
         __libc_Back_panic(__LIBC_PANIC_SIGNAL | __LIBC_PANIC_NO_SPM_TERM, pCtx, "Killed by unknown signal %d\n", iSignalNo);
     LIBCLOG_MSG("panic failed\n"); /* shuts up gcc */
-    asm("int3");
+    __asm__("int3");
 }
 
 

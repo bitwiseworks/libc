@@ -93,5 +93,5 @@ int __read (int handle, void *buf, size_t cbToRead)
         errno = -rc;
         LIBCLOG_ERROR_RETURN_INT(-1);
     }
-    LIBCLOG_RETURN_INT(cbRead);
+    LIBCLOG_RETURN_INT((int)cbRead);
 }

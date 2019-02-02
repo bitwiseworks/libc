@@ -112,6 +112,12 @@ extern char* dtoa  ANSI((double d, int mode, int ndigits, int *decpt,
 			int *sign, char **rve));
 extern char* gdtoa ANSI((FPI *fpi, int be, ULong *bits, int *kindp,
 			int mode, int ndigits, int *decpt, char **rve));
+extern char* hdtoa ANSI((double d, const char *xdigs, int ndigits, int *decpt,
+     int *sign, char **rve));
+extern char* ldtoa ANSI((long double *ld, int mode, int ndigits, int *decpt,
+     int *sign, char **rve));
+extern char* hldtoa ANSI((long double e, const char *xdigs, int ndigits,
+     int *decpt, int *sign, char **rve));
 extern void freedtoa ANSI((char*));
 extern float  strtof ANSI((CONST char *, char **));
 extern double strtod ANSI((CONST char *, char **));

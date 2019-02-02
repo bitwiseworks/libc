@@ -272,7 +272,7 @@ static const double pS2[5] = {
 
 	static double pzero(double x)
 {
-	const double *p,*q;
+	const double *p=0,*q=0;
 	double z,r,s;
 	int32_t ix;
 	GET_HIGH_WORD(ix,x);
@@ -367,7 +367,7 @@ static const double qS2[6] = {
 
 	static double qzero(double x)
 {
-	const double *p,*q;
+	const double *p=0,*q=0;
 	double s,r,z;
 	int32_t ix;
 	GET_HIGH_WORD(ix,x);

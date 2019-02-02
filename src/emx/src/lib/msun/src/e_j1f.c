@@ -223,7 +223,7 @@ static const float ps2[5] = {
 
 	static float ponef(float x)
 {
-	const float *p,*q;
+	const float *p=0,*q=0;
 	float z,r,s;
         int32_t ix;
 	GET_FLOAT_WORD(ix,x);
@@ -319,7 +319,7 @@ static const float qs2[6] = {
 
 	static float qonef(float x)
 {
-	const float *p,*q;
+	const float *p=0,*q=0;
 	float  s,r,z;
 	int32_t ix;
 	GET_FLOAT_WORD(ix,x);

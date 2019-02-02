@@ -130,6 +130,7 @@ __ieee754_j0l (x)
   u_int32_t se, i0, i1;
 
   GET_LDOUBLE_WORDS (se, i0, i1, x);
+  (void)i0; (void)i1;
   ix = se & 0x7fff;
   if (ix >= 0x7fff)
     return one / (x * x);
@@ -420,7 +421,7 @@ pzero (x)
 #endif
 {
 #ifdef __STDC__
-  const long double *p, *q;
+  const long double *p = 0, *q = 0;
 #else
   long double *p, *q;
 #endif
@@ -599,7 +600,7 @@ qzero (x)
 #endif
 {
 #ifdef __STDC__
-  const long double *p, *q;
+  const long double *p = 0, *q = 0;
 #else
   long double *p, *q;
 #endif

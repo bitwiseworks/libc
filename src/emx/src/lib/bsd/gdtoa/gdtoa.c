@@ -474,7 +474,7 @@ gdtoa
 					goto ret1;
 					}
 				dval(d) += dval(d);
-				if (dval(d) > ds || dval(d) == ds && L & 1) {
+				if (dval(d) > ds || (dval(d) == ds && L & 1)) {
  bump_up:
 					inex = STRTOG_Inexhi;
 					while(*--s == '9')
@@ -650,11 +650,11 @@ gdtoa
 				goto ret;
 				}
 #endif
-			if (j < 0 || j == 0 && !mode
+			if (j < 0 || (j == 0 && !mode
 #ifndef ROUND_BIASED
 							&& !(bits[0] & 1)
 #endif
-					) {
+					)) {
 				if (rdir && (b->wds > 1 || b->x[0])) {
 					if (rdir == 2) {
 						inex = STRTOG_Inexlo;
@@ -677,7 +677,7 @@ gdtoa
 				if (j1 > 0) {
 					b = lshift(b, 1);
 					j1 = cmp(b, S);
-					if ((j1 > 0 || j1 == 0 && dig & 1)
+					if ((j1 > 0 || (j1 == 0 && dig & 1))
 					&& dig++ == '9')
 						goto round_9_up;
 					inex = STRTOG_Inexhi;
@@ -722,13 +722,13 @@ gdtoa
 	/* Round off last digit */
 
 	if (rdir) {
-		if (rdir == 2 || b->wds <= 1 && !b->x[0])
+		if (rdir == 2 || (b->wds <= 1 && !b->x[0]))
 			goto chopzeros;
 		goto roundoff;
 		}
 	b = lshift(b, 1);
 	j = cmp(b, S);
-	if (j > 0 || j == 0 && dig & 1) {
+	if (j > 0 || (j == 0 && dig & 1)) {
  roundoff:
 		inex = STRTOG_Inexhi;
 		while(*--s == '9')

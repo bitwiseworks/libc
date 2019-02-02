@@ -98,7 +98,9 @@ struct files_state {
 	FILE	*fp;
 	int	 stayopen;
 };
+#if 0
 static	void	 files_endstate(void *);
+#endif
 NSS_TLS_HANDLING(files);
 static	int	 files_setgrent(void *, void *, va_list);
 static	int	 files_group(void *, void *, va_list);
@@ -138,7 +140,9 @@ struct compat_state {
 		COMPAT_MODE_NAME
 	}	 compat;
 };
+#if 0
 static	void	 compat_endstate(void *);
+#endif
 NSS_TLS_HANDLING(compat);
 static	int	 compat_setgrent(void *, void *, va_list);
 static	int	 compat_group(void *, void *, va_list);
@@ -392,6 +396,7 @@ is_comment_line(const char *s, size_t n)
 }
 
 
+#if 0
 /*
  * files backend
  */
@@ -405,6 +410,7 @@ files_endstate(void *p)
 		fclose(((struct files_state *)p)->fp);
 	free(p);
 }
+#endif
 
 
 static int
@@ -809,6 +815,7 @@ erange:
 
 
 
+#if 0
 /*
  * compat backend
  */
@@ -825,6 +832,7 @@ compat_endstate(void *p)
 		fclose(st->fp);
 	free(p);
 }
+#endif
 
 
 static int

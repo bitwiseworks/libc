@@ -31,6 +31,8 @@
  * SUCH DAMAGE.
  */
 
+#pragma GCC diagnostic ignored "-Wmaybe-uninitialized" /* junk uninit in srandomdev is intentional */
+
 #if defined(LIBC_SCCS) && !defined(lint)
 static char sccsid[] = "@(#)random.c	8.2 (Berkeley) 5/19/95";
 #endif /* LIBC_SCCS and not lint */

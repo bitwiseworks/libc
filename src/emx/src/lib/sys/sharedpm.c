@@ -1578,6 +1578,7 @@ int     __libc_spmSocketNew(int iSocket)
             pu16 = &gpSPMSelf->pacTcpipRefs[iSocket];
             uOldRefs = __atomic_xchg_word(pu16, 1);
             LIBC_ASSERTM(uOldRefs == 0, "Previous iSocket=%d had %#x refs left in the current process.\n", iSocket, uOldRefs);
+            (void)uOldRefs;
             rc = 0;
         }
     }
@@ -2599,7 +2600,6 @@ static void spmCleanup(void)
     PPIB                    pPib;
     PTIB                    pTib;
     __LIBC_SPMXCPTREGREC    RegRec;
-    int                     fFree = 0;
     FS_VAR();
 
     /*
@@ -2658,10 +2658,7 @@ static void spmCleanup(void)
 
             /* Determin whether to free shared stuff. */
             if (pProcess->cSPMOpens <= 1)
-            {
                 pProcess->cSPMOpens = 0;
-                fFree = 1;
-            }
             else
                 pProcess->cSPMOpens--;
 

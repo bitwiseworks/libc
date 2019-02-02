@@ -1,6 +1,10 @@
 /* A Bison parser, made from nsparser.y
    by GNU bison 1.35.  */
 
+/* This file is (was) generated, shut down warnings */
+#pragma GCC diagnostic ignored "-Wundef"
+#pragma GCC diagnostic ignored "-Wunused-but-set-variable"
+
 #define YYBISON 1  /* Identify Bison output.  */
 
 #define yyparse _nsyyparse

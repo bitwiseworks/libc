@@ -818,7 +818,7 @@ int _output (FILE *stream, const char *format, char *arg_ptr)
   int size;
   char cont;
   unsigned char c;
-  int mbn, shift;
+  int mbn;
 
   /* Initialize variables. */
 
@@ -829,8 +829,6 @@ int _output (FILE *stream, const char *format, char *arg_ptr)
   /* ANSI X3.159-1989, 4.9.6.1: "The format shall be a multibyte
      character sequence, beginning and ending in its initial shift
      state." */
-
-  shift = 0;
 
   /* Interpret the string. */
 

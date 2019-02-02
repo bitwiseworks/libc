@@ -22,7 +22,7 @@
  * @param   mode    The mode string.
  * @param   pomode  Where to store the open mode.
  */
-static int _interpret_stream_mode(const char *mode, unsigned *pomode)
+static int _interpret_stream_mode(const char *mode, int *pomode)
 {
     int flags = 0;
     int omode = 0;

@@ -39,7 +39,7 @@ void *  _lmalloc(unsigned);
     char * arg##_safe = (char*)arg;                 \
     if (SAFE_IS_HIGH(arg))                          \
     {                                               \
-        int cch = strlen(arg) + 1;                  \
+        int cch = strlen((char*)arg) + 1;           \
         arg##_safe = _lmalloc(cch);                 \
         if (!arg##_safe) goto safe_failure;         \
         memcpy(arg##_safe, (arg), cch);             \
@@ -48,7 +48,7 @@ void *  _lmalloc(unsigned);
 
 
 /** Use the const string. */
-#define SAFE_PCSZ_USE(arg) arg##_safe
+#define SAFE_PCSZ_USE(arg) (PCSZ)arg##_safe
 
 /** Cleanup a const string. */
 #define SAFE_PCSZ_DONE(arg) \

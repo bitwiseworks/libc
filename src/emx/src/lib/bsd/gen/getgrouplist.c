@@ -44,6 +44,7 @@ __FBSDID("$FreeBSD: src/lib/libc/gen/getgrouplist.c,v 1.13 2003/02/16 17:29:09 n
 #include <sys/types.h>
 #include <string.h>
 #include <grp.h>
+#include <unistd.h>
 
 int
 getgrouplist(uname, agroup, groups, grpcnt)

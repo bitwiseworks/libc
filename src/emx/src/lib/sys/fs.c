@@ -821,7 +821,6 @@ static int fsCleanPath(char *pszPath, unsigned fFlags, unsigned *pfFlags)
     /*
      * Change to '/' and remove duplicates.
      */
-    int     fUnc = 0;
     char   *pszSrc = pszPath;
     char   *pszTrg = pszPath;
     if (    (pszPath[0] == '\\' || pszPath[0] == '/')
@@ -830,7 +829,6 @@ static int fsCleanPath(char *pszPath, unsigned fFlags, unsigned *pfFlags)
     {   /* Skip first slash in a unc path. */
         pszSrc++;
         *pszTrg++ = '/';
-        fUnc = 1;
     }
 
     for (;;)

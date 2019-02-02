@@ -22,7 +22,7 @@ int _filesys (const char *drive, char *name, size_t size)
   len = sizeof (FSQBUFFER2) + QFSA_SIZE;
   buf = alloca (len);
   FS_SAVE_LOAD();
-  rc = DosQueryFSAttach (drive, 1, FSAIL_QUERYNAME, buf, &len);
+  rc = DosQueryFSAttach ((PCSZ)drive, 1, FSAIL_QUERYNAME, buf, &len);
   FS_RESTORE();
   if (rc != 0)
     {
@@ -39,6 +39,6 @@ int _filesys (const char *drive, char *name, size_t size)
       errno = E2BIG;
       return -1;
     }
-  strcpy (name, buf->szFSDName + buf->cbName);
+  strcpy (name, (char *)buf->szFSDName + buf->cbName);
   return 0;
 }

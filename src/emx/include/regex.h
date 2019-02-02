@@ -504,7 +504,7 @@ extern void re_set_registers (struct re_pattern_buffer *__buffer,
 			      unsigned int __num_regs,
 			      regoff_t *__starts, regoff_t *__ends);
 
-#if defined _REGEX_RE_COMP || defined _LIBC
+#if defined _REGEX_RE_COMP || defined _LIBC || defined __INNOTEK_LIBC__
 # ifndef _CRAY
 /* 4.2 bsd compatibility.  */
 extern char *re_comp (const char *);

@@ -1,6 +1,10 @@
 /* A Bison parser, made from plural.y
    by GNU bison 1.35.  */
 
+/* This file is (was) generated, shut down warnings */
+#pragma GCC diagnostic ignored "-Wundef"
+#pragma GCC diagnostic ignored "-Wmaybe-uninitialized"
+
 #define YYBISON 1  /* Identify Bison output.  */
 
 #define yyparse __gettextparse

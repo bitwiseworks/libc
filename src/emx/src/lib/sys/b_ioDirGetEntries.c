@@ -84,7 +84,7 @@ ssize_t __libc_Back_ioDirGetEntries(int fh, void *pvBuf, size_t cbBuf, __off_t *
     {
         if (poff)
             *poff = off;
-        LIBCLOG_RETURN_MSG(cb, "ret %#x *poff=%#x\n", cb, off);
+        LIBCLOG_RETURN_MSG(cb, "ret %#x *poff=%#llx\n", cb, off);
     }
     LIBCLOG_ERROR_RETURN_INT(cb);
 }

@@ -15,8 +15,7 @@
 int _ea_get (struct _ea *dst, const char *path, int handle,
              const char *name)
 {
-  const void *fileref;
-  ULONG rc, reftype, hf;
+  ULONG rc;
   EAOP2 eaop;
   PGEA2LIST pgealist;
   PFEA2LIST pfealist;
@@ -28,17 +27,6 @@ int _ea_get (struct _ea *dst, const char *path, int handle,
   dst->flags = 0;
   dst->size = 0;
   dst->value = NULL;
-  if (path != NULL)
-    {
-      reftype = ENUMEA_REFTYPE_PATH;
-      fileref = path;
-    }
-  else
-    {
-      hf = handle;
-      reftype = ENUMEA_REFTYPE_FHANDLE;
-      fileref = &hf;
-    }
   len = strlen (name);
   size = sizeof (GEA2LIST) + len;
   pgealist = alloca (size);
@@ -58,7 +46,7 @@ int _ea_get (struct _ea *dst, const char *path, int handle,
     rc = DosQueryFileInfo (handle, FIL_QUERYEASFROMLIST, &eaop,
                            sizeof (eaop));
   else
-    rc = DosQueryPathInfo (path, FIL_QUERYEASFROMLIST, &eaop,
+    rc = DosQueryPathInfo ((PCSZ)path, FIL_QUERYEASFROMLIST, &eaop,
                            sizeof (eaop));
   FS_RESTORE();
   if (rc != 0)

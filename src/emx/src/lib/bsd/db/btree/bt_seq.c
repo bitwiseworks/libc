@@ -247,7 +247,7 @@ __bt_seqadv(t, ep, flags)
 {
 	CURSOR *c;
 	PAGE *h;
-	indx_t index;
+	indx_t index = 0;
 	pgno_t pg;
 	int exact;
 

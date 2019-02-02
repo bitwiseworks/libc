@@ -60,7 +60,7 @@ int __sigpause_bsd(int fBlockMask)
      * Forward to sigsuspend().
      */
     __SIGSET_EMPTY(&SigSet);
-    *(int*)&SigSet.__bitmap[0] = fBlockMask;
+    SigSet.__bitmap[0] = fBlockMask;
     rc = sigsuspend(&SigSet);
     if (!rc)
         LIBCLOG_ERROR_RETURN_INT(rc);

@@ -9,7 +9,7 @@
 
 #include <386/builtin.h>
 #include <sys/fmutex.h>
-_fmutex __libc_gdtoa_locks[2] = {0};
+_fmutex __libc_gdtoa_locks[2] = {{0}};
 
 #else
 

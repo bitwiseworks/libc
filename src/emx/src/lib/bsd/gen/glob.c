@@ -173,14 +173,14 @@ _STD(glob)(pattern, flags, errfunc, pglob)
 	int flags, (*errfunc)(const char *, int);
 	glob_t *pglob;
 {
-	const u_char *patnext;
+	const char *patnext;
 	int limit;
 	Char *bufnext, *bufend, patbuf[MAXPATHLEN], prot;
 	mbstate_t mbs;
 	wchar_t wc;
 	size_t clen;
 
-	patnext = (u_char *) pattern;
+	patnext = pattern;
 	if (!(flags & GLOB_APPEND)) {
 		pglob->gl_pathc = 0;
 		pglob->gl_pathv = NULL;
@@ -667,7 +667,7 @@ glob3(pathbuf, pathend, pathend_last, pattern, restpattern, pglob, limit)
 	else
 		readdirfunc = readdir;
 	while ((dp = (*readdirfunc)(dirp))) {
-		u_char *sc;
+		char *sc;
 		Char *dc;
 		wchar_t wc;
 		size_t clen;
@@ -678,7 +678,7 @@ glob3(pathbuf, pathend, pathend_last, pattern, restpattern, pglob, limit)
 			continue;
 		memset(&mbs, 0, sizeof(mbs));
 		dc = pathend;
-		sc = (u_char *) dp->d_name;
+		sc = dp->d_name;
 		while (dc < pathend_last) {
 			clen = mbrtowc(&wc, sc, MB_LEN_MAX, &mbs);
 			if (clen == (size_t)-1 || clen == (size_t)-2) {

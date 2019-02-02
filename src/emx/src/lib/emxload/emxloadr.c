@@ -25,7 +25,7 @@ int _emxload_do_connect (int start)
       ok = FALSE;
       for (i = 0; i < 30; ++i)
         {
-          rc = DosOpen (pipe_name, &hpServer, &action, 0, 0,
+          rc = DosOpen ((PCSZ)pipe_name, &hpServer, &action, 0, 0,
                         OPEN_ACTION_FAIL_IF_NEW | OPEN_ACTION_OPEN_IF_EXISTS,
                         OPEN_FLAGS_NOINHERIT | OPEN_SHARE_DENYREADWRITE
                         | OPEN_ACCESS_READWRITE, NULL);
@@ -35,7 +35,7 @@ int _emxload_do_connect (int start)
               break;
             }
           else if (rc == ERROR_PIPE_BUSY)
-            rc = DosWaitNPipe (pipe_name, 1000L);
+            rc = DosWaitNPipe ((PCSZ)pipe_name, 1000L);
           if (rc == ERROR_FILE_NOT_FOUND || rc == ERROR_PATH_NOT_FOUND)
             {
               if (!start)
@@ -50,8 +50,8 @@ int _emxload_do_connect (int start)
                      handles. */
 
                   rc = DosExecPgm (objbuf, sizeof (objbuf), EXEC_BACKGROUND,
-                                   "emxload\0-server\0", NULL, &res,
-                                   "emxload.exe");
+                                   (PCSZ)"emxload\0-server\0", NULL, &res,
+                                   (PCSZ)"emxload.exe");
                   if (rc != 0)
                     return -1;
                 }

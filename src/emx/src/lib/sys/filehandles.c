@@ -557,7 +557,7 @@ void        __libc_fhInheritDone(void)
  */
 void        __libc_fhExecDone(void)
 {
-    LIBCLOG_ENTER("");
+    LIBCLOG_ENTER("\n");
 
     /*
      * This isn't thread safe, but there shouldn't be any threads

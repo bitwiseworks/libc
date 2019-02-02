@@ -46,9 +46,9 @@
 /** Tests a bit in the bitmap. */
 #define __SIGSET_ISSET(sigset, sig)     ( ( (sigset)->__bitmap[((sig) - 1) >> 5]  &  (1 << (((sig) - 1) & 31)) ) != 0 )
 /** Clears all bits in the bitmap. */
-#define __SIGSET_EMPTY(sigset)          ( (sigset)->__bitmap[0] = 0, (sigset)->__bitmap[1] = 0, 0 )
+#define __SIGSET_EMPTY(sigset)          ( (sigset)->__bitmap[0] = 0, (sigset)->__bitmap[1] = 0, (void)0 )
 /** Sets all bits in the bitmap. */
-#define __SIGSET_FILL(sigset)           ( (sigset)->__bitmap[0] = ~0, (sigset)->__bitmap[1] = ~0, 0 )
+#define __SIGSET_FILL(sigset)           ( (sigset)->__bitmap[0] = ~0, (sigset)->__bitmap[1] = ~0, (void)0 )
 /** Checks if the set is empty. */
 #define __SIGSET_ISEMPTY(sigset)        ( !(sigset)->__bitmap[0] && !(sigset)->__bitmap[1] )
 /** Invert a set (bitwise not) */

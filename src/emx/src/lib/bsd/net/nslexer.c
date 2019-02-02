@@ -1,3 +1,9 @@
+/* This file is (was) generated, shut down warnings */
+#pragma GCC diagnostic ignored "-Wundef"
+#pragma GCC diagnostic ignored "-Wimplicit-function-declaration"
+#pragma GCC diagnostic ignored "-Wunused-label"
+#pragma GCC diagnostic ignored "-Wunused-function"
+
 #define yy_create_buffer _nsyy_create_buffer
 #define yy_delete_buffer _nsyy_delete_buffer
 #define yy_scan_buffer _nsyy_scan_buffer

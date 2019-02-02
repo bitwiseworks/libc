@@ -53,7 +53,7 @@ _STD(strtof)(CONST char *s, char **sp)
 	ULong bits[1];
 	Long exp;
 	int k;
-	union { ULong L[1]; float f; } u;
+	union { ULong L[1]; float f; } u = {{0}};
 
 	k = strtodg(s, sp, &fpi, &exp, bits);
 	switch(k & STRTOG_Retmask) {
@@ -64,7 +64,7 @@ _STD(strtof)(CONST char *s, char **sp)
 
 	  case STRTOG_Normal:
 	  case STRTOG_NaNbits:
-		u.L[0] = bits[0] & 0x7fffff | exp + 0x7f + 23 << 23;
+		u.L[0] = (bits[0] & 0x7fffff) | ((exp + 0x7f + 23) << 23);
 		break;
 
 	  case STRTOG_Denormal:

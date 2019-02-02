@@ -83,7 +83,7 @@ APIRET APIENTRY  SafeDosStartSession(PSTARTDATA psd, PULONG pulIdSession, PPID p
         l3 = 0;
     if (SAFE_IS_HIGH(Environment))
     {
-        const char *psz = Environment;
+        const char *psz = (const char *)Environment;
         while (*psz)
             psz = strchr(psz, '\0') + 1;
         l4 = (uintptr_t)psz - (uintptr_t)Environment + 1;

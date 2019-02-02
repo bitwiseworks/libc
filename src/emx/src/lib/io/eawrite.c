@@ -18,7 +18,7 @@ int _ea_write (const char *path, int handle, PFEA2LIST src)
   eaop.oError = 0;
   FS_SAVE_LOAD();
   if (path != NULL)
-    rc = DosSetPathInfo (path, 2, &eaop, sizeof (eaop), 0);
+    rc = DosSetPathInfo ((PCSZ)path, 2, &eaop, sizeof (eaop), 0);
   else
     rc = DosSetFileInfo (handle, 2, &eaop, sizeof (eaop));
   FS_RESTORE();

@@ -66,7 +66,7 @@ int	sysctl(int *, u_int, void *, size_t *, void *, size_t);
 #undef copyin
 #define copyin(x,y,z)   !memcpy((y),(x),(z))
 #undef securelevel_gt
-#define securelevel_gt(cr, level) 0
+#define securelevel_gt(cr, level) ((void)(level), 0)
 #undef sysctl
 
 /*
@@ -935,7 +935,7 @@ sysctl_handle_opaque(SYSCTL_HANDLER_ARGS)
 {
 	int error/*, tries*/;
 //	u_int generation;
-	struct sysctl_req req2;
+//	struct sysctl_req req2;
 
 	/*
 	 * Attempt to get a coherent snapshot, by using the thread
@@ -945,7 +945,7 @@ sysctl_handle_opaque(SYSCTL_HANDLER_ARGS)
 	 * If we encounter an error, stop immediately.
 	 */
 //	tries = 0;
-	req2 = *req;
+//	req2 = *req;
 //retry:
 	//generation = curthread->td_generation;
 	error = SYSCTL_OUT(req, arg1, arg2);

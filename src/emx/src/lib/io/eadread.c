@@ -106,7 +106,7 @@ int _ead_read (_ead ead, const char *path, int handle, int flags)
         rc = DosQueryFileInfo (handle, FIL_QUERYEASFROMLIST, &eaop,
                                sizeof (eaop));
       else
-        rc = DosQueryPathInfo (path, FIL_QUERYEASFROMLIST, &eaop,
+        rc = DosQueryPathInfo ((PCSZ)path, FIL_QUERYEASFROMLIST, &eaop,
                                sizeof (eaop));
       FS_RESTORE();
       if (rc != 0)

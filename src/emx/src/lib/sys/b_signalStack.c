@@ -79,7 +79,7 @@ int __libc_Back_signalStack(__LIBC_PTHREAD pThrd, const stack_t *pStack, stack_t
      * Copy input.
      */
     stack_t         OldStack = {0};
-    stack_t         Stack;
+    stack_t         Stack = {0};
     if (pStack)
         Stack = *pStack;
 

@@ -459,7 +459,7 @@ strtod
 					if (j >= 53)
 					 word0(rv) = (P+2)*Exp_msk1;
 					else
-					 word0(rv) &= 0xffffffff << j-32;
+					 word0(rv) &= 0xffffffff << (j-32);
 					}
 				else
 					word1(rv) &= 0xffffffff << j;

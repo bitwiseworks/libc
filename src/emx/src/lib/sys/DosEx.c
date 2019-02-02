@@ -628,7 +628,6 @@ PDOSEX  __libc_dosexFind(DOSEXTYPE enmType, unsigned uKey)
     pPool = gpPoolsHead;
     while (pPool)
     {
-        PDOSEX  pPrev = NULL;
         PDOSEX  pCur = pPool->apHeads[enmType];
         while (pCur)
         {
@@ -640,7 +639,6 @@ PDOSEX  __libc_dosexFind(DOSEXTYPE enmType, unsigned uKey)
                 LIBCLOG_RETURN_P(pCur);
             }
             /* next */
-            pPrev = pCur;
             pCur = pCur->pNext;
         }
 

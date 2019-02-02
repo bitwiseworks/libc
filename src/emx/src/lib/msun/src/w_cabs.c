@@ -21,6 +21,9 @@ cabs(z)
 	return hypot(creal(z), cimag(z));
 }
 
+/* NOTE: z_abs is exported from LIBC DLLs but absent in headers */
+#pragma GCC diagnostic ignored "-Wmissing-prototypes"
+
 double
 z_abs(z)
 	double complex *z;

@@ -34,6 +34,8 @@
 #include <InnoTekLIBC/logstrict.h>
 
 
+/* NOTE: __libc_Back_termDll is only referenced from assembly */
+#pragma GCC diagnostic ignored "-Wmissing-prototypes"
 
 /**
  * Called by dll0.s when a dll is being unloaded.

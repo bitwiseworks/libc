@@ -82,13 +82,13 @@ typedef int _##name##_bmVjdGFy
 #else
 /* Bird: this is a temporary hack till pthreads are implemented and we can test things. */
 #define NSS_TLS_HANDLING(name)					\
-static	void	 name##_keyinit(void);				\
+/*static	void	 name##_keyinit(void);*/				\
 static	int	 name##_getstate(struct name##_state **);	\
 \
-static void							\
+/*static void							\
 name##_keyinit(void)						\
 {								\
-}								\
+}*/								\
 \
 static int							\
 name##_getstate(struct name##_state **p)			\

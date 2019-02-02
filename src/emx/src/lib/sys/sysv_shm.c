@@ -29,7 +29,6 @@
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#define _BSD_NAMESPACE_POLLUTION
 #include "libc-alias.h"
 #include <sys/cdefs.h>
 //__FBSDID("$FreeBSD: src/sys/kern/sysv_shm.c,v 1.96.2.3 2005/02/19 19:54:31 csjp Exp $");
@@ -623,7 +622,7 @@ int __libc_Back_sysvShmCtl(int shmid, int cmd, struct shmid_ds *bufptr)
 	int error = 0;
 	int rval = 0;
 	struct shmid_ds buf;
-	size_t bufsz;
+	size_t bufsz = 0;
 	
 	/* IPC_SET needs to copyin the buffer before calling kern_shmctl */
 	if (cmd == IPC_SET) {

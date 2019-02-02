@@ -448,7 +448,7 @@ int __libc_back_dirInherit(int fh, const char *pszNativePath, unsigned fInUnixTr
     /*
      * Open the directory.
      */
-    __LIBC_PFHDIR pFHDir;
+    __LIBC_PFHDIR pFHDir = NULL;
     char szNativePath[PATH_MAX + 5];
     strcpy(szNativePath, pszNativePath);
     int rc = dirOpen(szNativePath, fFlags, &fh, &pFHDir);
@@ -512,7 +512,7 @@ int __libc_Back_dirOpenNative(char *pszNativePath, unsigned fInUnixTree, unsigne
      * Open the directory.
      */
     int fh = -1;
-    __LIBC_PFHDIR pFHDir;
+    __LIBC_PFHDIR pFHDir = NULL;
     int rc = dirOpen(pszNativePath, fLibc, &fh, &pFHDir);
     if (!rc)
     {

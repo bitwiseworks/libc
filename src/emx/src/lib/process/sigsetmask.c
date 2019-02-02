@@ -54,9 +54,9 @@ int _STD(sigsetmask)(int fBlockMask)
      * Forward to sigprocmask().
      */
     __SIGSET_EMPTY(&SigSet);
-    *(int *)&SigSet.__bitmap[0] = fBlockMask;
+    SigSet.__bitmap[0] = fBlockMask;
     if (sigprocmask(SIG_SETMASK, &SigSet, &SigSetOld))
         LIBCLOG_ERROR_RETURN_INT(-1);
 
-    LIBCLOG_RETURN_INT(*(int *)&SigSetOld.__bitmap[0]);
+    LIBCLOG_RETURN_INT((int)SigSetOld.__bitmap[0]);
 }

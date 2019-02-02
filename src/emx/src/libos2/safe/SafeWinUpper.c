@@ -32,14 +32,14 @@ ULONG APIENTRY SafeWinUpper(HAB hab, ULONG idcp, ULONG idcc, PSZ psz)
     ULONG rc;
     if (SAFE_IS_HIGH(psz))
     {
-        size_t cch = strlen(psz);
+        size_t cch = strlen((char *)psz);
         char *pszTmp = _lmalloc(cch + 3);
         if (pszTmp)
         {
             memcpy(pszTmp, psz, cch + 1);
             pszTmp[cch + 1] = '\0';
             pszTmp[cch + 2] = '\0';
-            rc = WinUpper(hab, idcp, idcc, pszTmp);
+            rc = WinUpper(hab, idcp, idcc, (PSZ)pszTmp);
             if (rc > 0)
                 memcpy(psz, pszTmp, rc <= cch ? rc + 1 : rc);
             free(pszTmp);

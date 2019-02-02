@@ -132,6 +132,7 @@ sranddev()
 		_close(fd);
 	}
 
+#pragma GCC diagnostic ignored "-Wmaybe-uninitialized" /* junk uninit is intentional */
 	if (!done) {
 		struct timeval tv;
 		unsigned long junk;
@@ -139,6 +140,7 @@ sranddev()
 		gettimeofday(&tv, NULL);
 		srand((getpid() << 16) ^ tv.tv_sec ^ tv.tv_usec ^ junk);
 	}
+#pragma GCC diagnostic pop
 }
 
 

@@ -99,6 +99,6 @@ int __write(int handle, const void *buf, size_t cbToWrite)
         errno = -rc;
         LIBCLOG_ERROR_RETURN_INT(-1);
     }
-    LIBCLOG_RETURN_INT(cbWritten);
+    LIBCLOG_RETURN_INT((int)cbWritten);
 }
 

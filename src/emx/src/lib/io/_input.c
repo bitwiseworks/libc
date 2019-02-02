@@ -662,13 +662,11 @@ static int inp_main (ilocal *v, const char *format, char *arg_ptr)
   unsigned char f;
   int c;
   char assign;
-  int shift, mbi, mbn;
+  int mbi, mbn;
 
   /* ISO 9899-1990, 7.9.6.2 "The format shall be a multibyte
      character sequence, beginning and ending in its initial shift
      state." */
-
-  shift = 0;
 
   c = 0;
   while ((f = *format) != 0)

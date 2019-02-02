@@ -162,7 +162,7 @@ void __libc_Back_panic(unsigned fFlags, void *pvCtx, const char *pszFormat, ...)
  */
 void __libc_Back_panicV(unsigned fFlags, void *pvCtx, const char *pszFormat, va_list args)
 {
-    LIBCLOG_ENTER("fFlags=%#x pvCtx=%p pszFormat=%p:{%s}\n", fFlags, pvCtx, (void *)pszFormat, (void *)pszFormat);
+    LIBCLOG_ENTER("fFlags=%#x pvCtx=%p pszFormat=%p:{%s}\n", fFlags, pvCtx, (void *)pszFormat, pszFormat);
 
     /*
      * First, terminate the exception handler chain to avoid recursive trouble.

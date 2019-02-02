@@ -35,6 +35,9 @@
 _CRT_INIT1(__libc_Timebomb)
 #endif
 
+/* NOTE: This func is exported from LIBC DLLs so we can't disable it in !TIMEBOMB mode */
+#pragma GCC diagnostic ignored "-Wmissing-prototypes"
+
 CRT_DATA_USED
 void __libc_Timebomb(void)
 {

@@ -136,10 +136,11 @@ struct files_state {
 	int		 stayopen;
 	int		 version;
 };
+#if 0
 static	void	files_endstate(void *);
+#endif
 NSS_TLS_HANDLING(files);
 static	DB	*pwdbopen(int *);
-static	void	 files_endstate(void *);
 static	int	 files_setpwent(void *, void *, va_list);
 static	int	 files_passwd(void *, void *, va_list);
 
@@ -186,7 +187,9 @@ struct compat_state {
 		COMPAT_MODE_NETGROUP
 	}		 compat;
 };
+#if 0
 static	void	 compat_endstate(void *);
+#endif
 NSS_TLS_HANDLING(compat);
 static	int	 compat_setpwent(void *, void *, va_list);
 static	int	 compat_passwd(void *, void *, va_list);
@@ -485,6 +488,7 @@ pwdbopen(int *version)
 }
 
 
+#if 0
 static void
 files_endstate(void *p)
 {
@@ -497,6 +501,7 @@ files_endstate(void *p)
 		db->close(db);
 	free(p);
 }
+#endif
 
 
 static int
@@ -1392,6 +1397,7 @@ more:
 }
 
 
+#if 0
 static void
 compat_endstate(void *p)
 {
@@ -1407,6 +1413,7 @@ compat_endstate(void *p)
 	compat_clear_template(&st->template);
 	free(p);
 }
+#endif
 
 
 static int

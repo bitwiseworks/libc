@@ -22,6 +22,7 @@
 #include <complex.h>
 #include <math.h>
 
+#undef nan
 #define nan(x) __builtin_nan(x)
 
 

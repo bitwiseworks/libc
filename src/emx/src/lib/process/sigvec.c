@@ -80,7 +80,7 @@ int _STD(sigvec)(int iSignalNo, struct sigvec *pSigVec, struct sigvec *pSigVecOl
         SigAct.__sigaction_u.__sa_handler   = pSigVec->sv_handler;
         SigAct.sa_flags                     = pSigVec->sv_flags ^ SV_INTERRUPT;
         __SIGSET_EMPTY(&SigAct.sa_mask);
-        *(int *)&SigAct.sa_mask.__bitmap[0] = pSigVec->sv_mask;
+        SigAct.sa_mask.__bitmap[0] = pSigVec->sv_mask;
     }
 
     rc = sigaction(iSignalNo, pSigVec ? &SigAct : NULL, &SigActOld);
@@ -94,9 +94,9 @@ int _STD(sigvec)(int iSignalNo, struct sigvec *pSigVec, struct sigvec *pSigVecOl
         pSigVecOld->sv_mask     = *(int *)SigActOld.sa_mask.__bitmap[0];
     }
 
-    LIBCLOG_RETURN_MSG(0, "ret 0 (*pSigVecOld {sv_handle=%p, sv_mask=%#x, sv_flags=%#x})\n",
+    LIBCLOG_RETURN_MSG(0, "ret 0 (*pSigVecOld {sv_handle=%p, sv_mask=%#lx, sv_flags=%#x})\n",
                        (void *)SigActOld.__sigaction_u.__sa_sigaction,
-                       *(int *)SigActOld.sa_mask.__bitmap[0],
+                       SigActOld.sa_mask.__bitmap[0],
                        SigActOld.sa_flags ^ SV_INTERRUPT);
 }
 

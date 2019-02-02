@@ -137,7 +137,7 @@ vsyslog(pri, fmt, ap)
         char ch, *p;
         time_t now;
         int fd, saved_errno;
-	char *stdp, tbuf[2048], fmt_cpy[1024], timbuf[26];
+	char *stdp = NULL, tbuf[2048], fmt_cpy[1024], timbuf[26];
 #ifndef __EMX__
 	FILE *fp, *fmt_fp;
 	struct bufcookie tbuf_cookie;

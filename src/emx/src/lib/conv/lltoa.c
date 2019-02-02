@@ -19,7 +19,7 @@ char *_STD(lltoa) (long long value, char *string, int radix)
   char digits[64];
   unsigned long long x;
   int i;
-  long rem;
+  unsigned long rem;
 
   dst = string;
   if (radix < 2 || radix > 36)
