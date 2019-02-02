@@ -58,7 +58,7 @@ int _STD(waitid)(idtype_t enmIdType, id_t Id, siginfo_t *pSigInfo, int fOptions)
     /*
      * Validate options.
      */
-    if (!fOptions & (WEXITED | WUNTRACED | WSTOPPED | WCONTINUED))
+    if (!(fOptions & (WEXITED | WUNTRACED | WSTOPPED | WCONTINUED)))
     {
         errno = EINVAL;
         LIBCLOG_ERROR_RETURN_MSG(-1, "ret -1 - No event was selected! fOptions=%#x\n", fOptions);

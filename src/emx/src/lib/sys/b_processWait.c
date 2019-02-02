@@ -800,7 +800,7 @@ int __libc_Back_processWait(idtype_t enmIdType, id_t Id, siginfo_t *pSigInfo, un
     /*
      * Validate options.
      */
-    if (!fOptions & (WEXITED | WUNTRACED | WSTOPPED | WCONTINUED))
+    if (!(fOptions & (WEXITED | WUNTRACED | WSTOPPED | WCONTINUED)))
         LIBCLOG_ERROR_RETURN(-EINVAL, "ret -EINVAL - No event was selected! fOptions=%#x\n", fOptions);
     if (fOptions & ~(WEXITED | WUNTRACED | WSTOPPED | WCONTINUED | WNOHANG | WNOWAIT))
         LIBCLOG_ERROR_RETURN(-EINVAL, "ret -EINVAL - Unknown options %#x. (fOptions=%#x)\n",
