@@ -198,7 +198,8 @@ static char *ystrdup (const char *s)
 
 static void usage (void)
 {
-  fputs ("emxexp " VERSION INNOTEK_VERSION " -- Copyright (c) 1993-1995 by Eberhard Mattes\n\n"
+  fputs ("emxexp " VERSION VERSION_DETAILS
+         "\nCopyright (c) 1993-1995 by Eberhard Mattes\n" VERSION_COPYRIGHT "\n\n"
          "Usage: emxexp [-n] [-u] [-o[<ordinal>] <input_file>...\n\n"
          "Options:\n"
          "  -n          Output NONAME keyword for each exported symbol\n"

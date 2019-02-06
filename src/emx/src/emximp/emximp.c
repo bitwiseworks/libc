@@ -110,7 +110,8 @@ static void write_a_import (const char *func_name, const char *mod_name,
 
 static void usage (void)
 {
-  puts ("emximp " VERSION INNOTEK_VERSION " -- Copyright (c) 1992-1996 by Eberhard Mattes\n");
+  puts ("emximp " VERSION VERSION_DETAILS
+        "\nCopyright (c) 1992-1996 by Eberhard Mattes\n" VERSION_COPYRIGHT "\n");
   puts ("Usage:");
   puts ("  emximp [-a[<assembler>]] [-b <base_name>|<prefix_length>] "
         "[-p <module>] ...");

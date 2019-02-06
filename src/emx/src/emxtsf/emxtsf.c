@@ -55,7 +55,8 @@ static void *xmalloc (size_t n)
 
 static void usage (void)
 {
-  fputs ("emxtsf " VERSION INNOTEK_VERSION " -- Copyright (c) 1996 by Eberhard Mattes\n\n"
+  fputs ("emxtsf " VERSION VERSION_DETAILS
+         "\nCopyright (c) 1996 by Eberhard Mattes\n" VERSION_COPYRIGHT "\n\n"
          "Usage: emxtsf [-d <dll_name>] [-w <level>] <tss_file> <map_file> <def_file>\n",
          stderr);
   exit (1);

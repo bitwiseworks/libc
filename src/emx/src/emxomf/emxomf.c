@@ -991,10 +991,10 @@ static void put_mem (const void *src, int size)
    names stored in the LNAMES list.
 
    LNAMES record:
-   Ú
-   ³1   String length n
-   ³n   Name
-   À
+   ï¿½
+   ï¿½1   String length n
+   ï¿½n   Name
+   ï¿½
 
    Name indices are assigned sequentially. */
 
@@ -1054,11 +1054,11 @@ static void add_extdef (int *pstarted, const char *name, int type)
    symbols stored in the sym_ptr array.
 
    EXTDEF record:
-   Ú
-   ³1   String length n
-   ³n   External name
-   ³1-2 Type index
-   À
+   ï¿½
+   ï¿½1   String length n
+   ï¿½n   External name
+   ï¿½1-2 Type index
+   ï¿½
 
    Symbol indices are assigned sequentially.  */
 
@@ -1107,10 +1107,10 @@ static void write_extdef (void)
    symbols stored in the sym_ptr array.
 
    WKEXT record:
-   Ú
-   ³1-2 weak EXTDEF index
-   ³1-2 default resolution EXTDEF index
-   À
+   ï¿½
+   ï¿½1-2 weak EXTDEF index
+   ï¿½1-2 default resolution EXTDEF index
+   ï¿½
 
    */
 
@@ -1262,12 +1262,12 @@ static void write_alias (void)
     1-2 Base group
     1-2 Base segment
     0/2 Base frame
-   Ú
-   ³1   String length n
-   ³n   Public name
-   ³2/4 Public offset (4 bytes for 32-bit PUBDEF record)
-   ³1-2 Type index
-   À
+   ï¿½
+   ï¿½1   String length n
+   ï¿½n   Public name
+   ï¿½2/4 Public offset (4 bytes for 32-bit PUBDEF record)
+   ï¿½1-2 Type index
+   ï¿½
 
    The base frame field is present only if the base segment field is
    0. */
@@ -1418,13 +1418,13 @@ static void write_pubdef (void)
    variable).
 
    COMDEF record:
-   Ú
-   ³1   String length n
-   ³n   Communal name
-   ³1-2 Type index
-   ³1   Data type (0x61: FAR data, 0x62: NEAR data)
-   ³1-5 Communal length
-   À
+   ï¿½
+   ï¿½1   String length n
+   ï¿½n   Communal name
+   ï¿½1-2 Type index
+   ï¿½1   Data type (0x61: FAR data, 0x62: NEAR data)
+   ï¿½1-5 Communal length
+   ï¿½
 
    The length is encoded in 1 to 5 bytes, depending on the value:
 
@@ -1583,9 +1583,9 @@ static int reloc_compare (const void *x1, const void *x2)
     n   Data bytes (n is derived from record length)
 
    FIXUPP record:
-   Ú
-   ³?   THREAD subrecord or FIXUP subrecord
-   À
+   ï¿½
+   ï¿½?   THREAD subrecord or FIXUP subrecord
+   ï¿½
 
    THREAD subrecord:
     1   Flags
@@ -3733,7 +3733,8 @@ invalid:
 
 static void usage (void)
 {
-  puts ("emxomf " VERSION INNOTEK_VERSION " -- Copyright (c) 1992-1995 by Eberhard Mattes\n");
+  puts ("emxomf " VERSION VERSION_DETAILS
+        "\nCopyright (c) 1992-1995 by Eberhard Mattes\n" VERSION_COPYRIGHT "\n");
   puts ("Usage:");
   puts ("  emxomf [-dgqs] [-l[<symbol>]] [-m <symbol>] [-p <page_size>]");
   puts ("         [-i <default_lib>] [-I <idmdll>] [-D <dataseg>]");

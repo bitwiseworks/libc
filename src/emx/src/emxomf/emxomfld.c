@@ -1506,10 +1506,11 @@ static void cleanup (void)
 
 static void usage (void)
 {
-  fputs ("emxomfld " VERSION INNOTEK_VERSION "\n"
+  fputs ("emxomfld " VERSION VERSION_DETAILS "\n"
          "Copyright (c) 1992-1996 by Eberhard Mattes\n"
          "Copyright (c) 2003 by InnoTek Systemberatung GmbH\n"
          "Copyright (c) 2003-2006 by Knut St. Osmundsen\n"
+         VERSION_COPYRIGHT "\n"
          "\n", stderr);
   fputs ("Usage: emxomfld -o <file> [-l <lib>] [-L <libdir>] [-T <base>] [-igtsS]\n"
          "           [-Zexe] [-Zdll] [-Zsym] [-Zstack <size>] [-Zmap[=<map_file>]]\n"

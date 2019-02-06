@@ -265,7 +265,8 @@ static void warning (const char *fmt, ...)
 
 static void usage (void)
 {
-  puts ("emxaout " VERSION INNOTEK_VERSION " -- Copyright (c) 1994-1996 by Eberhard Mattes\n");
+  puts ("emxaout " VERSION VERSION_DETAILS
+        "\nCopyright (c) 1994-1996 by Eberhard Mattes\n" VERSION_COPYRIGHT "\n");
   puts ("Usage:");
   puts ("  emxaout [-u] [-o <output_file>] <input_file>");
   puts ("\nOptions:");
@@ -482,10 +483,10 @@ static void term_module (void)
 /* Convert an LNAMES record.
 
    LNAMES record:
-   Ú
-   ³1   String length n
-   ³n   Name
-   À
+   ï¿½
+   ï¿½1   String length n
+   ï¿½n   Name
+   ï¿½
 
    Name indices are assigned sequentially. */
 
@@ -507,10 +508,10 @@ static void conv_lnames (void)
 
    GRPDEF record:
     1/2 Group name index
-   Ú
-   ³1   0xff (use segment index)
-   ³1/2 Segment index
-   À
+   ï¿½
+   ï¿½1   0xff (use segment index)
+   ï¿½1/2 Segment index
+   ï¿½
 
    Group indices are assigned sequentially. */
 
@@ -657,12 +658,12 @@ static void conv_segdef (void)
     1-2 Base group
     1-2 Base segment
     0/2 Base frame
-   Ú
-   ³1   String length n
-   ³n   Public name
-   ³2/4 Public offset (4 bytes for 32-bit PUBDEF record)
-   ³1-2 Type index
-   À
+   ï¿½
+   ï¿½1   String length n
+   ï¿½n   Public name
+   ï¿½2/4 Public offset (4 bytes for 32-bit PUBDEF record)
+   ï¿½1-2 Type index
+   ï¿½
 
    The base frame field is present only if the base segment field is
    0. */
@@ -699,11 +700,11 @@ static void conv_pubdef (void)
 /* Convert an EXTDEF record.
 
    EXTDEF record:
-   Ú
-   ³1   String length n
-   ³n   External name
-   ³1-2 Type index
-   À
+   ï¿½
+   ï¿½1   String length n
+   ï¿½n   External name
+   ï¿½1-2 Type index
+   ï¿½
 
    Symbol indices are assigned sequentially by EXTDEF and COMDEF. */
 
@@ -728,13 +729,13 @@ static void conv_extdef (void)
 /* Convert an COMDEF record.
 
    COMDEF record:
-   Ú
-   ³1   String length n
-   ³n   Communal name
-   ³1-2 Type index
-   ³1   Data type (0x61: FAR data, 0x62: NEAR data)
-   ³1-5 Communal length
-   À
+   ï¿½
+   ï¿½1   String length n
+   ï¿½n   Communal name
+   ï¿½1-2 Type index
+   ï¿½1   Data type (0x61: FAR data, 0x62: NEAR data)
+   ï¿½1-5 Communal length
+   ï¿½
 
    The length is encoded in 1 to 5 bytes, depending on the value:
 
@@ -893,9 +894,9 @@ static void conv_lidata (void)
    of this program.
 
    FIXUPP record:
-   Ú
-   ³?   THREAD subrecord or FIXUP subrecord
-   À
+   ï¿½
+   ï¿½?   THREAD subrecord or FIXUP subrecord
+   ï¿½
 
    THREAD subrecord:
     1   Flags

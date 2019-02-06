@@ -2457,8 +2457,8 @@ failure:
 
 static void usage (void)
 {
-  fputs ("listomf " VERSION INNOTEK_VERSION " -- "
-         "Copyright (c) 1993-1996 by Eberhard Mattes\n\n"
+  fputs ("listomf " VERSION VERSION_DETAILS
+         "\nCopyright (c) 1993-1996 by Eberhard Mattes\n" VERSION_COPYRIGHT "\n\n"
          "Usage: listomf [-a] [-d] <input_file>\n\n"
          "Options:\n"
          "  -a    Show addresses of records\n"

@@ -81,8 +81,8 @@ int main (int argc, char *argv[]);
 
 static void NORETURN usage (void)
 {
-  fprintf (stderr, "emxcat " VERSION INNOTEK_VERSION " -- "
-           "Copyright (c) 1992-1995 by Eberhard Mattes\n\n");
+  fprintf (stderr, "emxcat " VERSION VERSION_DETAILS
+           "\nCopyright (c) 1992-1995 by Eberhard Mattes\n" VERSION_COPYRIGHT "\n\n");
   fprintf (stderr, "Usage: emxcat [-D<symbol>]... -o <output_file> <input_file>...\n");
   exit (1);
 }

@@ -218,8 +218,8 @@ static long my_size (struct file *f)
 
 static void usage (void)
 {
-  fputs ("emxstack " VERSION INNOTEK_VERSION " -- "
-         "Copyright (c) 1994-1995 by Eberhard Mattes\n\n", stderr);
+  fputs ("emxstack " VERSION VERSION_DETAILS
+         "\nCopyright (c) 1994-1995 by Eberhard Mattes\n" VERSION_COPYRIGHT "\n\n", stderr);
   fputs ("Usage: emxstack <command> [<options>] <file>...\n", stderr);
   fputs ("\nCommands:\n", stderr);
   fputs ("-c        Check whether stack size should be fixed\n", stderr);

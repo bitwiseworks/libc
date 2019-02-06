@@ -1950,7 +1950,7 @@ EXPORTS
     "___libc_Back_fsDirCurrentSetFH" @1948
     "__std_fchdir" @1949
     "___libc_Back_ioDirGetEntries" @1950
-    "__std_getdirents" @1951
+    "__std_getdirents" = "__std_getdents" @1951
     "___libc_Back_ioFileControlStandard" @1952
     "___libc_Back_termDll" @1953
     "___libc_ForkDeregisterModule" @1954
@@ -1958,7 +1958,6 @@ EXPORTS
     "__std_nanf" @1956
     "__std_nanl" @1957
     "___libc_Back_signalLostPoke" @1958
-    
     "___libc_Back_fsPathConf" @1959
     "___libc_Back_ioPathConf" @1960
     ; kLIBC 0.6.6
@@ -1972,3 +1971,6 @@ EXPORTS
     "__searchenv2_one_file" @1968
     "__searchenv2_value" @1969
 
+    ; LIBC Next 0.1.0
+    "__std_getdents" @1970
+    "__std_getdirentries" @1971

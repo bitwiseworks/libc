@@ -184,8 +184,8 @@ uchar *xstrdup (const uchar *s)
 
 static void usage (void)
 {
-  fputs ("emxdoc " VERSION INNOTEK_VERSION " -- "
-         "Copyright (c) 1993-1999 by Eberhard Mattes\n\n", stderr);
+  fputs ("emxdoc " VERSION VERSION_DETAILS
+         "\nCopyright (c) 1993-1999 by Eberhard Mattes\n" VERSION_COPYRIGHT "\n\n", stderr);
   fputs ("Usage:\n", stderr);
   fputs ("  emxdoc -H [-o <output>] [-x <xref>] <input>\n", stderr);
   fputs ("  emxdoc -T [-fr] [-o <output>] <input>\n", stderr);

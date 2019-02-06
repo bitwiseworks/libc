@@ -86,7 +86,7 @@ LIBC.STUBARG	:= $(if $(LIBC.STUB),-Zlinker "OPTION STUB=$(LIBC.STUB)")
 else
 LIBC.STUBARG	:= $(if $(LIBC.STUB),-Zlinker -STUB:$(LIBC.STUB))
 endif
-LIBC.DLL        := $.omf/libc$(VH)$(VM)$(VL).dll
+LIBC.DLL        := $.omf/libcn$(VH).dll
 LIBC.IMPLIB     := $.omf/libc_dll.lib $.aout/libc_dll.a
 LIBC.IMPLIB.TCPIPV4 := $.omf/tcpipv4/libc_dll.lib $.aout/tcpipv4/libc_dll.a
 LIBC.DEF        := $.omf/libc.def
@@ -205,8 +205,8 @@ endif
 # LIBC .def file
 $(LIBC.DEF): $(LIBC.LIBS) src/lib/libc.def version.smak
 	$(call RM,$@)
-	@$(call FECHO,$@,LIBRARY libc$(VH)$(VM)$(VL) INITINSTANCE TERMINSTANCE)
-	@$(call FECHO,$@,DESCRIPTION \"kLIBC version $(VERSION) $(INNOTEK_VERSION)\")
+	@$(call FECHO,$@,LIBRARY libcn$(VH) INITINSTANCE TERMINSTANCE)
+	@$(call FECHO,$@,DESCRIPTION \"LIBC Next version $(VERSION) $(VERSION_DETAILS)\")
 	@$(call FECHO,$@,DATA MULTIPLE)
 	@$(call FECHO,$@,CODE SHARED)
 	@$(call FECHO,$@,EXPORTS)
@@ -485,7 +485,7 @@ FWDLIB.DEPS.CPP := \
 $.omf/libc06.def: src/lib/libc06.def
 	$(call RM,$@)
 	cat $^ >> $@
-	@$(call FECHO,$@,DESCRIPTION \"kLIBC version $(VERSION) $(INNOTEK_VERSION)\")
+	@$(call FECHO,$@,DESCRIPTION \"LIBC Next version $(VERSION) $(VERSION_DETAILS)\")
 $.omf/libc06.dll: $.omf/libc06.def $(FWDLIB.DEPS)
 	gcc -Zomf -o $@ -nostdlib -Zdll $^
 $(INS)lib/libc06.dll: $.omf/libc06.dll
@@ -498,7 +498,7 @@ libc-dll: $.omf/libc06.dll
 $.omf/libc061.def: src/lib/libc061.def
 	$(call RM,$@)
 	cat $^ > $@
-	@$(call FECHO,$@,DESCRIPTION \"kLIBC version $(VERSION) $(INNOTEK_VERSION)\")
+	@$(call FECHO,$@,DESCRIPTION \"LIBC Next version $(VERSION) $(VERSION_DETAILS)\")
 $.omf/libc061.dll: $.omf/libc061.def $(FWDLIB.DEPS)
 	gcc -Zomf -o $@ -nostdlib -Zdll $^
 $(INS)lib/libc061.dll: $.omf/libc061.dll
@@ -511,7 +511,7 @@ libc-dll: $.omf/libc061.dll
 $.omf/libc062.def: src/lib/libc062.def src/lib/libstdc++.def
 	$(call RM,$@)
 	cat $^ > $@
-	@$(call FECHO,$@,DESCRIPTION \"kLIBC version $(VERSION) $(INNOTEK_VERSION)\")
+	@$(call FECHO,$@,DESCRIPTION \"LIBC Next version $(VERSION) $(VERSION_DETAILS)\")
 $.omf/libc062.dll: $.omf/libc062.def $(FWDLIB.DEPS)
 	gcc -Zomf -o $@ -nostdlib -Zdll $^
 $(INS)lib/libc062.dll: $.omf/libc062.dll
@@ -524,7 +524,7 @@ libc-dll: $.omf/libc062.dll
 $.omf/libc063.def: src/lib/libc063.def src/lib/libstdc++.def
 	$(call RM,$@)
 	cat $^ > $@
-	@$(call FECHO,$@,DESCRIPTION \"kLIBC version $(VERSION) $(INNOTEK_VERSION)\")
+	@$(call FECHO,$@,DESCRIPTION \"LIBC Next version $(VERSION) $(VERSION_DETAILS)\")
 $.omf/libc063.dll: $.omf/libc063.def $(FWDLIB.DEPS)
 	gcc -Zomf -o $@ -nostdlib -Zdll $^
 $(INS)lib/libc063.dll: $.omf/libc063.dll
@@ -537,7 +537,7 @@ libc-dll: $.omf/libc063.dll
 $.omf/libc064.def: src/lib/libc064.def src/lib/libstdc++.def
 	$(call RM,$@)
 	cat $^ > $@
-	@$(call FECHO,$@,DESCRIPTION \"kLIBC version $(VERSION) $(INNOTEK_VERSION)\")
+	@$(call FECHO,$@,DESCRIPTION \"LIBC Next version $(VERSION) $(VERSION_DETAILS)\")
 $.omf/libc064.dll: $.omf/libc064.def $(FWDLIB.DEPS)
 	gcc -Zomf -o $@ -nostdlib -Zdll $^
 $(INS)lib/libc064.dll: $.omf/libc064.dll
@@ -550,7 +550,7 @@ libc-dll: $.omf/libc064.dll
 $.omf/libc065.def: src/lib/libc065.def src/lib/libstdc++.def
 	$(call RM,$@)
 	cat $^ > $@
-	@$(call FECHO,$@,DESCRIPTION \"kLIBC version $(VERSION) $(INNOTEK_VERSION)\")
+	@$(call FECHO,$@,DESCRIPTION \"LIBC Next version $(VERSION) $(VERSION_DETAILS)\")
 $.omf/libc065.dll: $.omf/libc065.def $(FWDLIB.DEPS)
 	gcc -Zomf -o $@ -nostdlib -Zdll $^
 $(INS)lib/libc065.dll: $.omf/libc065.dll
@@ -563,7 +563,7 @@ libc-dll: $.omf/libc065.dll
 $.omf/libc066.def: src/lib/libc066.def src/lib/libstdc++.def
 	$(call RM,$@)
 	cat $^ > $@
-	@$(call FECHO,$@,DESCRIPTION \"kLIBC version $(VERSION) $(INNOTEK_VERSION)\")
+	@$(call FECHO,$@,DESCRIPTION \"LIBC Next version $(VERSION) $(VERSION_DETAILS)\")
 $.omf/libc066.dll: $.omf/libc066.def $.omf/libc_dll.lib $(FWDLIB.DEPS.CPP)
 	gcc -Zomf -o $@ -nostdlib -Zdll -Zmap $^
 $.omf/libc066.lib: $.omf/libc066.dll

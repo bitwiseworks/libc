@@ -57,8 +57,8 @@ static struct omflib *new_lib;
 
 static void usage (void)
 {
-  fprintf (stderr, "emxomfar " VERSION INNOTEK_VERSION " -- "
-           "Copyright (c) 1992-1996 by Eberhard Mattes\n\n");
+  fprintf (stderr, "emxomfar " VERSION VERSION_DETAILS
+           "\nCopyright (c) 1992-1996 by Eberhard Mattes\n" VERSION_COPYRIGHT "\n\n");
   fprintf (stderr, "Usage: emxomfar [-p#] <command> <library_file> [<module>]...\n");
   fprintf (stderr, "\nCommands:\n");
   fprintf (stderr, "  d    delete module from library\n");

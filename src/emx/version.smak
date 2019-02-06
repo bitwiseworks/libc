@@ -3,13 +3,12 @@
 # High part of version number
 VH = 0
 # Middle part of version number
-VM = 6
+VM = 1
 # Low part of version number
-ifdef OFFICIAL_BIRD_VERSION
-VL = 6
-else
-VL = 6x
-endif
+VL = 0
+
+# NOTE: VH must grow each time backward ABI compatibility breaks! Otherwise,
+# increasing VM or VL is enough.
 
 # The name of this package
 PACKAGE = GNU C for OS/2 runtime and tools
@@ -20,16 +19,17 @@ VERSION = $(VH).$(VM).$(VL)
 # The flag for C compiler to pass the VERSION macro to preprocessor
 CFLAGS.DEF.VERSION = -DVERSION=\"$(VERSION)\"
 
-# INNOTEK_VERSION is normally defined in the environment by a toplevel makefile.
-ifndef INNOTEK_VERSION
-ifdef OFFICIAL_BIRD_VERSION
-export INNOTEK_VERSION        ?= (Bird Build $(shell date '+%Y-%m-%d %H:%M'))
+ifdef OFFICIAL_VERSION
+ifndef BUILD_ID
+$(error BUILD_ID must be set for OFFICIAL_VERSION builds)
+endif
+export VERSION_DETAILS = (build $(BUILD_ID))
 else
-export INNOTEK_VERSION        ?= (Non-Bird Build $(shell date '+%Y-%m-%d %H:%M'))
+export VERSION_DETAILS = (test build $(shell date '+%Y-%m-%d %H:%M'))
 endif
-endif
-CFLAGS.DEF.VERSION += '-DINNOTEK_VERSION=" $(INNOTEK_VERSION)"'
+CFLAGS.DEF.VERSION += '-DVERSION_DETAILS=" $(VERSION_DETAILS)"'
 
 # Copyright
-COPYRIGHT = Copyright (c) 2003-2005 InnoTek Systemberatung GmbH
+COPYRIGHT = Copyright (c) 2019 bww bitwise works GmbH
+CFLAGS.DEF.VERSION += '-DVERSION_COPYRIGHT="$(COPYRIGHT)"'
 

@@ -327,8 +327,8 @@ include templates.smak
 # Include all submakefiles
 -include $(SUBMAK)
 
-ifdef OFFICIAL_BIRD_VERSION
-ifneq ($(filter-out eniac delirium os2bld, $(HOSTNAME)),)
+ifdef OFFICIAL_VERSION
+ifneq ($(filter-out novator, $(HOSTNAME)),)
 $(error yea, nice try! Now go be ashamed of yourself!)
 endif
 endif

@@ -724,8 +724,8 @@ static void c_list (void)
     {
       if (!header)
         {
-          puts ("Time-out ³ Program");
-          puts ("ÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ");
+          puts ("Time-out ï¿½ Program");
+          puts ("ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½");
           header = TRUE;
         }
       if (seconds == _EMXLOAD_INDEFINITE)
@@ -735,7 +735,7 @@ static void c_list (void)
       for (p = name; *p != 0; ++p)
         if (*p == '/')
           *p = '\\';
-      printf ("%8s ³ %s\n", timeout, name);
+      printf ("%8s ï¿½ %s\n", timeout, name);
     }
 }
 
@@ -745,8 +745,8 @@ static void c_list (void)
 
 static void usage (void)
 {
-  fputs ("emxload " VERSION INNOTEK_VERSION " -- "
-         "Copyright (c) 1993-1996 by Eberhard Mattes\n\n"
+  fputs ("emxload " VERSION VERSION_DETAILS
+         "\nCopyright (c) 1993-1996 by Eberhard Mattes\n" VERSION_COPYRIGHT "\n\n"
          "Usage: emxload [-m <limit>] [-s <limit>] [-e] [-u[w]]\n"
          "               [-gcc] [-g++] [-gobjc] [-gnat] [-omf] <program>...\n"
          "       emxload -l\n"
