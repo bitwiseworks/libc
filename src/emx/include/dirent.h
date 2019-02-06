@@ -129,7 +129,7 @@ __BEGIN_DECLS
 /** @todo DIR	*__opendir2(const char *, int); */
 /** @todo int	 alphasort(const void *, const void *); */
 int	 getdents(int, char *, int);
-int	 getdirentries(int, char *, int, long *);
+int	 getdirentries(int, char *, int, off_t *);
 #endif
 DIR	*opendir(const char *);
 struct dirent *

@@ -1,7 +1,7 @@
 /* $Id: $ */
 /** @file
  *
- * LIBC getdirents().
+ * LIBC getdends() and getdirentries().
  *
  * Copyright (c) 2005 knut st. osmundsen <bird@innotek.de>
  *
@@ -49,7 +49,7 @@
  * @param   cbBuf   Size of the buffer.
  *
  */
-int _STD(getdirents)(int fh, char *pvBuf, int cbBuf)
+int _STD(getdents)(int fh, char *pvBuf, int cbBuf)
 {
     LIBCLOG_ENTER("fh=%d pvBuf=%p cbBuf=%d(%#x)\n", fh, pvBuf, cbBuf, cbBuf);
 
@@ -61,3 +61,30 @@ int _STD(getdirents)(int fh, char *pvBuf, int cbBuf)
     LIBCLOG_ERROR_RETURN_P(-1);
 }
 
+
+/**
+ * Reads directory entries from an open directory.
+ *
+ * @returns Number of bytes read.
+ * @returns -1 on and errno set to EBADF, EINVAL or EIO.
+ *
+ * @param   fh      The file handle of an open directory.
+ * @param   pvBuf   Where to store the directory entries.
+ *                  The returned data is a series of dirent structs with
+ *                  variable name size. d_reclen must be used the offset
+ *                  to the next struct (from the start of the current one).
+ * @param   cbBuf   Size of the buffer.
+ * @param   poff    Where to store the lseek offset of the first entry.
+ *
+ */
+int _STD(getdirentries)(int fh, char *pvBuf, int cbBuf, off_t *poff)
+{
+    LIBCLOG_ENTER("fh=%d pvBuf=%p cbBuf=%d(%#x) poff=%p\n", fh, pvBuf, cbBuf, cbBuf, poff);
+
+    ssize_t cb = __libc_Back_ioDirGetEntries(fh, pvBuf, cbBuf, poff);
+    if (cb >= 0)
+        LIBCLOG_RETURN_INT((int)cb);
+
+    errno = -cb;
+    LIBCLOG_ERROR_RETURN_P(-1);
+}
