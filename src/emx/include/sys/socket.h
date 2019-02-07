@@ -391,6 +391,12 @@ struct cmsghdr {
 
 #define	CMSG_FIRSTHDR(mhdr)	((struct cmsghdr *)(mhdr)->msg_control)
 
+/* size of control message for contents of length len inlcuding its header */
+#define CMSG_LEN(len) (_ALIGN(sizeof(struct cmsghdr)) + (len))
+
+/* size needed to hold control message and its contents of length len */
+#define CMSG_SPACE(len) (_ALIGN(sizeof(struct cmsghdr)) + _ALIGN(len))
+
 /* "Socket"-level control message types: */
 #define	SCM_RIGHTS	0x01		/* access rights (array of int) */
 
