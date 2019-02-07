@@ -203,7 +203,10 @@ endif
 endif
 
 # LIBC .def file
-$(LIBC.DEF): $(LIBC.LIBS) src/lib/libc.def version.smak
+$(LIBC.DEF): $(LIBC.LIBS) src/lib/libc.def version.smak include/features.h
+	@$(call ECHO,Checking __LIBCN__/__LIBCN_MINOR__ macros...)
+	@grep -E "^[[:space:]]*#define[[:space:]]+__LIBCN__[[:space:]]+$(VH)[[:space:]]*$$" include/features.h
+	@grep -E "^[[:space:]]*#define[[:space:]]+__LIBCN_MINOR__[[:space:]]+$(VM)[[:space:]]*$$" include/features.h
 	$(call RM,$@)
 	@$(call FECHO,$@,LIBRARY libcn$(VH) INITINSTANCE TERMINSTANCE)
 	@$(call FECHO,$@,DESCRIPTION \"LIBC Next version $(VERSION) $(VERSION_DETAILS)\")

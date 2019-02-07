@@ -7,8 +7,13 @@ VM = 1
 # Low part of version number
 VL = 0
 
-# NOTE: VH must grow each time backward ABI compatibility breaks! Otherwise,
-# increasing VM or VL is enough.
+# NOTE: Our versioning rules:
+#
+# - VH++ each time backward ABI compatibility breaks. Note that
+#   __LIBCN__ in features.h must be always updated together with VH.
+# - VM++ each time public any API is changed. Note that
+#   __LIBCN_MINOR__ in features.h must be always updated together with VM.
+# - VL++ with each public release.
 
 # The name of this package
 PACKAGE = GNU C for OS/2 runtime and tools

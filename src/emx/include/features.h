@@ -351,6 +351,14 @@
 # define __GLIBC_HAVE_LONG_LONG	1
 #endif
 
+/* Major and minor version number of the LIBC Next library package.  Use
+   these macros to test for features in specific releases.  */
+#define __LIBCN__ 0
+#define __LIBCN_MINOR__ 1
+
+#define __LIBCN_PREREQ(maj, min) \
+	((__LIBCN__ << 16) + __LIBCN_MINOR__ >= ((maj) << 16) + (min))
+
 /* This is here only because every header file already includes this one.  */
 #ifndef __ASSEMBLER__
 # ifndef _SYS_CDEFS_H
