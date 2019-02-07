@@ -1974,3 +1974,4 @@ EXPORTS
     ; LIBC Next 0.1.0
     "__std_getdents" @1970
     "__std_getdirentries" @1971
+    "___libc_native2errno" @1972
