@@ -313,7 +313,7 @@ static int stripomf(const char *pszFile)
 static int usage(void)
 {
     fputs("stripomf " VERSION VERSION_DETAILS
-          "Copyright (c) 2003 by InnoTek Systemberatung GmbH\n" VERSION_COPYRIGHT "\n\n"
+          "\nCopyright (c) 2003 by InnoTek Systemberatung GmbH\n" VERSION_COPYRIGHT "\n\n"
           "Usage: stripomf <input_file>\n\n",
           stderr);
     return 8;
