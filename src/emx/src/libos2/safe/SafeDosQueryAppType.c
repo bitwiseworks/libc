@@ -1,4 +1,4 @@
-/* $Id: SafeDosQueryAppType.c 3410 2007-06-11 19:08:22Z bird $ */
+/* $Id: SafeDosQueryAppType.c 3942 2014-12-26 19:15:42Z bird $ */
 /** @file
  *
  * SafeDosQueryAppType()
@@ -47,7 +47,6 @@ ULONG APIENTRY SafeDosQueryAppType(PCSZ pszName, PULONG pulFlags)
         *pulFlags = ful1;
 
     SAFE_PCSZ_DONE(pszName);
-    SAFE_DOS_FAILURE();
     return rc;
 }
 

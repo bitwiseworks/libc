@@ -1,10 +1,12 @@
 /* os2safe.h,v 1.1 2003/10/06 00:54:20 bird Exp */
 /** @file
- *
  * OS/2 API High Memory Wrappers.
  * You include this file before os2.h and link with -los2safe.
+ */
+
+/*
  *
- * Copyright (c) 2003-2014 knut st. osmundsen <bird-srcspam@anduin.net>
+ * Copyright (c) 2003-2015 knut st. osmundsen <bird-srcspam@anduin.net>
  *
  *
  * This program is free software; you can redistribute it and/or modify
@@ -44,6 +46,31 @@
 #define DosStartSession         SafeDosStartSession
 #define DosQueryAppType         SafeDosQueryAppType
 #define DosDevIOCtl             SafeDosDevIOCtl
+
+#define DosMapCase              SafeDosMapCase
+#define DosQueryCollate         SafeDosQueryCollate
+#define DosQueryCp              SafeDosQueryCp
+#define DosQueryCtryInfo        SafeDosQueryCtryInfo
+#define DosQueryDBCSEnv         SafeDosQueryDBCSEnv
+
 #define WinUpper                SafeWinUpper
 
+/*
+ * Note! The DOS queue API does not work with data, but with addresses, request
+ * numbers, priorities and process IDs.  I.e. the data address you give
+ * DosWriteQueue is NOT used to memcpy() what it points to into some internal
+ * buffer that is then queued.  Instead that address is converted to 16-bit and
+ * placed on the queue.
+ *
+ * This means that the data pointer passed to DosWriteQueue CANNOT be a high
+ * address!  (The wrappers below makes sure all the other pointer parameters
+ * can be pointing to high memory, though.)
+ */
+#define DosCreateQueue          SafeDosCreateQueue
+#define DosOpenQueue            SafeDosOpenQueue
+#define DosPeekQueue            SafeDosPeekQueue
+#define DosQueryQueue           SafeDosQueryQueue
+#define DosReadQueue            SafeDosReadQueue
+
 #endif
+

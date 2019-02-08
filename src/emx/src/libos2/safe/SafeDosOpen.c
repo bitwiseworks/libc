@@ -1,4 +1,4 @@
-/* $Id: SafeDosOpen.c 3926 2014-10-26 01:40:43Z bird $ */
+/* $Id: SafeDosOpen.c 3942 2014-12-26 19:15:42Z bird $ */
 /** @file
  * kLibC - Safe SafeDosOpen().
  *
@@ -49,7 +49,6 @@ ULONG APIENTRY SafeDosOpen(PCSZ pszFileName, PHFILE phFile, PULONG pulAction,
         *pulAction = ul1;
 
     SAFE_PCSZ_DONE(pszFileName);
-    SAFE_DOS_FAILURE();
     return rc;
 }
 

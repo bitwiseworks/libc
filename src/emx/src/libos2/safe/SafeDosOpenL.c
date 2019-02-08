@@ -1,4 +1,4 @@
-/* $Id: SafeDosOpenL.c 828 2003-10-10 23:38:11Z bird $ */
+/* $Id: SafeDosOpenL.c 3942 2014-12-26 19:15:42Z bird $ */
 /** @file
  *
  * SafeDosOpenL()
@@ -61,7 +61,6 @@ ULONG APIENTRY SafeDosOpenL(PCSZ pszFileName, PHFILE phFile, PULONG pulAction,
         *pulAction = ul1;
 
     SAFE_PCSZ_DONE(pszFileName);
-    SAFE_DOS_FAILURE();
     return rc;
 }
 

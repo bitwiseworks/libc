@@ -1,4 +1,4 @@
-/* $Id: SafeDosForceDelete.c 828 2003-10-10 23:38:11Z bird $ */
+/* $Id: SafeDosForceDelete.c 3942 2014-12-26 19:15:42Z bird $ */
 /** @file
  *
  * SafeDosForceDelete()
@@ -33,7 +33,6 @@ ULONG APIENTRY SafeDosForceDelete(PCSZ pszFileName)
     SAFE_PCSZ(pszFileName);
     rc = DosForceDelete(SAFE_PCSZ_USE(pszFileName));
     SAFE_PCSZ_DONE(pszFileName);
-    SAFE_DOS_FAILURE();
     return rc;
 }
 

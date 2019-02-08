@@ -1,4 +1,4 @@
-/* $Id: SafeDosWaitNPipe.c 828 2003-10-10 23:38:11Z bird $ */
+/* $Id: SafeDosWaitNPipe.c 3942 2014-12-26 19:15:42Z bird $ */
 /** @file
  *
  * SafeDosWaitNPipe()
@@ -33,6 +33,6 @@ ULONG APIENTRY SafeDosWaitNPipe(PCSZ pszName, ULONG ulTimeout)
     SAFE_PCSZ(pszName);
     rc = DosWaitNPipe(SAFE_PCSZ_USE(pszName), ulTimeout);
     SAFE_PCSZ_DONE(pszName);
-    SAFE_DOS_FAILURE();
     return rc;
 }
+
