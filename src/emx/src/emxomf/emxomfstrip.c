@@ -16,9 +16,11 @@
 #include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <unistd.h>
 #include <string.h>
 #include <sys/stat.h>
 #include <sys/omflib.h>
+#include <sys/emxload.h>
 #if defined(_MSC_VER) || defined(__WATCOMC__)
 # include <io.h>
 # define ftruncate _chsize
@@ -324,7 +326,7 @@ int main(int argc, char **argv)
                 break;
 
             case 'V':
-                printf(VERSION INNOTEK_VERSION "\n");
+                printf(VERSION VERSION_DETAILS "\n");
                 return 0;
 
             default:

@@ -26,6 +26,12 @@ include mkexe.smak
 .TLDF	:= -liberty
 include mkexe.smak
 
+.TARGET := emxomfstrip.exe
+.TKIND	:= $(TOOLFMT)
+.TSRC	:= src/emxomf/emxomfstrip.c
+.TCF	:= $(CFLAGS.DEF.VERSION)
+include mkexe.smak
+
 .TARGET := emxaout.exe
 .TKIND	:= $(TOOLFMT)
 .TSRC	:= $(addprefix src/emxomf/,emxaout.c grow.c)
