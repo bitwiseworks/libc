@@ -85,6 +85,19 @@ unsigned *__threadid (void);
 #endif
 /* bird: EMX - end */
 
+/* A null pointer constant.  */
+
+#undef NULL		/* in case <stdio.h> has defined it. */
+#ifdef __GNUG__
+#define NULL __null
+#else   /* G++ */
+#ifndef __cplusplus
+#define NULL ((void *)0)
+#else   /* C++ */
+#define NULL 0
+#endif  /* C++ */
+#endif  /* G++ */
+
 #if (defined (__STDC_VERSION__) && __STDC_VERSION__ >= 201112L) \
   || (defined(__cplusplus) && __cplusplus >= 201103L)
 #ifndef _GCC_MAX_ALIGN_T
