@@ -71,6 +71,34 @@ struct exe2_header
   word new_hi;                  /* High word of the location of the header */
 };
 
+
+/* exe1 + exe2, with more canonical member names. */
+struct exe1p2_header
+{
+  word e_magic;
+  word e_cblp;
+  word e_cp;
+  word e_crlc;
+  word e_cparhdr;
+  word e_minalloc;
+  word e_maxalloc;
+  word e_ss;
+  word e_sp;
+  word e_csum;
+  word e_ip;
+  word e_cs;
+  word e_lfarlc;
+  word e_ovno;
+  word e_res[4];
+  word e_oemid;
+  word e_oeminfo;
+  word e_res2[10];
+  dword e_lfanew;
+};
+
+#define EXE_MAGIC_MZ 0x5a4d
+
+
 /* This is the layout of the OS/2 LX header. */
 struct os2_header
 {
@@ -123,6 +151,9 @@ struct os2_header
   dword stack_size;             /* Stack size */
   dword reserved[5];            /* Reserved */
 };
+
+#define EXE_MAGIC_LX 0x584c
+
 
 /* This is the layout of an object table entry. */
 struct object
