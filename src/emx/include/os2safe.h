@@ -46,6 +46,7 @@
 #define DosStartSession         SafeDosStartSession
 #define DosQueryAppType         SafeDosQueryAppType
 #define DosDevIOCtl             SafeDosDevIOCtl
+#define DosEnumAttribute        SafeDosEnumAttribute
 
 #define DosMapCase              SafeDosMapCase
 #define DosQueryCollate         SafeDosQueryCollate

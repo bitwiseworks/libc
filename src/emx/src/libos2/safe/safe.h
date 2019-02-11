@@ -44,7 +44,7 @@ void *  _lmalloc(unsigned);
 /** Wrap an input only buffer. */
 #define SAFE_INBUF(arg, len, type) \
     { \
-        type *arg##_safe = arg; \
+        type *arg##_safe = (type *)arg; \
         if (SAFE_IS_HIGH(arg)) \
         { \
             arg##_safe = (type *)_lmalloc(len); \
