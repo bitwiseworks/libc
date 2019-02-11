@@ -448,7 +448,7 @@ _STD_WILDWILD = \
 	src/lib/lgpl/sysdeps/generic/*.c \
 	src/lib/lgpl/sysdeps/ieee754/ldbl-96/*.c
 $.stmp-libc-std: $(wildcard $(_STD_WILDWILD))
-	cd src/lib && gawk -f ./mkstd.awk $(patsubst src/lib/%,%,$^) > $.libc-std.h.tmp
+	cd src/lib && gawk -f ./mkstd.awk $(patsubst src/lib/%,%,$^) > $(realpath $.)/libc-std.h.tmp
 	$(call UPDATE,$.libc-std.h.tmp,$.libc-std.h)
 	$(call TOUCH,$@)
 
