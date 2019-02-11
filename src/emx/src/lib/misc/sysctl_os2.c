@@ -144,13 +144,13 @@ static int sysctl_hw_model(SYSCTL_HANDLER_ARGS)
     if (!u.szModel[0])
     {
         int i;
-        asm ("cpuid\n"
-             : "=a" (i),
-               "=b" (u.uRegs[0]),
-               "=c" (u.uRegs[2]),
-               "=d" (u.uRegs[1])
-             : "a" (0)
-             );
+        __asm__ ("cpuid\n"
+                 : "=a" (i),
+                   "=b" (u.uRegs[0]),
+                   "=c" (u.uRegs[2]),
+                   "=d" (u.uRegs[1])
+                 : "a" (0)
+                 );
     }
 
     return (sysctl_handle_string(oidp, u.szModel, sizeof(u.szModel), req));
@@ -164,16 +164,9 @@ SYSCTL_PROC(_hw, HW_MODEL, hw_model, CTLFLAG_RD,
  */
 static int sysctl_hw_ncpus(SYSCTL_HANDLER_ARGS)
 {
-    static u_int cCpus;
+    static u_int cCpus = 0;
     if (!cCpus)
-    {
-        ULONG ul;
-        FS_VAR_SAVE_LOAD();
-        if (DosQuerySysInfo(QSV_NUMPROCESSORS, QSV_NUMPROCESSORS, &ul, sizeof(ul)))
-            ul = 1;
-        cCpus = ul;
-        FS_RESTORE();
-    }
+        cCpus = sysconf(_SC_NPROCESSORS_ONLN);
 
     return (sysctl_handle_int(oidp, &cCpus, 0, req));
 }

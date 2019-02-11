@@ -7,6 +7,10 @@
 #include <errno.h>
 #include <sys/param.h>
 
+#define INCL_BASE
+#define INCL_FSMACROS
+#include <os2emx.h>
+
 /* Return the POSIX.1  minimum values, for now. */
 
 long _STD(sysconf) (int name)
@@ -51,6 +55,21 @@ long _STD(sysconf) (int name)
 
         case _SC_PAGESIZE:
             return PAGE_SIZE;
+
+        case _SC_NPROCESSORS_ONLN:
+        {
+            static long cCpus = 0;
+            if (!cCpus)
+            {
+                ULONG ul;
+                FS_VAR_SAVE_LOAD();
+                if (DosQuerySysInfo(QSV_NUMPROCESSORS, QSV_NUMPROCESSORS, &ul, sizeof(ul)))
+                    ul = 1;
+                cCpus = ul;
+                FS_RESTORE();
+            }
+            return cCpus;
+        }
 
         default:
             errno = EINVAL;
