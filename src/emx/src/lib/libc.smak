@@ -422,10 +422,20 @@ endif
 endif
 
 $(addprefix $(INS)lib/,$(notdir $(LIBC.IMPLIB))): $(LIBC.IMPLIB)
+ifeq ($(MODE),opt)
+	$(call CP,$(filter %.lib,$^),$(dir $@))
+	$(foreach l,$(filter %.a,$^),objcopy --strip-debug $l $(dir $@)$(notdir $l))
+else
 	$(call CP,$^,$(dir $@))
+endif
 
 $(addprefix $(INS)lib/tcpipv4/,$(notdir $(LIBC.IMPLIB.TCPIPV4))): $(LIBC.IMPLIB.TCPIPV4)
+ifeq ($(MODE),opt)
+	$(call CP,$(filter %.lib,$^),$(dir $@))
+	$(foreach l,$(filter %.a,$^),objcopy --strip-debug $l $(dir $@)$(notdir $l))
+else
 	$(call CP,$^,$(dir $@))
+endif
 
 # How libc-std.h can be auto-generated.
 # Unfortunately, we cannot use libc.a to find out all _std_ names since
