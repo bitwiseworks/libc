@@ -407,11 +407,14 @@ int         __libc_threadEnum(int (pfnCallback)(__LIBC_PTHREAD pCur, void *pvPar
 
     /* can't search something which isn't there. */
     if (gmtxThrdDB.fs == _FMS_UNINIT)
-        LIBCLOG_ERROR_RETURN_P(NULL);
+    {
+        errno = EINVAL;
+        LIBCLOG_ERROR_RETURN_INT(-1);
+    }
 
     rc = _fmutex_request(&gmtxThrdDB, 0);
     if (rc)
-        LIBCLOG_ERROR_RETURN(NULL, "ret NULL - fmutex f**ked. rc=%d\n", rc);
+        LIBCLOG_ERROR_RETURN(rc, "ret NULL - fmutex f**ked. rc=%d\n", rc);
 
     for (pThrd = gpThrdDB; pThrd; pThrd = pThrd->pNext)
     {
