@@ -69,10 +69,6 @@ typedef	__wchar_t	wchar_t;
 #endif
 #endif
 
-#ifndef	NULL
-#define	NULL	0
-#endif
-
 #define	offsetof(type, member)	__offsetof(type, member)
 
 
