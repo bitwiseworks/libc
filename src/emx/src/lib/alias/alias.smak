@@ -65,7 +65,7 @@ $.$(.TARG): $.libc-std.h src/lib/alias/alias.smak
 		fi \
 	done
 # archiver scripting
-	echo "CREATE $(@F)" > $@.ar-script
+	echo "CREATE $@" > $@.ar-script
 	fun1=; \
 	for fun in $(ALIAS.ALIASES); do \
 	    if test -z "$$fun1"; then \
@@ -84,7 +84,7 @@ $.$(.TARG): $.libc-std.h src/lib/alias/alias.smak
 	echo "SAVE" >> $@.ar-script
 	echo "END" >> $@.ar-script
 	rm -f $@
-	cd $(@D) && ar -M < $@.ar-script
+	ar -M < $@.ar-script
 
 include mkomflib.smak
 include comend.smak

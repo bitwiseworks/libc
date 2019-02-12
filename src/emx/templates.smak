@@ -41,18 +41,19 @@ define def_lib_ar
 $$.$(.TARG): $(.OBJS) $(.DEPS)
 ifdef KMK_VERSION
 	@kmk_builtin_append -tn $$@.ar-script \
-		"CREATE $$(@F)" \
+		"CREATE $$@" \
 		$(foreach x, $(filter %.o, $(sort $(.OBJS) $(.DEPS))), "ADDMOD $(x)") \
 		"SAVE" \
 		"END"
 else
-	echo "CREATE $$(@F)" > $$@.ar-script
+	echo "CREATE $$@" > $$@.ar-script
 	$(foreach x, $(filter %.o, $(sort $(.OBJS) $(.DEPS))), $(call def_lib_ar_addmod))
 	echo "SAVE" >> $$@.ar-script
 	echo "END" >> $$@.ar-script
 endif
 	rm -f $$@
-	cd $$(@D) && ar -M < $$@.ar-script
+	ar -M < $$@.ar-script
+
 endef
 
 # defined used by def_lib_ar to add a module to the script file. (blank line is imporant!)
