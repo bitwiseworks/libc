@@ -2,15 +2,14 @@
 # For a list of additional variables that can be defined prior to including
 # this submakefile see build.txt.
 
-## for opt builds we have our own install rules
-# objcopy nukes imports.
-#ifeq ($(findstring prof,$(.TKIND)),)
-#ifneq ($(findstring aout,$(.TKIND)),)
-#ifeq ($(MODE),opt)
-#.NOINST := 1
-#endif
-#endif
-#endif
+# for opt builds we have our own install rules
+ifeq ($(findstring prof,$(.TKIND)),)
+ifneq ($(findstring aout,$(.TKIND)),)
+ifeq ($(MODE),opt)
+.NOINST := 1
+endif
+endif
+endif
 		
 include common.smak
 
@@ -19,21 +18,21 @@ libs: $(.MODULE)
 # The rule for building an archive with imports
 $(eval $(call def_implib))
 
-## Rule for stripping debug info.
-#ifdef .NOINST
-#INS.FILES += $(INS)$(.INSDIR)$(.TARGET)
-#$(INS)$(.INSDIR)$(.TARGET): $.$(.TARG)
-#	objcopy --strip-debug $< $@
-#
-## No need in .dbg in NO_STRIP mode (which is for binaries only so we still
-## strip import libs with objcopy above)
-#ifndef NO_STRIP
-#INS.FILES += $(INS)$(.INSDIR)dbg/$(.TARGET)
-#$(INS)$(.INSDIR)dbg/$(.TARGET): $.$(.TARG)
-#	mkdir -p $(INS)$(.INSDIR)dbg
-#	$(call CP,$<,$@)
-#endif
-#endif
+# Rule for stripping debug info.
+ifdef .NOINST
+INS.FILES += $(INS)$(.INSDIR)$(.TARGET)
+$(INS)$(.INSDIR)$(.TARGET): $.$(.TARG)
+	objcopy --strip-debug $< $@
+
+# No need in .dbg in NO_STRIP mode (which is for binaries only so we still
+# strip import libs with objcopy above)
+ifndef NO_STRIP
+INS.FILES += $(INS)$(.INSDIR)dbg/$(.TARGET)
+$(INS)$(.INSDIR)dbg/$(.TARGET): $.$(.TARG)
+	mkdir -p $(INS)$(.INSDIR)dbg
+	$(call CP,$<,$@)
+endif
+endif
 
 include mkomflib.smak
 include comend.smak
