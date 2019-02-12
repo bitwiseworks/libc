@@ -23,17 +23,19 @@ $(eval $(call def_lib))
 endif
 
 # Rule for stripping debug info.
-ifndef NO_STRIP
 ifdef .NOINST
 INS.FILES += $(INS)$(.INSDIR)$(.TARGET)
 $(INS)$(.INSDIR)$(.TARGET): $.$(.TARG)
 	objcopy --strip-debug $< $@
 	
+# No need in .dbg in NO_STRIP mode (which is for binaries only so we still
+# strip static libs with objcopy above)
+ifndef NO_STRIP
 INS.FILES += $(INS)$(.INSDIR)dbg/$(.TARGET)
 $(INS)$(.INSDIR)dbg/$(.TARGET): $.$(.TARG)
 	mkdir -p $(INS)$(.INSDIR)dbg
 	$(call CP,$<,$@)
-endif	
+endif
 endif
 
 include mkomflib.smak
