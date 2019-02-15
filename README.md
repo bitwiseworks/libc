@@ -21,3 +21,5 @@ Backward compatibility is also maintained between different releases of LIBC Nex
 Note that we also have a project named LIBCx (https://github.com/bitwiseworks/libcx) where we attempted to apply our fixes and improvements without forking kLIBC (mostly because kLIBC is a rather complex library all other libraries depend on and therefore it must be rock solid, any patch to it is potentially dangerous). However, some fixes and improvements are simply impossible to be implemented within a separate library so there are still patches to the original kLIBC code that we need to deploy.
 
 The general plan for LIBC Next is to eventually incorporate all LIBCx code into this repository. And then merge it all with the original kLIBC project if it ever gets resurrected.
+
+We want to thank Knut St. Osmundsen (aka Bird) for his effortful support of OS/2 software throughout many years and especially for his work on the kLIBC project LIBC Next is based on.
