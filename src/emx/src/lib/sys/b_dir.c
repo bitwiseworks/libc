@@ -269,20 +269,33 @@ static int dirSelect(int cFHs, struct fd_set *pRead, struct fd_set *pWrite, stru
  */
 static int dirForkChild(__LIBC_PFH pFH, int fh, __LIBC_PFORKHANDLE pForkHandle, __LIBC_FORKOP enmOperation)
 {
+    __LIBC_PFHDIR pFHDir = (__LIBC_PFHDIR)pFH;
+    LIBCLOG_ENTER("pFHDir=%p:{.Core.pszNativePath=%s} fh=%d\n", pFHDir, pFHDir->Core.pszNativePath, fh);
+
     switch (enmOperation)
     {
         case __LIBC_FORK_OP_FORK_CHILD:
         {
-            __LIBC_PFHDIR pFHDir = (__LIBC_PFHDIR)pFH;
-
             /* make pattern */
             char szNativePath[PATH_MAX + 5];
             size_t cch = strlen(pFH->pszNativePath);
+            if (cch > PATH_MAX)
+                LIBCLOG_ERROR_RETURN_INT(-ENOMEM);
             memcpy(szNativePath, pFH->pszNativePath, cch);
-            szNativePath[cch] = '/';
-            szNativePath[cch + 1] = '*';
-            szNativePath[cch + 2] = '\0';
-
+            /*
+             * Try perform the search (find everything!). See dirOpen.
+             */
+            if (szNativePath[cch-1] != '/' && szNativePath[cch-1] != '\\')
+            {
+                szNativePath[cch] = '/';
+                szNativePath[cch + 1] = '*';
+                szNativePath[cch + 2] = '\0';
+            }
+            else
+            {
+                szNativePath[cch] = '*';
+                szNativePath[cch + 1] = '\0';
+            }
             pFHDir->hDir   = HDIR_CREATE;
             pFHDir->cFiles = pFHDir->cbBuf / 40;
 #if OFF_MAX > LONG_MAX
@@ -302,7 +315,7 @@ static int dirForkChild(__LIBC_PFH pFH, int fh, __LIBC_PFORKHANDLE pForkHandle, 
             if (rc)
             {
                 pFHDir->hDir = HDIR_CREATE;
-                return rc;
+                LIBCLOG_ERROR_RETURN_INT(rc);
             }
             if (pFHDir->uCurEntry)
             {
@@ -316,7 +329,7 @@ static int dirForkChild(__LIBC_PFH pFH, int fh, __LIBC_PFORKHANDLE pForkHandle, 
         default:
             break;
     }
-    return 0;
+    LIBCLOG_RETURN_INT(0);
 }
 
 

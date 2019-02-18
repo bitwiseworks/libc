@@ -1520,8 +1520,8 @@ static int fhForkChild1(__LIBC_PFORKHANDLE pForkHandle, __LIBC_FORKOP enmOperati
                         rc = pFH->pOps->pfnForkChild(pFH, iFH, pForkHandle, __LIBC_FORK_OP_FORK_CHILD);
                         if (rc)
                         {
-                            LIBC_ASSERTM_FAILED("pfnForkChild(=%p) for handle %d failed with rc=%d\n",
-                                                (void *)pFH->pOps->pfnForkChild, iFH, rc);
+                            LIBC_ASSERTM_FAILED("pfnForkChild(=%p) for handle %d (type %d) failed with rc=%d\n",
+                                                (void *)pFH->pOps->pfnForkChild, iFH, pFH->pOps->enmType, rc);
                             if (rc > 0)
                                 rc = -__libc_native2errno(rc);
                             break;
