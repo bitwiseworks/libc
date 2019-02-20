@@ -2012,8 +2012,9 @@ static struct type *parse_type (const char *type_name)
             }
           else
             {
-              warning ("Unknown GNU extension type code: %ld, %ld bits",
-                       code, size);
+              if (warning_level > 1)
+                  warning ("Unknown GNU extension type code: %ld, %ld bits",
+                           code, size);
               goto syntax;
             }
           if (!parse_char (';'))
@@ -2042,7 +2043,8 @@ static struct type *parse_type (const char *type_name)
           }
 
         default:
-          warning ("Unknown GNU extension type: @%c", *parse_ptr);
+          if (warning_level > 1)
+              warning ("Unknown GNU extension type: @%c", *parse_ptr);
           goto syntax;
         }
       break;
@@ -2120,7 +2122,8 @@ static struct type *parse_type (const char *type_name)
           }
 
         default:
-          warning ("Unknown forward reference: %c", ch);
+          if (warning_level > 1)
+              warning ("Unknown forward reference: %c", ch);
           parse_ptr = p1 + 1;
           goto syntax;
         }
@@ -3734,7 +3737,8 @@ static void parse_symbol (int *index, int where, const char *msg, int flag)
               i = 0x87;
               break;
             default:
-              warning ("unknown register %lu", symbol->n_value);
+              if (warning_level > 1)
+                  warning ("Unknown register %lu", symbol->n_value);
               return;
             }
           sst_start (SST_reg);      /* Register variable */

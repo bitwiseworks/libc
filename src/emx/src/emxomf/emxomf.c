@@ -837,7 +837,8 @@ static int make_nstr (const char *pszName, size_t cch, char *pszOutBuf)
         memcpy(pszOutBuf + SYMBOL_MAX_LENGTH, szHash, SYMBOL_HASH_LENGTH);
         pszOutBuf[SYMBOL_MAX_LENGTH + SYMBOL_HASH_LENGTH] = '\0';
 
-        warning ("Truncated symbol '%.*s' to '%.*s%s'", cch, pszName, SYMBOL_MAX_LENGTH, pszName, szHash);
+        if (warning_level > 1)
+            warning ("Truncated symbol '%.*s' to '%.*s%s'", cch, pszName, SYMBOL_MAX_LENGTH, pszName, szHash);
 
         cch = SYMBOL_MAX_LENGTH + SYMBOL_HASH_LENGTH;
     }
@@ -1206,7 +1207,8 @@ static const char *weak_process_name(const struct nlist *pSym, const char *pszOr
                 pachName[SYMBOL_MAX_LENGTH + 1] = '_';
                 format_u64(u32Hash, &pachName[SYMBOL_MAX_LENGTH + 2], 62, 6);
                 memcpy(&pachName[SYMBOL_MAX_LENGTH + SYMBOL_HASH_LENGTH], weak_marker, SYMBOL_WEAK_LENGTH + 1);
-                warning("Truncated symbol '%s' to '%s' (weak)", pszOrgName, pachName);
+                if (warning_level > 1)
+                    warning("Truncated symbol '%s' to '%s' (weak)", pszOrgName, pachName);
             }
 
             return pachName;
