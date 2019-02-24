@@ -1,5 +1,10 @@
 # History of changes for LIBC Next
 
+#### Version 0.1.1 (2019-02-24)
+
+* Fix failures to fork children from drive root directory [#31].
+* Silence emxomf warnings not fixable by programmer [#32].
+
 #### Version 0.1.0 (2019-02-15)
 
 * Initial release of LIBC Next based on kLIBC version 0.6.6 CSD6 (released on 27-10-2014). The below list of changes shows important changes, improvements and fixes since this version.
