@@ -197,7 +197,7 @@ int __findfirst(const char *pszName, int attr, struct _find *fp)
      */
     pFD->cFiles = sizeof(pFD->achBuffer) / 40;
 #if OFF_MAX > LONG_MAX
-    pFD->fType = __libc_gpfnDosOpenL ? FIL_QUERYEASIZEL : FIL_QUERYEASIZE;
+    pFD->fType = __libc_gfHaveLFS ? FIL_QUERYEASIZEL : FIL_QUERYEASIZE;
     if (pFD->fType == FIL_QUERYEASIZEL)  /* the L version is buggy!! Make sure there is enough space. */
         pFD->cFiles = sizeof(pFD->achBuffer) / sizeof(FILEFINDBUF4L);
 #else

@@ -68,7 +68,7 @@ static inline int getFileSize(HFILE hFile, off_t *pcb)
     } info;
     int     rc;
 #if OFF_MAX > LONG_MAX
-    if (__libc_gpfnDosOpenL)
+    if (__libc_gfHaveLFS)
     {
         rc = DosQueryFileInfo(hFile, FIL_STANDARDL, &info, sizeof(info.fsts3L));
         *pcb = info.fsts3L.cbFile;
@@ -91,8 +91,8 @@ static inline int setFileSize(HFILE hFile, off_t cbFile)
 {
     int rc;
 #if OFF_MAX > LONG_MAX
-    if (__libc_gpfnDosSetFileSizeL)
-        rc = __libc_gpfnDosSetFileSizeL(hFile, cbFile);
+    if (__libc_gfHaveLFS)
+        rc = DosSetFileSizeL(hFile, cbFile);
     else
     {
         if (cbFile > __LONG_MAX)
@@ -114,10 +114,10 @@ static inline int seekFile(HFILE hFile, off_t off, int iMethod, off_t *poffFile)
 {
     int rc;
 #if OFF_MAX > LONG_MAX
-    if (__libc_gpfnDosSetFilePtrL)
+    if (__libc_gfHaveLFS)
     {
         LONGLONG cbNewTmp;
-        rc = __libc_gpfnDosSetFilePtrL(hFile, off, iMethod, &cbNewTmp);
+        rc = DosSetFilePtrL(hFile, off, iMethod, &cbNewTmp);
         off = cbNewTmp;
     }
     else

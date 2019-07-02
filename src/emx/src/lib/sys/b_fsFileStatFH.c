@@ -108,7 +108,7 @@ int __libc_Back_fsFileStatFH(int fh, struct stat *pStat)
              */
             FS_VAR_SAVE_LOAD();
 #if OFF_MAX > LONG_MAX
-            if (__libc_gpfnDosOpenL)
+            if (__libc_gfHaveLFS)
             {
                 if (fUnixEAs)
                     rc = DosQueryFileInfo(fh, FIL_QUERYEASIZEL, &info, sizeof(info.fsts4L));

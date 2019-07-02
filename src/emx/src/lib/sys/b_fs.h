@@ -217,15 +217,8 @@ extern const struct __LIBC_BACK_FSUNIXATTRIBSDIRGEA2LIST
 #pragma pack()
 
 
-/** @group Large File Support - API pointers.
- * Test if the function pointer is set before calling it.
- * For APIs which take a structure level parameter, check __pfnDosOpenL.
- * @{ */
-extern ULONG (* _System __libc_gpfnDosOpenL)(PCSZ pszFileName, PHFILE phFile, PULONG pulAction, LONGLONG llFileSize, ULONG ulAttribute, ULONG ulOpenFlags, ULONG ulOpenMode, PEAOP2 pEABuf);
-extern ULONG (* _System __libc_gpfnDosSetFilePtrL)(HFILE hFile, LONGLONG llOffset, ULONG ulOrigin, PLONGLONG pllPos);
-extern ULONG (* _System __libc_gpfnDosSetFileSizeL)(HFILE hFile, LONGLONG cbSize);
-extern ULONG (* _System __libc_gpfnDosSetFileLocksL)(HFILE hFile, __const__ FILELOCKL *pflUnlock, __const__ FILELOCKL *pflLock, ULONG ulTimeout, ULONG flFlags);
-/** @} */
+/** Indicator whether or not Large File Support API is available. */
+extern int  __libc_gfHaveLFS;
 
 #endif /* _OS2EMX_H */
 

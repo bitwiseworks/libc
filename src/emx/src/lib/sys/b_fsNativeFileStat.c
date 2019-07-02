@@ -124,7 +124,7 @@ int __libc_back_fsNativeFileStat(const char *pszNativePath, struct stat *pStat)
     if (fUnixEAs)
     {
 #if OFF_MAX > LONG_MAX
-        if (__libc_gpfnDosOpenL)
+        if (__libc_gfHaveLFS)
         {
             rc = DosQueryPathInfo((PCSZ)pszNativePath, FIL_QUERYEASIZEL, &info, sizeof(info.fsts4L));
             fLarge = 1;
@@ -142,7 +142,7 @@ int __libc_back_fsNativeFileStat(const char *pszNativePath, struct stat *pStat)
     if (rc == ERROR_SHARING_VIOLATION)
     {
 #if OFF_MAX > LONG_MAX
-        if (__libc_gpfnDosOpenL)
+        if (__libc_gfHaveLFS)
         {
             rc = DosQueryPathInfo((PCSZ)pszNativePath, FIL_STANDARDL, &info, sizeof(info.fsts4L) - sizeof(info.fsts4L.cbList));
             fLarge = 1;

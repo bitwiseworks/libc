@@ -293,7 +293,7 @@ static int __fcntl_locking(int fh, int iRequest, struct flock *pFlock)
     FS_VAR_SAVE_LOAD();
 #if OFF_MAX > LONG_MAX
     int  fLarge = 0;
-    if (__libc_gpfnDosOpenL)
+    if (__libc_gfHaveLFS)
     {
         rc = DosQueryFileInfo(fh, FIL_STANDARDL, &info, sizeof(info.fsts3L));
         fLarge = 1;
@@ -361,14 +361,14 @@ static int __fcntl_locking(int fh, int iRequest, struct flock *pFlock)
         /* Do work. */
 #if OFF_MAX > LONG_MAX
         rc = ERROR_INVALID_PARAMETER;
-        if (__libc_gpfnDosSetFileLocksL)
+        if (__libc_gfHaveLFS)
         {
             FILELOCKL   aflock[2];
             bzero(&aflock[(fLock + 1) & 1], sizeof(aflock[0]));
             aflock[fLock].lOffset = offStart;
             aflock[fLock].lRange  = cbRange;
             FS_SAVE_LOAD();
-            rc = __libc_gpfnDosSetFileLocksL(fh, &aflock[0], &aflock[1], ulTimeout, fAccess);
+            rc = DosSetFileLocksL(fh, &aflock[0], &aflock[1], ulTimeout, fAccess);
             FS_RESTORE();
         }
         /* 

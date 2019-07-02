@@ -72,10 +72,10 @@ off_t __libc_Back_ioSeek(int hFile, off_t off, int iMethod)
         FS_VAR();
         FS_SAVE_LOAD();
 #if OFF_MAX > LONG_MAX
-        if (__libc_gpfnDosSetFilePtrL)
+        if (__libc_gfHaveLFS)
         {
             LONGLONG cbNewTmp;
-            rc = __libc_gpfnDosSetFilePtrL(hFile, off, iMethod, &cbNewTmp);
+            rc = DosSetFilePtrL(hFile, off, iMethod, &cbNewTmp);
             cbNew = cbNewTmp;
         }
         else

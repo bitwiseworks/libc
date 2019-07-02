@@ -367,7 +367,7 @@ static int dirOpen(const char *pszNativePath, unsigned fLibc, int *pfh, __LIBC_P
         Tmp.uCur.pv = Tmp.uBuf.pv;
         Tmp.cFiles  = Tmp.cbBuf / 40;
 #if OFF_MAX > LONG_MAX
-        Tmp.fType   = __libc_gpfnDosOpenL ? FIL_QUERYEASIZEL : FIL_QUERYEASIZE;
+        Tmp.fType   = __libc_gfHaveLFS ? FIL_QUERYEASIZEL : FIL_QUERYEASIZE;
         if (Tmp.fType == FIL_QUERYEASIZEL)  /* the L version is buggy!! Make sure there is enough space. */
             Tmp.cFiles = Tmp.cbBuf / sizeof(FILEFINDBUF4L);
 #else

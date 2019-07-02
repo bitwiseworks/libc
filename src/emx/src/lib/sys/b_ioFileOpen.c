@@ -292,10 +292,10 @@ int __libc_Back_ioFileOpen(const char *pszFile, unsigned fLibc, int fShare, off_
     for (;;)
     {
 #if OFF_MAX > LONG_MAX
-        if (__libc_gpfnDosOpenL)
+        if (__libc_gfHaveLFS)
         {
             LONGLONG cbInitialTmp = cbInitial;
-            rc = __libc_gpfnDosOpenL((PCSZ)&szNativePath[0], &hFile, &ulAction, cbInitialTmp, flAttr, flOpenFlags, flOpenMode, pEaOp2);
+            rc = DosOpenL((PCSZ)&szNativePath[0], &hFile, &ulAction, cbInitialTmp, flAttr, flOpenFlags, flOpenMode, pEaOp2);
         }
         else
         {

@@ -157,7 +157,7 @@ int __libc_back_fsNativeFileOwnerSetCommon(intptr_t hNative, const char *pszNati
         } info;
 
 #if OFF_MAX > LONG_MAX
-        if (__libc_gpfnDosOpenL)
+        if (__libc_gfHaveLFS)
             rc = DosQueryPathInfo((PCSZ)pszNativePath, FIL_STANDARDL, &info, sizeof(info.fsts4L) - sizeof(info.fsts4L.cbList));
         else
 #endif

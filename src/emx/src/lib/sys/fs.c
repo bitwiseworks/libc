@@ -78,11 +78,8 @@ char    __libc_gszUnixRoot[PATH_MAX] = "";
 /** The umask of the process. */
 mode_t  __libc_gfsUMask = 022;
 
-
-ULONG (* _System __libc_gpfnDosOpenL)(PCSZ pszFileName, PHFILE phFile, PULONG pulAction, LONGLONG llFileSize, ULONG ulAttribute, ULONG ulOpenFlags, ULONG ulOpenMode, PEAOP2 pEABuf) = NULL;
-ULONG (* _System __libc_gpfnDosSetFilePtrL)(HFILE hFile, LONGLONG llOffset, ULONG ulOrigin, PLONGLONG pllPos) = NULL;
-ULONG (* _System __libc_gpfnDosSetFileSizeL)(HFILE hFile, LONGLONG cbSize) = NULL;
-ULONG (* _System __libc_gpfnDosSetFileLocksL)(HFILE hFile, __const__ FILELOCKL *pflUnlock, __const__ FILELOCKL *pflLock, ULONG ulTimeout, ULONG flFlags) = NULL;
+/** Indicator whether or not Large File Support API is available. */
+int  __libc_gfHaveLFS = 0;
 
 /** Symlink EA name. */
 static const char __libc_gszSymlinkEA[] = EA_SYMLINK;
@@ -480,22 +477,20 @@ int __libc_back_fsInit(void)
      * reference counters for that module.
      */
     HMODULE     hmod = NULLHANDLE;
+    PFN         dummy;
     if (DosLoadModule(NULL, 0, (PCSZ)"DOSCALLS", &hmod))
     {
         LIBC_ASSERTM_FAILED("DosLoadModule failed on doscalls!\n");
         abort();
         LIBCLOG_RETURN_INT(-1);
     }
-    if (    DosQueryProcAddr(hmod, ORD_DOS32OPENL,          NULL, (PFN*)(void *)&__libc_gpfnDosOpenL)
-        ||  DosQueryProcAddr(hmod, ORD_DOS32SETFILEPTRL,    NULL, (PFN*)(void *)&__libc_gpfnDosSetFilePtrL)
-        ||  DosQueryProcAddr(hmod, ORD_DOS32SETFILESIZEL,   NULL, (PFN*)(void *)&__libc_gpfnDosSetFileSizeL)
-        ||  DosQueryProcAddr(hmod, ORD_DOS32SETFILELOCKSL,  NULL, (PFN*)(void *)&__libc_gpfnDosSetFileLocksL)
+    if (    !DosQueryProcAddr(hmod, ORD_DOS32OPENL,          NULL, &dummy)
+        &&  !DosQueryProcAddr(hmod, ORD_DOS32SETFILEPTRL,    NULL, &dummy)
+        &&  !DosQueryProcAddr(hmod, ORD_DOS32SETFILESIZEL,   NULL, &dummy)
+        &&  !DosQueryProcAddr(hmod, ORD_DOS32SETFILELOCKSL,  NULL, &dummy)
           )
     {
-        __libc_gpfnDosOpenL         = NULL;
-        __libc_gpfnDosSetFilePtrL   = NULL;
-        __libc_gpfnDosSetFileSizeL  = NULL;
-        __libc_gpfnDosSetFileLocksL = NULL;
+        __libc_gfHaveLFS = 1;
     }
     DosFreeModule(hmod);
 
@@ -1935,8 +1930,8 @@ int __libc_back_fsNativeSetEAs(intptr_t hNative, const char *pszNativePath, PFEA
         ULONG  flOpenMode  = OPEN_ACCESS_WRITEONLY | OPEN_FLAGS_NOINHERIT | OPEN_SHARE_DENYNONE;
 
 #if OFF_MAX > LONG_MAX
-        if (__libc_gpfnDosOpenL)
-            rc2 = __libc_gpfnDosOpenL((PCSZ)pszNativePath, &hFile2, &ulAction, 0, FILE_NORMAL, flOpenFlags, flOpenMode, NULL);
+        if (__libc_gfHaveLFS)
+            rc2 = DosOpenL((PCSZ)pszNativePath, &hFile2, &ulAction, 0, FILE_NORMAL, flOpenFlags, flOpenMode, NULL);
         else
 #endif
             rc2 = DosOpen((PCSZ)pszNativePath, &hFile2, &ulAction, 0, FILE_NORMAL, flOpenFlags, flOpenMode, NULL);
