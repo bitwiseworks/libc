@@ -44,7 +44,7 @@
 
 
 /**
- * Unlinks a file, directory, symlink, dev, pipe or socket.
+ * Unlinks a file, symlink, dev, pipe or socket, but not a directory.
  *
  * @returns 0 on success.
  * @returns Negative error code (errno.h) on failure.
@@ -64,7 +64,7 @@ int __libc_Back_fsUnlink(const char *pszPath)
      * Resolve the path.
      */
     char szNativePath[PATH_MAX];
-    int rc = __libc_back_fsResolve(pszPath, BACKFS_FLAGS_RESOLVE_FULL_SYMLINK | BACKFS_FLAGS_RESOLVE_DIR_MAYBE, &szNativePath[0], NULL);
+    int rc = __libc_back_fsResolve(pszPath, BACKFS_FLAGS_RESOLVE_FULL_SYMLINK, &szNativePath[0], NULL);
     if (rc)
         LIBCLOG_ERROR_RETURN_INT(rc);
 
@@ -104,18 +104,21 @@ int __libc_Back_fsUnlink(const char *pszPath)
          *      2) it's a directory.
          *      3) we are denied access - network, hpfs386 or SES.
          *
-         * If it's either of the first two we are subject to race conditions, so we
-         * have to retry. The third cause is distiguishable from the two othes by
-         * the failing DosSetPathInfo.
+         * If it's the first we are subject to race conditions, so we have to retry.
+         * The third cause is distiguishable from the two othes by the failing DosSetPathInfo.
          */
-        int fDirectory = 0;
         for (unsigned i = 0; (rc == ERROR_ACCESS_DENIED || rc == ERROR_PATH_NOT_FOUND) && i < 2; i++)
         {
             FILESTATUS3 fsts3;
             rc = DosQueryPathInfo((PCSZ)&szNativePath[0], FIL_STANDARD, &fsts3, sizeof(fsts3));
             if (!rc)
             {
-                fDirectory = (fsts3.attrFile & FILE_DIRECTORY) != 0;
+                /* Directory? */
+                if ((fsts3.attrFile & FILE_DIRECTORY) != 0)
+                {
+                    rc = ERROR_DIRECTORY;
+                    break;
+                }
 
                 /* turn of the read-only attribute */
                 if (fsts3.attrFile & FILE_READONLY)
@@ -132,9 +135,7 @@ int __libc_Back_fsUnlink(const char *pszPath)
                 }
 
                 /* retry */
-                if (fDirectory)
-                    rc = DosDeleteDir((PCSZ)&szNativePath[0]);
-                else if (s_fUseForce == 1)
+                if (s_fUseForce == 1)
                     rc = DosForceDelete((PCSZ)&szNativePath[0]);
                 else
                     rc = DosDelete((PCSZ)&szNativePath[0]);
@@ -154,7 +155,9 @@ int __libc_Back_fsUnlink(const char *pszPath)
         if (rc)
         {
             if (rc == ERROR_ACCESS_DENIED)
-                rc = fDirectory ? -ENOTEMPTY : -EACCES;
+                rc = -EACCES;
+            else if (rc == ERROR_DIRECTORY)
+                rc = -EISDIR;
             else
                 rc = -__libc_native2errno(rc);
         }
