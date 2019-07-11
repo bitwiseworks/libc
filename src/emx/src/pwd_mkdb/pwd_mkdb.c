@@ -555,6 +555,18 @@ main(int argc, char *argv[])
 			snprintf(uidstr, sizeof(uidstr), "%u", pwd.pw_uid);
 			snprintf(gidstr, sizeof(gidstr), "%u", pwd.pw_gid);
 
+#ifdef __EMX__
+			/*
+			 * Replace : with $ in drive name in pw_dir (because : is a field
+			 * separator) to match master.passwd convention.
+			 */
+			if (pwd.pw_fields & _PWF_DIR && pwd.pw_dir) {
+				if (((pwd.pw_dir[0] >= 'A' && pwd.pw_dir[0] <= 'Z') ||
+						 (pwd.pw_dir[0] >= 'a' && pwd.pw_dir[0] <= 'z')) &&
+						pwd.pw_dir[1] == ':')
+					pwd.pw_dir[1] = '$';
+			}
+#endif
 			if (fprintf(oldfp, "%s:*:%s:%s:%s:%s:%s\n",
 			    pwd.pw_name, pwd.pw_fields & _PWF_UID ? uidstr : "",
 			    pwd.pw_fields & _PWF_GID ? gidstr : "",
@@ -673,6 +685,19 @@ scan(fp, pw)
 fmt:		errno = EFTYPE;	/* XXX */
 		error(pname);
 	}
+
+#ifdef __EMX__
+	/*
+	 * Replace $ with : in drive name in pw_dir
+	 * (undo master.passwd replacement).
+	 */
+	if (pw->pw_fields & _PWF_DIR && pw->pw_dir) {
+		if (((pw->pw_dir[0] >= 'A' && pw->pw_dir[0] <= 'Z') ||
+				 (pw->pw_dir[0] >= 'a' && pw->pw_dir[0] <= 'z')) &&
+				pw->pw_dir[1] == '$')
+			pw->pw_dir[1] = ':';
+	}
+#endif
 
 	return (1);
 }
