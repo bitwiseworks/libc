@@ -1,0 +1,11 @@
+.MODULE := pwd_mkdb
+.MDESC  := Utility for creating the password database
+.MDEP	:= omflib@omf moddef@omf
+.INSDIR := bin/
+
+.TARGET := pwd_mkdb.exe
+.TKIND	:= $(TOOLFMT)
+.TSRC   := $(wildcard src/pwd_mkdb/*.c)
+.TCF	:= $(CFLAGS.DEF.VERSION)
+.TDEP	:= @O@libomflib$A @O@libmoddef$A
+include mkexe.smak
