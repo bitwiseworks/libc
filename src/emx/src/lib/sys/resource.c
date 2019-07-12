@@ -39,6 +39,7 @@
 #include <sys/errno.h>
 #include <sys/types.h>
 #include <sys/time.h>
+#include <sys/times.h>
 #include <sys/resource.h>
 #include "syscalls.h"
 
@@ -174,4 +175,46 @@ int	_STD(setrlimit)(int iResId, const struct rlimit *pLimit)
 {
     errno = ENOSYS;
     return -1;
+}
+
+/*
+ * Taken from https://github.com/komh/os2compat/blob/master/process/getrusage.c.
+ * Uses times API, so derives its limitations.
+ */
+int	_STD(getrusage)(int who, struct rusage *usage)
+{
+    struct tms time;
+
+    if (who != RUSAGE_SELF && who != RUSAGE_CHILDREN)
+    {
+        errno = EINVAL;
+        return -1;
+    }
+
+    /* Intialize members of struct rusage */
+    memset(usage, 0, sizeof(*usage));
+
+    if (times(&time) != (clock_t)-1)
+    {
+        clock_t u;
+        clock_t s;
+
+        if (who == RUSAGE_CHILDREN)
+        {
+            u = time.tms_cutime;
+            s = time.tms_cstime;
+        }
+        else
+        {
+            u = time.tms_utime;
+            s = time.tms_stime;
+        }
+
+        usage->ru_utime.tv_sec = u / CLK_TCK;
+        usage->ru_utime.tv_usec = ( u % CLK_TCK ) * 1000000U / CLK_TCK;
+        usage->ru_stime.tv_sec = s / CLK_TCK;
+        usage->ru_stime.tv_usec = (s % CLK_TCK ) * 1000000U / CLK_TCK;
+    }
+
+    return 0;
 }
