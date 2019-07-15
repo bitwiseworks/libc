@@ -1,5 +1,13 @@
 # History of changes for LIBC Next
 
+#### Version 0.1.2 (2019-07-15)
+
+* Get rid of direct resolving of DosOpenL and friends. [#36].
+* unlink() shall not delete directories, but return EISDIR [upstream].
+* Make _fnlwr/_fnlwr2 work for path rewrites (/@unixroot and such) [#39].
+* Provide pwd_mkdb tool that handles : to $ replacement in drive names in pw_dir [#1].
+* Add getrusage() implementation [#40].
+
 #### Version 0.1.1 (2019-02-24)
 
 * Fix failures to fork children from drive root directory [#31].
