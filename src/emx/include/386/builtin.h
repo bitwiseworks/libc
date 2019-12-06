@@ -15,7 +15,7 @@ __BEGIN_DECLS
 static __inline__ signed char __cxchg (__volatile__ signed char *p,
                                        signed char v)
 {
-  __asm__ __volatile__ ("xchgb %0, %1" : "=m"(*p), "=r"(v) : "1"(v));
+  __asm__ __volatile__ ("xchgb %0, %1" : "=m"(*p), "=q"(v) : "1"(v));
   return v;
 }
 
