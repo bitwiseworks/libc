@@ -221,6 +221,17 @@ struct nstat {
 #define st_mtime st_mtimespec.tv_sec
 #define st_ctime st_ctimespec.tv_sec
 #define st_birthtime st_birthtimespec.tv_sec
+
+#define	st_atimensec st_atimespec.tv_nsec
+#define	st_mtimensec st_mtimespec.tv_nsec
+#define	st_ctimensec st_ctimespec.tv_nsec
+#define	st_birthtimensec st_birthtimespec.tv_nsec
+
+/* For compatibility (see #45). */
+#define	st_atim st_atimespec
+#define	st_mtim st_mtimespec
+#define	st_ctim st_ctimespec
+#define	st_birthtim st_birthtimespec
 #endif
 
 #define	S_ISUID	0004000			/* set user id on execution */
