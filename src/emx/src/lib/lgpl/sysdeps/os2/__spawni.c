@@ -149,7 +149,11 @@ static void restore_handle(PRESTOREACTION pRAction)
 }
 
 
-/* Internal OS dependent worker. */
+/*
+ * Internal OS dependent worker.
+ * Note that it returns 0 on success and errno on failure (as required by Posix
+ * for posix_spawn, see #46 for details).
+ */
 int __spawni(
     pid_t *pid,
     const char *path,
@@ -236,14 +240,14 @@ int __spawni(
         {
             /* TODO: release the file handle table lock. */
             errno = EINVAL;
-            return -1;
+            return errno;
         }
 
         paRestore = _hmalloc(sizeof(RESTOREACTION) * file_actions->__used);
         if (!paRestore)
         {
             /* TODO: release the file handle table lock. */
-            return -1;
+            return errno;
         }
         memset(paRestore, -1, sizeof(RESTOREACTION) * file_actions->__used);
 
@@ -364,10 +368,13 @@ int __spawni(
             *pid = pidChild;
         }
         else
-            rc = -1;
+            rc = errno;
     }
     else
+    {
         errno = EINVAL;                 /* error in file_actions or attrp. */
+        rc = errno;
+    }
 
     /*
      * Restore the file handles.
