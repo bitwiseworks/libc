@@ -152,10 +152,17 @@ int __libc_back_fsNativeSymlinkCreate(const char *pszTarget, char *pszNativePath
         LIBCLOG_RETURN_INT(0);
     }
 
+    /*
+     * Note: If the file already exists, DosOpen returns ERROR_OPEN_FAILED. But
+     * if there is a directory with such a name, it returns ERROR_ACCESS_DENIED.
+     * Give both cases special handling as Posix expects EEXIST in both of them
+     * (we used to return EACCESS in the latter case via __libc_native2errno
+     * which is wrong). See #48 for more details.
+     */
     struct stat s;
     if (rc == ERROR_EAS_NOT_SUPPORTED)
         rc = -EOPNOTSUPP;
-    else if (   rc == ERROR_OPEN_FAILED
+    else if (   (rc == ERROR_OPEN_FAILED || rc == ERROR_ACCESS_DENIED)
              && !__libc_back_fsNativeFileStat(pszNativePath, &s))
         rc = -EEXIST;
     else
