@@ -1,5 +1,13 @@
 # History of changes for LIBC Next
 
+#### Version 0.1.3 (2019-12-25)
+
+* Restrict 2-nd __cxchg operand to A/B/C/D registers [#47].
+* symlink: Return EEXIST if path name exists and is directory [#48].
+* posix_spawn: Return errno on failure instead of -1 [#46].
+* sys/stat.h: Add more BSD-like aliases like st_mtimensec and st_mtim [#45].
+* Rebuild with newer libiberty (binutils 2.33.1) to fix EMXOMF crash [#49].
+
 #### Version 0.1.2 (2019-07-15)
 
 * Get rid of direct resolving of DosOpenL and friends. [#36].

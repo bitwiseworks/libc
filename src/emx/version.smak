@@ -5,7 +5,7 @@ VH = 0
 # Middle part of version number
 VM = 1
 # Low part of version number
-VL = 2
+VL = 3
 
 # NOTE: Our versioning rules:
 #
