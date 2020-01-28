@@ -1,4 +1,37 @@
 /* _output.c (emx+gcc) -- Copyright (c) 1990-2000 by Eberhard Mattes */
+/* wide char changes by Dmitriy Kuminov */
+
+#ifdef _WIDECHAR
+#define _OUTPUT _woutput
+#define _PUTC_INLINE _putwc_inline
+#define _EOF WEOF
+#define _CHAR wchar_t
+#define _LIT(str) L##str
+#define _MEMSET wmemset
+#define _MEMMOVE wmemmove
+#define _STRLEN wcslen
+#define _TOUPPER towupper
+#define _ULTOA ultows
+#define _ULLTOA ulltows
+#define _REMOVE_ZEROES wremove_zeros
+#define _DTOA dtows
+#else
+#define _OUTPUT _output
+#define _PUTC_INLINE _putc_inline
+#define _EOF EOF
+#define _CHAR char
+#define _LIT(str) str
+#define _MEMSET memset
+#define _MEMMOVE memmove
+#define _STRLEN strlen
+#define _TOUPPER toupper
+#define _ULTOA _ultoa
+#define _ULLTOA _ulltoa
+#define _REMOVE_ZEROES __remove_zeros
+#define _DTOA __legacy_dtoa
+#endif
+
+#define _SIZEOF_ARRAY(a) (sizeof (a)/ sizeof ((a)[0]))
 
 #include "libc-alias.h"
 #include <stdio.h>
@@ -14,6 +47,11 @@
 #include <emx/float.h>
 #include <InnoTekLIBC/locale.h>
 #include <wchar.h>
+#ifdef _WIDECHAR
+#include <wctype.h>
+#else
+#include <ctype.h>
+#endif
 #include "getputc.h"
 
 #define FALSE           0
@@ -90,12 +128,12 @@
 /* Write the character C.  Note the return statement! */
 
 #define PUTC(V,C) BEGIN \
-                    if (_putc_inline (C, (V)->stream) == EOF) \
+                    if (_PUTC_INLINE (C, (V)->stream) == _EOF) \
                       return -1; \
                     ++(V)->count; \
                   END
 
-#define STRLEN(S) (((S) == NULL) ? 0 : strlen (S))
+#define SAFE_STRLEN(S) (((S) == NULL) ? 0 : _STRLEN (S))
 
 /* This structure holds the local variables of _output() which are
    passed to the various functions called by _output(). */
@@ -114,16 +152,109 @@ typedef struct
   int dig;                      /* DBL_DIG / LDBL_DIG for __small_dtoa() */
 } olocal;
 
-static char zdot[] = "0.";      /* "0." for the current locale */
+static _CHAR zdot[] = _LIT ("0.");      /* "0." for the current locale */
+
+
+static _CHAR *str_upper (_CHAR *s)
+{
+  _CHAR *p = s;
+  while ((*p = _TOUPPER (*p))) ++p;
+  return s;
+}
+
+
+#ifdef _WIDECHAR
+static void ultows(uint32_t n, wchar_t *buf, int radix)
+{
+    // assume buf only cotains ASCII numbers
+    char *ptr = (char *) buf;
+    _ultoa (n, ptr, radix);
+    int len = strlen (ptr);
+    wchar_t *wptr = buf + len;
+    ptr += len;
+    while (ptr >= (char *) buf)
+        *wptr-- = (wchar_t) *ptr--;
+}
+
+static void ulltows(uint64_t n, wchar_t *buf, int radix)
+{
+    // assume buf only cotains ASCII numbers
+    char *ptr = (char *) buf;
+    _ulltoa (n, ptr, radix);
+    int len = strlen (ptr);
+    wchar_t *wptr = buf + len;
+    ptr += len;
+    while (ptr >= (char *) buf)
+        *wptr-- = (wchar_t) *ptr--;
+}
+
+static void wremove_zeros (wchar_t *digits, int keep)
+{
+    int i;
+    i = wcslen (digits) - 1;
+    while (i >= keep && digits[i] == '0')
+        --i;
+    digits[i+1] = 0;
+}
+
+static wchar_t *dtows (wchar_t *buffer, int *p_exp, long double x, int ndigits,
+                       int fmt, int dig)
+{
+    // assume buf only cotains ASCII numbers
+    char *ptr = (char *) buffer;
+    char *result = __legacy_dtoa (ptr, p_exp, x, ndigits, fmt, dig);
+    int len = strlen (ptr);
+    wchar_t *wptr = buffer + len;
+    ptr += len;
+    while (ptr >= result)
+        *wptr-- = (wchar_t) *ptr--;
+    return ++wptr;
+}
+#endif /* _WIDECHAR */
+
 
 /* Print the first N characters of the string S. */
 
-static int out_str (olocal *v, const char *s, int n)
+static int out_str (olocal *v, const _CHAR *s, int n)
 {
   if (n >= 16)
     {
+#ifdef _WIDECHAR
+      if (!_IS_WSPRINTF_STREAM (v->stream))
+      {
+          /* Convert wchar_t string to multibyte when doing stream I/O. */
+          mbstate_t state = {{0}};
+          for (int i = 0; i < n; i++)
+          {
+              char mb[MB_LEN_MAX];
+              size_t cb = wcrtomb(mb, s[i], &state);
+              if (cb == (size_t) -1) /* encoding error */
+                return -1;
+              if (!cb) /* end of string */
+                return 0;
+
+              size_t j = 0;
+              while (j < cb)
+              if (_putc_inline (mb [j++], v->stream) == EOF)
+                  return -1;
+              v->count += cb;
+          }
+          return 0;
+      }
+
+      /* Otherwise, it's a special swprintf buffer of wchar_t. Put chars
+         directly. Note that we temporarily change stream's write count units
+         from wchar_t to char as fwrite doesn't expect wchar_t there. */
+
+      v->stream->_wcount *= sizeof(wchar_t);
+      int cnt = fwrite_unlocked (s, sizeof(wchar_t), n, v->stream);
+      v->stream->_wcount /= sizeof(wchar_t);
+      if (cnt != n)
+        return -1;
+#else
       if (fwrite_unlocked (s, 1, n, v->stream) != n)
         return -1;
+#endif
       v->count += n;
     }
   else
@@ -143,19 +274,72 @@ static int out_str (olocal *v, const char *s, int n)
 
 /* Print the character C N times. */
 
-static int out_pad (olocal *v, char c, int n)
+static int out_pad (olocal *v, _CHAR c, int n)
 {
-  char buf[256];
+  _CHAR buf[256];
 
-  if (n > sizeof (buf))
+#ifdef _WIDECHAR
+  if (!_IS_WSPRINTF_STREAM (v->stream))
+  {
+      /* Convert wchar_t string to multibyte when doing stream I/O. */
+      mbstate_t state = {{0}};
+      char mb[MB_LEN_MAX];
+      size_t cb = wcrtomb(mb, c, &state);
+      if (cb == (size_t) -1) /* encoding error */
+          return -1;
+      if (!cb) /* end of string */
+          return 0;
+
+      if (n >= 16)
+      {
+          /* Prepare the padding buffer */
+          size_t max = sizeof(buf) / cb;
+          if (max > n)
+              max = n;
+          size_t i = 0;
+          char *p = (char *)buf;
+          while (i++ < max)
+          {
+              memcpy(p, mb, cb);
+              p += cb;
+          }
+
+          while (n > 0)
+          {
+              if (max > n)
+                  max = n;
+              if (fwrite_unlocked (buf, cb, n, v->stream) != n)
+                  return -1;
+              v->count += n * cb;
+              n -= max;
+          }
+      }
+      else
+      while (n > 0)
+      {
+          size_t i = 0;
+          while (i < cb)
+              if (_putc_inline (mb [i++], v->stream) == EOF)
+                  return -1;
+          v->count += cb;
+          --n;
+      }
+      return 0;
+  }
+
+  /* Otherwise, it's a special swprintf buffer of wchar_t. Put chars
+     directly. */
+#endif
+
+  if (n > _SIZEOF_ARRAY (buf))
     {
       int i;
 
       /* Very big padding -- do 256 characters at a time. */
-      memset (buf, c, sizeof (buf));
+      _MEMSET (buf, c, _SIZEOF_ARRAY (buf));
       while (n > 0)
         {
-          i = sizeof (buf);
+          i = _SIZEOF_ARRAY (buf);
           if (i > n)
             i = n;
           OUT_STR (v, buf, i);
@@ -164,7 +348,7 @@ static int out_pad (olocal *v, char c, int n)
     }
   else if (n >= 16)
     {
-      memset (buf, c, n);
+      _MEMSET (buf, c, n);
       OUT_STR (v, buf, n);
     }
   else
@@ -223,7 +407,58 @@ static int cvt_str (olocal *v, const char *str, int str_len)
 
   if (str_len < v->width && !v->minus)
     OUT_PAD (v, ' ', v->width - str_len);
+#ifdef _WIDECHAR
+  if (_IS_WSPRINTF_STREAM (v->stream))
+  {
+      /* It's a special swprintf buffer of wchar_t. Convert multibyte to
+         wchar_t string. */
+      mbstate_t state = {{0}};
+      int left = str_len;
+      while (left)
+      {
+          wchar_t wc;
+          size_t cb = mbrtowc(&wc, str, left, &state);
+          switch (cb)
+          {
+              /*
+               * Quit the loop.
+               */
+              case -2: /* incomplete character - we ASSUME this cannot happen. */
+              case -1: /* encoding error */
+                  return -1;
+              case 0:  /* end of string */
+                  left = 0;
+                  break;
+
+              default:
+                  str += cb;
+                  left -= cb;
+                  PUTC(v, wc);
+                  break;
+          }
+      }
+      return 0;
+  }
+
+  /* Otherwise, it's a multibyte stream. Put chars directly. */
+  if (str_len >= 16)
+  {
+      if (fwrite_unlocked (str, 1, str_len, v->stream) != str_len)
+          return -1;
+      v->count += str_len;
+  }
+  else
+  while (str_len > 0)
+  {
+      if (_putc_inline (*str, v->stream) == EOF)
+          return -1;
+      ++v->count;
+      ++str; --str_len;
+  }
+  return 0;
+#else
   OUT_STR (v, str, str_len);
+#endif
   if (str_len < v->width && v->minus)
     OUT_PAD (v, ' ', v->width - str_len);
   return 0;
@@ -271,18 +506,21 @@ static int cvt_wstr (olocal *v, const wchar_t *str, int str_len)
 
   if (str_len < v->width && !v->minus)
     OUT_PAD (v, ' ', v->width - str_len);
+#ifdef _WIDECHAR
+  OUT_STR (v, str, str_len);
+#else
   mbstate_t state = {{0}};
   for (int i = 0; i < str_len; i++)
   {
-      char mb[MB_LEN_MAX + 1];
+      char mb[MB_LEN_MAX];
       size_t cb = wcrtomb(mb, *str, &state);
       switch (cb)
       {
           /*
            * Quit the loop.
            */
-          case -2: /* incomplete character - we ASSUME this cannot happen. */
           case -1: /* encoding error */
+              return -1;
           case 0:  /* end of string */
               i = str_len;
               break;
@@ -293,6 +531,7 @@ static int cvt_wstr (olocal *v, const wchar_t *str, int str_len)
               break;
       }
   }
+#endif
   if (str_len < v->width && v->minus)
     OUT_PAD (v, ' ', v->width - str_len);
   return 0;
@@ -310,8 +549,8 @@ static int cvt_wstr (olocal *v, const wchar_t *str, int str_len)
    non-zero for negative numbers (the strings don't contain a
    sign). */
 
-static int cvt_number (olocal *v, const char *pfx, const char *dot,
-                       const char *str, const char *xps,
+static int cvt_number (olocal *v, const _CHAR *pfx, const _CHAR *dot,
+                       const _CHAR *str, const _CHAR *xps,
                        int lpad0, int rpad0, int is_signed, int is_neg)
 {
   int sign, pfx_len, dot_len, str_len, xps_len, min_len, lpad1;
@@ -327,10 +566,10 @@ static int cvt_number (olocal *v, const char *pfx, const char *dot,
   else
     sign = EOF;
 
-  pfx_len = STRLEN (pfx);
-  dot_len = STRLEN (dot);
-  str_len = strlen (str);
-  xps_len = STRLEN (xps);
+  pfx_len = SAFE_STRLEN (pfx);
+  dot_len = SAFE_STRLEN (dot);
+  str_len = _STRLEN (str);
+  xps_len = SAFE_STRLEN (xps);
 
   if (lpad0 < 0)
     lpad0 = 0;
@@ -392,7 +631,7 @@ static int cvt_number (olocal *v, const char *pfx, const char *dot,
    ZERO is non-zero if the number is zero.  IS_NEG is non-zero if the
    number is negative (the string STR doesn't contain a sign). */
 
-static int cvt_integer (olocal *v, const char *pfx, const char *str,
+static int cvt_integer (olocal *v, const _CHAR *pfx, const _CHAR *str,
                         int zero, int is_signed, int is_neg)
 {
   int lpad0;
@@ -403,45 +642,45 @@ static int cvt_integer (olocal *v, const char *pfx, const char *str,
   if (v->prec >= 0)             /* Ignore `0' if `-' is given for an integer */
     v->pad = ' ';
 
-  lpad0 = v->prec - strlen (str);
+  lpad0 = v->prec - _STRLEN (str);
   return cvt_number (v, pfx, NULL, str, NULL, lpad0, 0, is_signed, is_neg);
 }
 
 
-static int cvt_hex (olocal *v, char *str, char x, int zero)
+static int cvt_hex (olocal *v, _CHAR *str, _CHAR x, int zero)
 {
   if (x == 'X')
-    strupr (str);
-  return cvt_integer (v, ((!zero && v->hash) ? (x == 'X' ? "0X" : "0x") : NULL),
+    str_upper (str);
+  return cvt_integer (v, ((!zero && v->hash) ? (x == 'X' ? _LIT ("0X") : _LIT ("0x")) : NULL),
                       str, zero, FALSE, FALSE);
 }
 
 
-static int cvt_hex_32 (olocal *v, uint32_t n, char x)
+static int cvt_hex_32 (olocal *v, uint32_t n, _CHAR x)
 {
-  char buf[9];
+  _CHAR buf[9];
 
-  _ltoa (n, buf, 16);
+  _ULTOA (n, buf, 16);
   return cvt_hex (v, buf, x, n == 0);
 }
 
 
-static int cvt_hex_64 (olocal *v, uint64_t n, char x)
+static int cvt_hex_64 (olocal *v, uint64_t n, _CHAR x)
 {
-  char buf[17];
+  _CHAR buf[17];
 
-  _ulltoa (n, buf, 16);
+  _ULLTOA (n, buf, 16);
   return cvt_hex (v, buf, x, n == 0);
 }
 
 
-static int cvt_oct (olocal *v, const char *str, int zero)
+static int cvt_oct (olocal *v, const _CHAR *str, int zero)
 {
   size_t len;
 
   if (v->hash && str[0] != '0')
     {
-      len = strlen (str);
+      len = _STRLEN (str);
       if (v->prec <= (int)len)
         v->prec = len + 1;
     }
@@ -451,36 +690,36 @@ static int cvt_oct (olocal *v, const char *str, int zero)
 
 static int cvt_oct_32 (olocal *v, uint32_t n)
 {
-  char buf[12];
+  _CHAR buf[12];
 
-  _ltoa (n, buf, 8);
+  _ULTOA (n, buf, 8);
   return cvt_oct (v, buf, n == 0);
 }
 
 
 static int cvt_oct_64 (olocal *v, uint64_t n)
 {
-  char buf[23];
+  _CHAR buf[23];
 
-  _ulltoa (n, buf, 8);
+  _ULLTOA (n, buf, 8);
   return cvt_oct (v, buf, n == 0);
 }
 
 
 static int cvt_dec_32 (olocal *v, uint32_t n, int is_signed, int is_neg)
 {
-  char buf[11];
+  _CHAR buf[11];
 
-  _ultoa (n, buf, 10);
+  _ULTOA (n, buf, 10);
   return cvt_integer (v, NULL, buf, n == 0, is_signed, is_neg);
 }
 
 
 static int cvt_dec_64 (olocal *v, uint64_t n, int is_signed, int is_neg)
 {
-  char buf[21];
+  _CHAR buf[21];
 
-  _ulltoa (n, buf, 10);
+  _ULLTOA (n, buf, 10);
   return cvt_integer (v, NULL, buf, n == 0, is_signed, is_neg);
 }
 
@@ -489,7 +728,7 @@ static int cvt_dec_64 (olocal *v, uint64_t n, int is_signed, int is_neg)
    string DIGITS and the exponent XP) for the "%f" format.  If IS_NEG
    is non-zero, the number is negative. */
 
-static int cvt_fixed_digits (olocal *v, char *digits, int xp, int is_neg,
+static int cvt_fixed_digits (olocal *v, _CHAR *digits, int xp, int is_neg,
                              int is_auto)
 {
   int lpad0, rpad0, len, frac;
@@ -539,13 +778,13 @@ static int cvt_fixed_digits (olocal *v, char *digits, int xp, int is_neg,
       if (is_auto)
         {
           rpad0 = 0;
-          __remove_zeros (digits, 0);
+          _REMOVE_ZEROES (digits, 0);
           if (digits[0] == 0)
             lpad0 = 0;
         }
 
       return cvt_number (v, NULL, ((v->hash || digits[0] != 0 || lpad0 != 0)
-                                   ? zdot : "0"),
+                                   ? zdot : _LIT ("0")),
                          digits, NULL, lpad0, rpad0, TRUE, is_neg);
     }
   else if (xp < DECIMAL_DIG)
@@ -566,14 +805,14 @@ static int cvt_fixed_digits (olocal *v, char *digits, int xp, int is_neg,
 
       if (is_auto)
         {
-          __remove_zeros (digits, xp + 1);
+          _REMOVE_ZEROES (digits, xp + 1);
           rpad0 = 0;
         }
 
       /* Insert the decimal point. */
       if (v->hash || digits[xp + 1] != 0 || rpad0 != 0)
         {
-          memmove (digits + xp + 2, digits + xp + 1, DECIMAL_DIG - xp);
+          _MEMMOVE (digits + xp + 2, digits + xp + 1, DECIMAL_DIG - xp);
           digits[xp + 1] = zdot[1];
         }
       return cvt_number (v, NULL, NULL, digits, NULL, 0, rpad0, TRUE, is_neg);
@@ -586,7 +825,7 @@ static int cvt_fixed_digits (olocal *v, char *digits, int xp, int is_neg,
       rpad0 = (is_auto ? 0 : v->prec);
 
       return cvt_number (v, NULL, digits,
-                         ((v->hash || rpad0 != 0) ? zdot+1 : ""),
+                         ((v->hash || rpad0 != 0) ? zdot+1 : _LIT ("")),
                          NULL, lpad0, rpad0, TRUE, is_neg);
     }
 }
@@ -598,11 +837,11 @@ static int cvt_fixed_digits (olocal *v, char *digits, int xp, int is_neg,
    'E'.  If IS_AUTO is non-zero, we should omit trailing zeros for the
    "%g" format. */
 
-static int cvt_exp_digits (olocal *v, char *digits, int xp, int is_neg,
-                           char xp_char, int is_auto)
+static int cvt_exp_digits (olocal *v, _CHAR *digits, int xp, int is_neg,
+                           _CHAR xp_char, int is_auto)
 {
   int i, rpad0;
-  char xps_buf[10];
+  _CHAR xps_buf[10];
 
   xps_buf[0] = xp_char;
   xps_buf[1] = '+';
@@ -613,11 +852,11 @@ static int cvt_exp_digits (olocal *v, char *digits, int xp, int is_neg,
     }
   i = 2;
   if (xp >= 1000)
-    xps_buf[i++] = (char)((xp / 1000) % 10) + '0';
+    xps_buf[i++] = (_CHAR)((xp / 1000) % 10) + '0';
   if (xp >= 100)
-    xps_buf[i++] = (char)((xp / 100) % 10) + '0';
-  xps_buf[i++] = (char)((xp / 10) % 10) + '0';
-  xps_buf[i++] = (char)(xp % 10) + '0';
+    xps_buf[i++] = (_CHAR)((xp / 100) % 10) + '0';
+  xps_buf[i++] = (_CHAR)((xp / 10) % 10) + '0';
+  xps_buf[i++] = (_CHAR)(xp % 10) + '0';
   xps_buf[i] = 0;
 
   /* Insert decimal point. */
@@ -629,7 +868,7 @@ static int cvt_exp_digits (olocal *v, char *digits, int xp, int is_neg,
     }
   else
     {
-      memmove (digits + 2, digits + 1, DECIMAL_DIG);
+      _MEMMOVE (digits + 2, digits + 1, DECIMAL_DIG);
       digits[1] = zdot[1];
       if (v->prec >= DECIMAL_DIG)
         rpad0 = 1 + v->prec - DECIMAL_DIG;
@@ -640,7 +879,7 @@ static int cvt_exp_digits (olocal *v, char *digits, int xp, int is_neg,
         }
       if (is_auto)
         {
-          __remove_zeros (digits, 2);
+          _REMOVE_ZEROES (digits, 2);
           if (digits[2] == 0)
             digits[1] = 0;
           rpad0 = 0;
@@ -656,14 +895,14 @@ static int cvt_fixed (olocal *v, long double x, int is_neg)
 {
 
   if (x == 0.0)
-    return cvt_number (v, NULL, NULL, ((v->hash || v->prec > 0) ? zdot : "0"),
+    return cvt_number (v, NULL, NULL, ((v->hash || v->prec > 0) ? zdot : _LIT ("0")),
                        NULL, 0, v->prec, TRUE, is_neg);
   else
     {
-      char digits[DECIMAL_DIG+2], *p;
+      _CHAR digits[DECIMAL_DIG+2], *p;
       int xp;
 
-      p = __legacy_dtoa (digits, &xp, x, v->prec, DTOA_PRINTF_F, v->dig);
+      p = _DTOA (digits, &xp, x, v->prec, DTOA_PRINTF_F, v->dig);
       return cvt_fixed_digits (v, p, xp, is_neg, FALSE);
     }
 }
@@ -671,23 +910,23 @@ static int cvt_fixed (olocal *v, long double x, int is_neg)
 
 /* Perform formatting for the "%e" format.  XP_CHAR is 'e' or 'E'. */
 
-static int cvt_exp (olocal *v, long double x, int is_neg, char xp_char)
+static int cvt_exp (olocal *v, long double x, int is_neg, _CHAR xp_char)
 {
   if (x == 0.0)
     {
-      static char xps_buf[] = "e+00";
+      static _CHAR xps_buf[] = _LIT ("e+00");
 
       xps_buf[0] = xp_char;
       return cvt_number (v, NULL, NULL,
-                         ((v->hash || v->prec > 0) ? zdot : "0"),
+                         ((v->hash || v->prec > 0) ? zdot : _LIT ("0")),
                          xps_buf, 0, v->prec, TRUE, is_neg);
     }
   else
     {
-      char digits[DECIMAL_DIG+2], *p;
+      _CHAR digits[DECIMAL_DIG+2], *p;
       int xp;
 
-      p = __legacy_dtoa (digits, &xp, x, v->prec, DTOA_PRINTF_E, v->dig);
+      p = _DTOA (digits, &xp, x, v->prec, DTOA_PRINTF_E, v->dig);
       return cvt_exp_digits (v, p, xp, is_neg, xp_char, FALSE);
     }
 }
@@ -695,7 +934,7 @@ static int cvt_exp (olocal *v, long double x, int is_neg, char xp_char)
 
 /* Perform formatting for the "%g" format.  XP_CHAR is 'e' or 'E'. */
 
-static int cvt_auto (olocal *v, long double x, int is_neg, char xp_char)
+static int cvt_auto (olocal *v, long double x, int is_neg, _CHAR xp_char)
 {
   /* A precision of zero is treated as a precision of 1.  Note that
      the precision defines the number of significant digits, not the
@@ -708,14 +947,14 @@ static int cvt_auto (olocal *v, long double x, int is_neg, char xp_char)
      case. */
 
   if (x == 0.0)
-    return cvt_number (v, NULL, NULL, (v->hash ? zdot : "0"), NULL,
+    return cvt_number (v, NULL, NULL, (v->hash ? zdot : _LIT ("0")), NULL,
                        0, (v->hash ? v->prec - 1 : 0), TRUE, is_neg);
   else
     {
-      char digits[DECIMAL_DIG+2], *p;
+      _CHAR digits[DECIMAL_DIG+2], *p;
       int xp;
 
-      p = __legacy_dtoa (digits, &xp, x, v->prec, DTOA_PRINTF_G, v->dig);
+      p = _DTOA (digits, &xp, x, v->prec, DTOA_PRINTF_G, v->dig);
 
       /* If the exponent (of "%e" format) is less than -4 or greater
          than or equal to the precision, use "%e" format.  Otherwise,
@@ -753,9 +992,9 @@ static int cvt_auto (olocal *v, long double x, int is_neg, char xp_char)
    significant digits of X (depending on the type of X), FMT is the
    format character from the format string. */
 
-static int cvt_float (olocal *v, long double x, char fmt)
+static int cvt_float (olocal *v, long double x, _CHAR fmt)
 {
-  const char *s;
+  const _CHAR *s;
   int is_neg, fpclass;
 
   fpclass = fpclassify (x);
@@ -763,11 +1002,11 @@ static int cvt_float (olocal *v, long double x, char fmt)
   switch (fpclass)
     {
     case FP_NAN:
-      s = (fmt & 0x20) ? "nan" : "NAN";
+      s = (fmt & 0x20) ? _LIT ("nan") : _LIT ("NAN");
       is_neg = 0;               /* Don't print -NAN */
       break;
     case FP_INFINITE:
-      s = (fmt & 0x20) ? "inf" : "INF";
+      s = (fmt & 0x20) ? _LIT ("inf") : _LIT ("INF");
       break;
     default:
       s = NULL;
@@ -812,13 +1051,15 @@ static int cvt_float (olocal *v, long double x, char fmt)
 
 /* This is the working horse for printf() and friends. */
 
-int _output (FILE *stream, const char *format, char *arg_ptr)
+int _OUTPUT (FILE *stream, const _CHAR *format, char *arg_ptr)
 {
   olocal v;
   int size;
-  char cont;
-  unsigned char c;
+  int cont;
+  _CHAR c;
+#ifndef _WIDECHAR
   int mbn;
+#endif
 
   /* Initialize variables. */
 
@@ -835,6 +1076,10 @@ int _output (FILE *stream, const char *format, char *arg_ptr)
   while ((c = *format) != 0)
     if (c != '%')
       {
+#ifdef _WIDECHAR
+        PUTC (&v, c);
+        ++format;
+#else
         /* ANSI X3.159-1989, 4.9.6.1: "... ordinary multibyte
            charcters (not %), which are copied unchanged to the output
            stream..."
@@ -848,6 +1093,7 @@ int _output (FILE *stream, const char *format, char *arg_ptr)
             PUTC (&v, *format);
             ++format; --mbn;
           }
+#endif
       }
     else if (format[1] == '%')
       {

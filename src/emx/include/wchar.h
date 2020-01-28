@@ -117,10 +117,10 @@ wint_t	btowc(int);
 /** @todo wint_t	fgetwc(struct __sFILE *); */
 /** @todo wchar_t	*
 	fgetws(wchar_t * __restrict, int, struct __sFILE * __restrict); */
-/** @todo wint_t	fputwc(wchar_t, struct __sFILE *); */
+wint_t	fputwc(wchar_t, struct __sFILE *);
 /** @todo int	fputws(const wchar_t * __restrict, struct __sFILE * __restrict); */
 int	fwide(struct __sFILE *, int);
-/** @todo int	fwprintf(struct __sFILE * __restrict, const wchar_t * __restrict, ...); */
+int	fwprintf(struct __sFILE * __restrict, const wchar_t * __restrict, ...);
 /** @todo int	fwscanf(struct __sFILE * __restrict, const wchar_t * __restrict, ...); */
 /** @todo wint_t	getwc(struct __sFILE *); */
 /** @todo wint_t	getwchar(void); */
@@ -130,17 +130,17 @@ size_t	mbrtowc(wchar_t * __restrict, const char * __restrict, size_t,
 int	mbsinit(const mbstate_t *);
 size_t	mbsrtowcs(wchar_t * __restrict, const char * __restrict * __restrict, size_t,
 	    mbstate_t * __restrict);
-/** @todo wint_t	putwc(wchar_t, struct __sFILE *); */
-/** @todo wint_t	putwchar(wchar_t); */
-/** @todo int	swprintf(wchar_t * __restrict, size_t n, const wchar_t * __restrict,
-	    ...); */
+wint_t	putwc(wchar_t, struct __sFILE *);
+wint_t	putwchar(wchar_t);
+int	swprintf(wchar_t * __restrict, size_t n, const wchar_t * __restrict,
+			...);
 /** @todo int	swscanf(const wchar_t * __restrict, const wchar_t * __restrict, ...); */
 /** @todo wint_t	ungetwc(wint_t, struct __sFILE *); */
-/** @todo int	vfwprintf(struct __sFILE * __restrict, const wchar_t * __restrict,
-	    __va_list); */
-/** @todo int	vswprintf(wchar_t * __restrict, size_t n, const wchar_t * __restrict,
-	    __va_list); */
-/** @todo int	vwprintf(const wchar_t * __restrict, __va_list); */
+int	vfwprintf(struct __sFILE * __restrict, const wchar_t * __restrict,
+			__va_list);
+int	vswprintf(wchar_t * __restrict, size_t n, const wchar_t * __restrict,
+			__va_list);
+int	vwprintf(const wchar_t * __restrict, __va_list);
 size_t	wcrtomb(char * __restrict, wchar_t, mbstate_t * __restrict);
 wchar_t	*wcscat(wchar_t * __restrict, const wchar_t * __restrict);
 wchar_t	*wcschr(const wchar_t *, wchar_t) __pure;
@@ -175,7 +175,7 @@ int	wmemcmp(const wchar_t *, const wchar_t *, size_t) __pure;
 wchar_t	*wmemcpy(wchar_t * __restrict, const wchar_t * __restrict, size_t);
 wchar_t	*wmemmove(wchar_t *, const wchar_t *, size_t);
 wchar_t	*wmemset(wchar_t *, wchar_t, size_t);
-/** @todo int	wprintf(const wchar_t * __restrict, ...); */
+int	wprintf(const wchar_t * __restrict, ...);
 /** @todo int	wscanf(const wchar_t * __restrict, ...); */
 
 /** @todo #ifndef _STDSTREAM_DECLARED */
@@ -225,5 +225,11 @@ size_t	wcslcat(wchar_t *, const wchar_t *, size_t);
 size_t	wcslcpy(wchar_t *, const wchar_t *, size_t);
 #endif
 __END_DECLS
+
+#ifdef __USE_GNU
+wint_t	fputwc_unlocked(wchar_t, struct __sFILE *);
+wint_t	putwc_unlocked(wchar_t, struct __sFILE *);
+wint_t	putwchar_unlocked(wchar_t);
+#endif
 
 #endif /* !_WCHAR_H_ */

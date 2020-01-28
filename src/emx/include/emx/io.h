@@ -560,6 +560,7 @@ off_t _ftello_unlocked (struct __sFILE *);
 int _input (struct __sFILE *, const char *, char *);
 struct __sFILE *_newstream (void);
 int _output (struct __sFILE *, const char *, char *);
+int _woutput (struct __sFILE *, const wchar_t *, char *);
 int _stream_read (int, void *, size_t);
 int _stream_write (int, const void *, size_t);
 int _tmpbuf1 (struct __sFILE *, void *);

@@ -1978,3 +1978,18 @@ EXPORTS
 
     ; LIBC Next 0.1.2
     "__std_getrusage" @1973
+
+    ; LIBC Next 0.1.4
+    "__std_fputwc" @1974
+    "__std_fputwc_unlocked" @1975
+    "__std_fwprintf" @1976
+    "__std_putwc" @1977
+    "__std_putwchar" @1978
+    "__std_putwchar_unlocked" @1979
+    "__std_putwc_unlocked" @1980
+    "__std_swprintf" @1981
+    "__std_vfwprintf" @1982
+    "__std_vswprintf" @1983
+    "__std_vwprintf" @1984
+    "__std_wprintf" @1985
+    "__woutput" @1986
