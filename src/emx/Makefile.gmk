@@ -206,10 +206,12 @@ DO.IMPLIB = $(IMPLIB) -o $@ $(strip $1 $(IMPLIBFLAGS.KIND)) $(^IC)\
   $(if $(^O)$(^LIB),$(NL)$(AR) rs $@ $(^O) $(^LIB))
 
 # How to create dependencies
-MAKEDEP = makedep
-MAKEDEPFLAGS = $(CFLAGS.INC)
-DO.DEPS = $(MAKEDEP) $(MAKEDEPFLAGS) \
-  -I$(subst $(SPACE), -I,$(sort $(dir $^))) -I$. -p$(@D)/ -c -S -f$@ $^
+# (use GCC to generate dep rules and patch them with sed to use $. and $OBJFILE
+# for target objects and remove primary sources from deps (they are already
+# presentt in compile rules).
+DO.DEPS = $(CC) $(CFLAGS) $(1) \
+  -I$(subst $(SPACE), -I,$(sort $(dir $^))) -I$. -MM -MTTAG | \
+  sed -e 's/TAG:[[:space:]]\+\([^[:space:]]\+\)/$$.$$(call OBJFILE,\1):/' > $@
 
 # How to convert an a.out file to the OMF format
 #   Emxomf depends on two libs, we have to detect wethere or not emxomf is built

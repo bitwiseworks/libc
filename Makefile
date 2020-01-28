@@ -24,8 +24,11 @@ all: release
 
 release: release-tools release-libs
 
-#release-dep:
-#	$(MAKE) -C src/emx MODE=opt $(MAKE_DEFS) -f Makefile.gmk dep
+release-dep:
+	$(MAKE) -C src/emx MODE=opt $(MAKE_DEFS) -f Makefile.gmk dep
+
+release-cleandep:
+	$(MAKE) -C src/emx MODE=opt $(MAKE_DEFS) -f Makefile.gmk cleandep
 
 release-tools:
 	$(MAKE) -C src/emx MODE=opt $(MAKE_DEFS) tools

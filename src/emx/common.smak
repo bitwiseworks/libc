@@ -59,12 +59,17 @@ ifdef .tmp
 # Read the dependency file
 -include $.$(.TKIND.DIR)dep-$(.TARGET).smak
 
-TARGDEPEND += $.$(.TKIND.DIR)dep-$(.TARGET).smak
+TARGDEPEND += $.$(.TKIND.DIR)dep-$(.TARGET).smak $.$(.TKIND.DIR)dep-$(.TARGET).smak.rsp
 
 ifdef BUILD_DEPS
 # How to build the dependency file
-$.$(.TKIND.DIR)dep-$(.TARGET).smak: $(.tmp)
-	$(DO.DEPS)
+define def_generate_deps
+$$.$(.TKIND.DIR)dep-$(.TARGET).smak.rsp: $(.tmp)
+	@echo $(.tmp) > $$@
+$$.$(.TKIND.DIR)dep-$(.TARGET).smak: $.$(.TKIND.DIR)dep-$(.TARGET).smak.rsp
+	$$(call DO.DEPS,$(.TCF) @$$@.rsp)
+endef
+$(eval $(call def_generate_deps))
 endif # BUILD_DEPS
 endif # def .tmp
 
