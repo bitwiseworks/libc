@@ -123,9 +123,9 @@ struct ostat {
 	__uint16_t st_gid;		/* group ID of the file's group */
 	__uint16_t st_rdev;		/* device type */
 	__int32_t st_size;		/* file size, in bytes */
-	struct	timespec st_atimespec;	/* time of last access */
-	struct	timespec st_mtimespec;	/* time of last data modification */
-	struct	timespec st_ctimespec;	/* time of last file status change */
+	struct	timespec st_atim;	/* time of last access */
+	struct	timespec st_mtim;	/* time of last data modification */
+	struct	timespec st_ctim;	/* time of last file status change */
 	__int32_t st_blksize;		/* optimal blocksize for I/O */
 	__int32_t st_blocks;		/* blocks allocated for file */
 	fflags_t  st_flags;		/* user defined flags for file */
@@ -149,9 +149,9 @@ struct stat {
 	__int32_t st_lspare;
 #endif /* bird */
 #if __BSD_VISIBLE
-	struct	timespec st_atimespec;	/* time of last access */
-	struct	timespec st_mtimespec;	/* time of last data modification */
-	struct	timespec st_ctimespec;	/* time of last file status change */
+	struct	timespec st_atim;	/* time of last access */
+	struct	timespec st_mtim;	/* time of last data modification */
+	struct	timespec st_ctim;	/* time of last file status change */
 #else
 	time_t	  st_atime;		/* time of last access */
 	long	  st_atimensec;		/* nsec of last access */
@@ -169,9 +169,9 @@ struct stat {
 	__int32_t st_lspare;
 #endif /* bird */
 #if __BSD_VISIBLE
-	struct timespec st_birthtimespec; /* time of file creation */
+	struct timespec st_birthtim; /* time of file creation */
 	/*
-	 * Explicitly pad st_birthtimespec to 16 bytes so that the size of
+	 * Explicitly pad st_birthtim to 16 bytes so that the size of
 	 * struct stat is backwards compatible.  We use bitfields instead
 	 * of an array of chars so that this doesn't require a C99 compiler
 	 * to compile if the size of the padding is 0.  We use 2 bitfields
@@ -198,15 +198,15 @@ struct nstat {
 	uid_t	  st_uid;		/* user ID of the file's owner */
 	gid_t	  st_gid;		/* group ID of the file's group */
 	__dev_t   st_rdev;		/* device type */
-	struct	timespec st_atimespec;	/* time of last access */
-	struct	timespec st_mtimespec;	/* time of last data modification */
-	struct	timespec st_ctimespec;	/* time of last file status change */
+	struct	timespec st_atim;	/* time of last access */
+	struct	timespec st_mtim;	/* time of last data modification */
+	struct	timespec st_ctim;	/* time of last file status change */
 	off_t	  st_size;		/* file size, in bytes */
 	__int64_t st_blocks;		/* blocks allocated for file */
 	__uint32_t st_blksize;		/* optimal blocksize for I/O */
 	fflags_t  st_flags;		/* user defined flags for file */
 	__uint32_t st_gen;		/* file generation number */
-	struct timespec st_birthtimespec; /* time of file creation */
+	struct timespec st_birthtim; /* time of file creation */
 	/*
 	 * See above about the following padding.
 	 */
@@ -217,21 +217,21 @@ struct nstat {
 #endif /* bird: emx */
 
 #if __BSD_VISIBLE
-#define st_atime st_atimespec.tv_sec
-#define st_mtime st_mtimespec.tv_sec
-#define st_ctime st_ctimespec.tv_sec
-#define st_birthtime st_birthtimespec.tv_sec
+#define st_atime st_atim.tv_sec
+#define st_mtime st_mtim.tv_sec
+#define st_ctime st_ctim.tv_sec
+#define st_birthtime st_birthtim.tv_sec
 
-#define	st_atimensec st_atimespec.tv_nsec
-#define	st_mtimensec st_mtimespec.tv_nsec
-#define	st_ctimensec st_ctimespec.tv_nsec
-#define	st_birthtimensec st_birthtimespec.tv_nsec
+#define	st_atimensec st_atim.tv_nsec
+#define	st_mtimensec st_mtim.tv_nsec
+#define	st_ctimensec st_ctim.tv_nsec
+#define	st_birthtimensec st_birthtim.tv_nsec
 
 /* For compatibility (see #45). */
-#define	st_atim st_atimespec
-#define	st_mtim st_mtimespec
-#define	st_ctim st_ctimespec
-#define	st_birthtim st_birthtimespec
+#define	st_atimespec st_atim
+#define	st_mtimespec st_mtim
+#define	st_ctimespec st_ctim
+#define	st_birthtimespec st_birthtim
 #endif
 
 #define	S_ISUID	0004000			/* set user id on execution */
