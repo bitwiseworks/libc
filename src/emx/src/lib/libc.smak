@@ -166,7 +166,7 @@ LIBC.ELH.LIBS   := $(LIBC.LIBS)
 LIBC.ELH.DEPS   := $(LIBC.DEPS)
 LIBC.ELH.DIRS   :=
 
-LIBC.LOG.DLL	:= $(LIBC.DLL:.dll=.logchk)
+LIBC.LOG.DLL	:= $.omf-log/$(notdir $(LIBC.DLL))
 LIBC.LOG.DEF    := $(LIBC.DEF)
 LIBC.LOG.OBJS   := \
 	$(LIBC.OBJS.STARTUP) \
@@ -382,8 +382,8 @@ INS.FILES       += \
   $(addprefix $(INS)lib/tcpipv4/,$(notdir $(LIBC.IMPLIB.TCPIPV4)))
 ifndef LIBC_CORE_ONLY
 INS.FILES       += \
-  $(INS)lib/$(notdir $(LIBC.LOG.DLL)) \
-  $(INS)lib/$(notdir $(LIBC.LOG.DLL).map) \
+  $(INS)lib/log/$(notdir $(LIBC.LOG.DLL)) \
+  $(INS)lib/log/$(notdir $(LIBC.LOG.DLL).map) \
   $(INS)lib/$(notdir $(LIBC.PRF.DLL)) \
   $(INS)lib/$(notdir $(LIBC.PRF.DLL).map) \
   $(INS)lib/$(notdir $(LIBC.ELH.DLL)) \
@@ -397,9 +397,9 @@ $(INS)lib/$(notdir $(LIBC.DLL)): $(LIBC.DLL)
 $(INS)lib/$(notdir $(LIBC.DLL:.dll=.map)): $(LIBC.DLL:.dll=.map)
 	$(call CP,$<,$@)
 
-$(INS)lib/$(notdir $(LIBC.LOG.DLL)): $(LIBC.LOG.DLL)
+$(INS)lib/log/$(notdir $(LIBC.LOG.DLL)): $(LIBC.LOG.DLL)
 	$(call CP,$<,$@)
-$(INS)lib/$(notdir $(LIBC.LOG.DLL).map): $(LIBC.LOG.DLL).map
+$(INS)lib/log/$(notdir $(LIBC.LOG.DLL).map): $(LIBC.LOG.DLL).map
 	$(call CP,$<,$@)
 
 $(INS)lib/$(notdir $(LIBC.PRF.DLL)): $(LIBC.PRF.DLL)
