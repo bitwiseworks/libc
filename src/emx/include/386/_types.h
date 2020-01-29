@@ -120,6 +120,9 @@ typedef	__uint32_t	__vm_paddr_t;
 typedef	__uint64_t	__vm_pindex_t;
 typedef	__uint32_t	__vm_size_t;
 
+/* Be compatible with OS/2 Toolkit where wchar_t is 2-byte unsigned. */
+typedef	unsigned short	__wchar_t;
+
 /*
  * Unusual type definitions.
  */

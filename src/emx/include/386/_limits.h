@@ -110,6 +110,10 @@
 #endif
 #define	__WORD_BIT	32
 
+/* Be compatible with OS/2 Toolkit where wchar_t is 2-byte unsigned. */
+#define	__WCHAR_MIN	0		/* min value for a wchar_t */
+#define	__WCHAR_MAX	__USHRT_MAX	/* max value for a wchar_t */
+
 /* bird: Real time signals. */
 #define __RTSIG_MAX     32
 #endif /* !_MACHINE__LIMITS_H_ */

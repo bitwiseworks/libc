@@ -94,11 +94,6 @@ typedef	unsigned int	__useconds_t;	/* microseconds (unsigned) */
  */
 typedef	int		__ct_rune_t;	/* arg type for ctype funcs */
 typedef	__ct_rune_t	__rune_t;	/* rune_t (see above) */
-#if 0 /* bird: wchar_t is usually 2 bytes on OS/2. (might change this later!) */
-typedef	__ct_rune_t	__wchar_t;	/* wchar_t (see above) */
-#else /* bird */
-typedef	unsigned short  __wchar_t;
-#endif /* bird */
 typedef	__ct_rune_t	__wint_t;	/* wint_t (see above) */
 
 typedef	__uint32_t	__dev_t;	/* device number */
