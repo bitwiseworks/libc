@@ -1993,3 +1993,6 @@ EXPORTS
     "__std_vwprintf" @1984
     "__std_wprintf" @1985
     "__woutput" @1986
+    "__std_clock_getres" @1987
+    "__std_clock_gettime" @1988
+    "__std_clock_settime" @1989

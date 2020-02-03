@@ -121,6 +121,25 @@ typedef	__timer_t	timer_t;
 #include <sys/timespec.h>
 #endif /* __POSIX_VISIBLE >= 199309 */
 
+/* These macros are also in sys/time.h. */
+#if !defined(CLOCK_REALTIME) && __POSIX_VISIBLE >= 200112
+#define CLOCK_REALTIME	0
+#ifdef __BSD_VISIBLE
+#define CLOCK_VIRTUAL	1
+#define CLOCK_PROF	2
+#endif
+#define CLOCK_MONOTONIC	4
+#define CLOCK_THREAD_CPUTIME_ID	14
+#define	CLOCK_PROCESS_CPUTIME_ID	15
+#endif /* !defined(CLOCK_REALTIME) && __POSIX_VISIBLE >= 200112 */
+
+#if !defined(TIMER_ABSTIME) && __POSIX_VISIBLE >= 200112
+#if __BSD_VISIBLE
+#define TIMER_RELTIME	0x0	/* relative timer */
+#endif
+#define TIMER_ABSTIME	0x1	/* absolute timer */
+#endif /* !defined(TIMER_ABSTIME) && __POSIX_VISIBLE >= 200112 */
+
 struct tm {
 	int	tm_sec;		/* seconds after the minute [0-60] */
 	int	tm_min;		/* minutes after the hour [0-59] */
