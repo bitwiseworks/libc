@@ -33,6 +33,8 @@
 #include <os2emx.h>
 #include <InnoTekLIBC/backend.h>
 
+/* Prefer integer arithmetics (should be faster) */
+#define USE_INTEGER
 
 /**
  * Gets the current high-resolution timestamp as nanoseconds.
@@ -45,18 +47,11 @@ hrtime_t __libc_Back_timeHighResNano(void)
      * Calc factor the first time.
      */
     static ULONG        ulFreq;
-#ifdef USE_INTEGER
-    static unsigned     uMult;
-#endif
     if (!ulFreq)
     {
         int rc = DosTmrQueryFreq(&ulFreq);
         if (rc)
             return HRTIME_INFINITY;
-#ifdef USE_INTEGER /* quick approximation, very assumpive. */
-        ulFreq  /=    1000;
-        uMult    = 1000000;
-#endif
     }
 
     /*
@@ -66,7 +61,11 @@ hrtime_t __libc_Back_timeHighResNano(void)
     int rc = DosTmrQueryTime((void *)&ullCurrent);
     if (!rc)
 #ifdef USE_INTEGER
-        return (ullCurrent * uMult) / ulFreq;
+    {
+        unsigned long long ullSec = ullCurrent / ulFreq;
+        ULONG ulSecRem = ullCurrent % ulFreq;
+        return ullSec * 1000000000LLU + 1000000000LLU * ulSecRem / ulFreq;
+    }
 #else
     {
         long double lrd = ullCurrent;
