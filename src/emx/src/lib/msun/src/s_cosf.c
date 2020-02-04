@@ -21,8 +21,6 @@ static char rcsid[] = "$FreeBSD: src/lib/msun/src/s_cosf.c,v 1.7 2002/05/28 18:1
 #include "math.h"
 #include "math_private.h"
 
-static const float one=1.0;
-
 float
 cosf(float x)
 {

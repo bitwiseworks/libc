@@ -721,8 +721,7 @@ int __libc_spmWaitForChildToBecomeAlive(__LIBC_PSPMPROCESS pEmbryo)
             /* fallback if the sem is busted or for old libc initializing spm. */
             DosSleep(cLoops > 8);
 
-            __LIBC_SPMLOADAVG LoadAvg; /* SPM hack */
-            __libc_spmSetLoadAvg(&LoadAvg);
+            __libc_spmSetLoadAvg(NULL); /* SPM hack */
         }
     }
     LIBCLOG_RETURN_INT(fAlive);
@@ -1725,11 +1724,11 @@ int     __libc_spmGetLoadAvg(__LIBC_PSPMLOADAVG  pLoadAvg, unsigned *puTimestamp
 
 
 /**
- * Get the stored load average samples.
+ * Set the stored load average samples.
  *
  * @returns 0 on success.
  * @returns Negative error code (errno.h) on failure.
- * @param   pLoadAvg    Where to store the load average samples.
+ * @param   pLoadAvg    Load average samples to set.
  */
 int     __libc_spmSetLoadAvg(const __LIBC_SPMLOADAVG *pLoadAvg)
 {
@@ -1738,14 +1737,18 @@ int     __libc_spmSetLoadAvg(const __LIBC_SPMLOADAVG *pLoadAvg)
     __LIBC_SPMLOADAVG       LoadAvg;
 
     /* copy to temp buffer. */
-    LoadAvg = *pLoadAvg;
+    if (pLoadAvg)
+        LoadAvg = *pLoadAvg;
     LoadAvg.uTimestamp = spmTimestamp();
 
     rc = spmRequestMutexErrno(&RegRec);
     if (rc)
         return rc;
 
-    gpSPMHdr->LoadAvg = LoadAvg;
+    if (pLoadAvg)
+        gpSPMHdr->LoadAvg = LoadAvg;
+    else
+        gpSPMHdr->LoadAvg.uTimestamp = LoadAvg.uTimestamp;
 
     spmReleaseMutex(&RegRec);
     return 0;

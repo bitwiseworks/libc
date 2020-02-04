@@ -266,7 +266,7 @@ static void out_flush (void)
 static void out_start (void)
 {
   struct lib *lp1, *lp2;
-  char name[512], cmd[512];
+  char name[512], cmd[512 + 16];
 
   if (pipe_flag)
     {

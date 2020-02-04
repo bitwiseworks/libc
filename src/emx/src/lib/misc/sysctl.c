@@ -460,8 +460,8 @@ sysctl_register_all(void *arg)
 	struct sysctl_oid **oidp;
 
 	SYSCTL_INIT();
-        extern int __libc_sysctl_set__;
-        int *ptr = &__libc_sysctl_set__;
+        extern int __libc_sysctl_set__[];
+        int *ptr = __libc_sysctl_set__;
 	if (*ptr == -2)
             for (oidp = (struct sysctl_oid **)(ptr + 1); *oidp != NULL; oidp++)
                 sysctl_register_oid(*oidp);

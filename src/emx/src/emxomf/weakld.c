@@ -3489,7 +3489,7 @@ static int      wldGenerateDefCallback(struct _md *pMD, const _md_stmt *pStmt, _
          */
         case _MD_EXPORTS:
         {
-            char        szTmp[1024];
+            char        szTmp[1024 * 2];
             int         cch;
             PWLDSYM     pSymInt = NULL;
             PWLDSYM     pSymExp;

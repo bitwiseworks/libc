@@ -72,5 +72,7 @@ ulp
 			}
 		}
 #endif
+#pragma GCC diagnostic ignored "-Wuninitialized"
 	return a;
+#pragma GCC diagnostic pop
 	}

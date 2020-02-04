@@ -1611,7 +1611,7 @@ int main (int argc, char *argv[])
   struct stat s;
   int c, rc, files;
   const char *ext;
-  char tmp[512], *t;
+  char tmp[512 + 16], *t;
   char execname[512];
   name_list *pcur;
   int   opt_libs_static = 0;

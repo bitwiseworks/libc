@@ -105,10 +105,10 @@ main(int argc, char *argv[])
 	uint32_t store;
 	const char *t;
 	char *p;
-	char buf[MAX(MAXPATHLEN, LINE_MAX * 2)], tbuf[1024];
-	char sbuf[MAX(MAXPATHLEN, LINE_MAX * 2)];
-	char buf2[MAXPATHLEN];
-	char sbuf2[MAXPATHLEN];
+	char buf[MAX(MAXPATHLEN + 16, LINE_MAX * 2)], tbuf[1024];
+	char sbuf[MAX(MAXPATHLEN + 16, LINE_MAX * 2)];
+	char buf2[MAXPATHLEN + 16];
+	char sbuf2[MAXPATHLEN + 16];
 	char *username;
 	u_int method, methoduid;
 	int Cflag, dflag, iflag;
@@ -116,6 +116,7 @@ main(int argc, char *argv[])
 
 	iflag = dflag = Cflag = 0;
 	strcpy(prefix, _PATH_PWD);
+	oldfp = NULL;
 	makeold = 0;
 	username = NULL;
 	while ((ch = getopt(argc, argv, "CNd:ips:u:v")) != -1)
@@ -761,7 +762,7 @@ error(name)
 void
 cleanup()
 {
-	char buf[MAXPATHLEN];
+	char buf[MAXPATHLEN + 16];
 
 	switch(clean) {
 	case FILE_ORIG:
