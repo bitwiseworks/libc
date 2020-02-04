@@ -74,8 +74,11 @@ int	 memcmp(const void *, const void *, size_t);
 void	*memcpy(void * __restrict, const void * __restrict, size_t);
 void	*memmove(void *, const void *, size_t);
 void	*memset(void *, int, size_t);
+#if __POSIX_VISIBLE >= 200809
+char	*stpcpy(char * __restrict, const char * __restrict);
+char	*stpncpy(char * __restrict, const char * __restrict, size_t);
+#endif
 #if __BSD_VISIBLE
-char	*stpcpy(char *, const char *);
 char	*strcasestr(const char *, const char *);
 #endif
 char	*strcat(char * __restrict, const char * __restrict);
@@ -102,6 +105,10 @@ void	 strmode(int, char *);
 char	*strncat(char * __restrict, const char * __restrict, size_t);
 int	 strncmp(const char *, const char *, size_t);
 char	*strncpy(char * __restrict, const char * __restrict, size_t);
+#if __POSIX_VISIBLE >= 200809
+char	*strndup(const char *, size_t) __malloc_like;
+size_t	 strnlen(const char *, size_t) __pure;
+#endif
 #if __BSD_VISIBLE
 char	*strnstr(const char *, const char *, size_t);
 #endif
@@ -109,7 +116,9 @@ char	*strpbrk(const char *, const char *);
 char	*strrchr(const char *, int);
 #if __BSD_VISIBLE
 char	*strsep(char **, const char *);
- char	*strsignal(int);
+#endif
+#if __POSIX_VISIBLE >= 200809
+char	*strsignal(int);
 #endif
 size_t	 strspn(const char *, const char *);
 char	*strstr(const char *, const char *);
@@ -178,15 +187,12 @@ void *_memcpy_amd(void *, const void *, size_t);
 /* bird: GNU stuff - start */
 #ifdef __USE_GNU
 char	*basename(const char *);
-size_t   strnlen(const char *, size_t);
 void    *mempcpy(void *, const void *, size_t);
-char    *strndup(const char *, size_t);
 void    *memrchr(const void *, int, size_t);
 #define  memrchr(pach, ch, cch)     _memrchr(pach, ch, cch)
 int      strverscmp(const char *, const char *);
 char    *strchrnul(const char *, int);
 void    *rawmemchr(const void *, int);
-char    *stpncpy(char *, const char *, int);
 
 size_t   __strnlen(const char *, size_t);
 void    *__mempcpy(void *, const void *, size_t);
