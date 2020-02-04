@@ -1996,3 +1996,10 @@ EXPORTS
     "__std_clock_getres" @1987
     "__std_clock_gettime" @1988
     "__std_clock_settime" @1989
+    "__std_sem_destroy" @1990
+    "__std_sem_getvalue" @1991
+    "__std_sem_init" @1992
+    "__std_sem_post" @1993
+    "__std_sem_timedwait" @1994
+    "__std_sem_trywait" @1995
+    "__std_sem_wait" @1996

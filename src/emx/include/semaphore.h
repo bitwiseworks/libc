@@ -36,14 +36,11 @@
 
 #include <sys/cdefs.h>
 #include <sys/_types.h>
-#include <sys/_umtx.h>
 
 #include <machine/_limits.h>
 
 struct _sem {
-	__uint32_t	_magic;
-	struct _usem2	_kern;
-	__uint32_t	_padding;	/* Preserve structure size */
+  __uint32_t	_opaque[4];
 };
 
 typedef	struct _sem	sem_t;
@@ -54,19 +51,21 @@ typedef	struct _sem	sem_t;
 struct timespec;
 
 __BEGIN_DECLS
+#if 0 /* @todo */
 #if __BSD_VISIBLE
 int	 sem_clockwait_np(sem_t * __restrict, __clockid_t, int,
 	    const struct timespec *, struct timespec *);
 #endif
-int	 sem_close(sem_t *);
+#endif
+/* @todo int	 sem_close(sem_t *); */
 int	 sem_destroy(sem_t *);
 int	 sem_getvalue(sem_t * __restrict, int * __restrict);
 int	 sem_init(sem_t *, int, unsigned int);
-sem_t	*sem_open(const char *, int, ...);
+/* @todo sem_t	*sem_open(const char *, int, ...); */
 int	 sem_post(sem_t *);
 int	 sem_timedwait(sem_t * __restrict, const struct timespec * __restrict);
 int	 sem_trywait(sem_t *);
-int	 sem_unlink(const char *);
+/* @todo int	 sem_unlink(const char *); */
 int	 sem_wait(sem_t *);
 __END_DECLS
 
