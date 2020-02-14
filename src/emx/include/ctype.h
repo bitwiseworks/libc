@@ -51,9 +51,12 @@ int     isascii(int);
 int     toascii(int);
 #endif
 
+#if __ISO_C_VISIBLE >= 1999
+int	isblank(int);
+#endif
+
 #if __BSD_VISIBLE
 int	digittoint(int);
-int     isblank(int);
 int	ishexnumber(int);
 int	isideogram(int);
 int	isnumber(int);
@@ -63,6 +66,7 @@ int	isrune(int);
 #endif
 __END_DECLS
 
+#ifndef __cplusplus
 #define isalnum(ch)     __istype((ch), (__CT_ALPHA)|(__CT_DIGIT))
 #define isalpha(ch)     __istype((ch), (__CT_ALPHA))
 #define iscntrl(ch)     __istype((ch), (__CT_CNTRL))
@@ -81,6 +85,7 @@ __END_DECLS
 #endif
 #define tolower(ch)     __tolower(ch)
 #define toupper(ch)     __toupper(ch)
+#endif /* !__cplusplus */
 
 #if __XSI_VISIBLE
 #define _toupper(ch)    __toupper(ch)
@@ -89,8 +94,11 @@ __END_DECLS
 #define	toascii(ch)     ((ch) & 0x7F)
 #endif
 
-#if __BSD_VISIBLE
+#if __ISO_C_VISIBLE >= 1999 && !defined(__cplusplus)
 #define isblank(ch)     __istype((ch), (__CT_BLANK))
+#endif
+
+#if __BSD_VISIBLE
 #define ishexnumber(ch) __istype((ch), (__CT_XDIGIT))
 #define isideogram(ch)  __istype((ch), (__CT_IDEOGRAM))
 #define isnumber(ch)    __istype((ch), (__CT_DIGIT))
