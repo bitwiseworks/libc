@@ -50,6 +50,16 @@
 #include <sys/uio.h>
 #include <sys/cdefs.h>
 
+#ifndef _SA_FAMILY_T_DECLARED
+typedef	__sa_family_t	sa_family_t;
+#define	_SA_FAMILY_T_DECLARED
+#endif
+
+#ifndef _SOCKLEN_T_DECLARED
+typedef	__socklen_t	socklen_t;
+#define	_SOCKLEN_T_DECLARED
+#endif
+
 #if defined (__cplusplus)
 extern "C" {
 #endif
@@ -189,9 +199,9 @@ struct sockaddr {
 	u_short	sa_family;		/* address family */
 	char	sa_data[14];		/* up to 14 bytes of direct address */
 #else
-        u_char  sa_len;                 /* total length */
-        u_char  sa_family;              /* address family */
-        char    sa_data[14];            /* actually longer; address value */
+	u_char		sa_len;		/* total length */
+	sa_family_t	sa_family;	/* address family */
+	char		sa_data[14];	/* actually longer; address value */
 #endif
 };
 
@@ -203,6 +213,8 @@ struct sockproto {
 	u_short	sp_family;		/* address family */
 	u_short	sp_protocol;		/* protocol */
 };
+
+#include <sys/_sockaddr_storage.h>
 
 /*
  * Protocol families, same as address families for now.
@@ -336,12 +348,12 @@ struct msghdr {
 	caddr_t	msg_accrights;		/* access rights sent/received */
 	int	msg_accrightslen;
 #else
-        u_int   msg_namelen;            /* size of address */
-        struct  iovec *msg_iov;         /* scatter/gather array */
-        u_int   msg_iovlen;             /* # elements in msg_iov */
-        caddr_t msg_control;            /* ancillary data, see below */
-        u_int   msg_controllen;         /* ancillary data buffer len */
-        long    msg_flags;              /* flags on received message */
+        socklen_t   msg_namelen;            /* size of address */
+        struct iovec *msg_iov;              /* scatter/gather array */
+        u_int       msg_iovlen;             /* # elements in msg_iov */
+        caddr_t     msg_control;            /* ancillary data, see below */
+        socklen_t   msg_controllen;         /* ancillary data buffer len */
+        long        msg_flags;              /* flags on received message */
 #endif
 };
 
@@ -373,9 +385,9 @@ struct msghdr {
  * of message elements headed by cmsghdr structures.
  */
 struct cmsghdr {
-	u_int	cmsg_len;		/* data byte count, including hdr */
-	int	cmsg_level;		/* originating protocol */
-	int	cmsg_type;		/* protocol-specific type */
+	socklen_t	cmsg_len;	/* data byte count, including hdr */
+	int		cmsg_level;	/* originating protocol */
+	int		cmsg_type;	/* protocol-specific type */
 /* followed by	u_char  cmsg_data[]; */
 };
 
