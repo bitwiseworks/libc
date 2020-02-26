@@ -82,7 +82,7 @@ int __select(int nfds, struct fd_set *readfds, struct fd_set *writefds,
     /*
      * Wait operation?
      */
-    if (!readfds && !writefds && !exceptfds)
+    if (nfds == 0 || (!readfds && !writefds && !exceptfds))
         return __select_wait(tv);
 
 
