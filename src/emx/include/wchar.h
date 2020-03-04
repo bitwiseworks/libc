@@ -113,10 +113,10 @@ struct tm;
 __BEGIN_DECLS
 wint_t	btowc(int);
 wint_t	fgetwc(struct __sFILE *);
-/** @todo wchar_t	*
-	fgetws(wchar_t * __restrict, int, struct __sFILE * __restrict); */
+wchar_t	*
+	fgetws(wchar_t * __restrict, int, struct __sFILE * __restrict);
 wint_t	fputwc(wchar_t, struct __sFILE *);
-/** @todo int	fputws(const wchar_t * __restrict, struct __sFILE * __restrict); */
+int	fputws(const wchar_t * __restrict, struct __sFILE * __restrict);
 int	fwide(struct __sFILE *, int);
 int	fwprintf(struct __sFILE * __restrict, const wchar_t * __restrict, ...);
 int	fwscanf(struct __sFILE * __restrict, const wchar_t * __restrict, ...);
@@ -228,9 +228,12 @@ __END_DECLS
 wint_t	fputwc_unlocked(wchar_t, struct __sFILE *);
 wint_t	putwc_unlocked(wchar_t, struct __sFILE *);
 wint_t	putwchar_unlocked(wchar_t);
+int	fputws_unlocked(const wchar_t * __restrict, struct __sFILE * __restrict);
 wint_t	fgetwc_unlocked(struct __sFILE *);
 wint_t	getwc_unlocked(struct __sFILE *);
 wint_t	getwchar_unlocked(void);
+wchar_t	*
+	fgetws_unlocked(wchar_t * __restrict, int, struct __sFILE * __restrict);
 #endif
 
 #endif /* !_WCHAR_H_ */

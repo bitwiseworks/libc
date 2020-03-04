@@ -2018,3 +2018,7 @@ EXPORTS
     "__std_wscanf" @2009
     "__ungetwc_nolock" @2010
     "__winput" @2011
+    "__std_fgetws" @2012
+    "__std_fgetws_unlocked" @2013
+    "__std_fputws" @2014
+    "__std_fputws_unlocked" @2015
