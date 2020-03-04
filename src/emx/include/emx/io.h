@@ -9,6 +9,11 @@
 #include <alloca.h>
 #include <stdio.h>
 
+#ifndef _WINT_T_DECLARED
+typedef	__wint_t	wint_t;
+#define	_WINT_T_DECLARED
+#endif
+
 __BEGIN_DECLS
 
 #if !defined (NULL)
@@ -558,6 +563,7 @@ void _closestream (struct __sFILE *);
 int _fseek_unlocked (struct __sFILE *, off_t, int);
 off_t _ftello_unlocked (struct __sFILE *);
 int _input (struct __sFILE *, const char *, char *);
+int _winput (struct __sFILE *, const wchar_t *, char *);
 struct __sFILE *_newstream (void);
 int _output (struct __sFILE *, const char *, char *);
 int _woutput (struct __sFILE *, const wchar_t *, char *);
@@ -566,6 +572,7 @@ int _stream_write (int, const void *, size_t);
 int _tmpbuf1 (struct __sFILE *, void *);
 int _trslash (const char *, size_t, int);
 int _ungetc_nolock (int, struct __sFILE *);
+wint_t _ungetwc_nolock (wint_t, struct __sFILE *);
 int _vsopen (const char *, int, int, char *);
 
 

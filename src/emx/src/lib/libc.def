@@ -2003,3 +2003,18 @@ EXPORTS
     "__std_sem_timedwait" @1994
     "__std_sem_trywait" @1995
     "__std_sem_wait" @1996
+    "__std_fgetwc" @1997
+    "__std_fgetwc_unlocked" @1998
+    "__std_fwscanf" @1999
+    "__std_getwc" @2000
+    "__std_getwchar" @2001
+    "__std_getwchar_unlocked" @2002
+    "__std_getwc_unlocked" @2003
+    "__std_swscanf" @2004
+    "__std_ungetwc" @2005
+    "__std_vfwscanf" @2006
+    "__std_vswscanf" @2007
+    "__std_vwscanf" @2008
+    "__std_wscanf" @2009
+    "__ungetwc_nolock" @2010
+    "__winput" @2011

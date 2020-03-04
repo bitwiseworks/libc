@@ -1,4 +1,29 @@
 /* _input.c (emx+gcc) -- Copyright (c) 1990-2000 by Eberhard Mattes */
+/* wide char changes by Dmitriy Kuminov */
+
+#ifdef _WIDECHAR
+#define _INPUT _winput
+#define _GETC_INLINE _getwc_inline
+#define _UNGETC_NOLOCK _ungetwc_nolock
+#define _EOF WEOF
+#define _CHAR wchar_t
+#define _LIT(str) L##str
+#define _TO_INT(c) ((int)(c))
+#define _STDTOLD wcstold
+#define _STDTOD wcstod
+#define _STDTOF wcstof
+#else
+#define _INPUT _input
+#define _GETC_INLINE _getc_inline
+#define _UNGETC_NOLOCK _ungetc_nolock
+#define _EOF EOF
+#define _CHAR char
+#define _LIT(str) str
+#define _TO_INT(c) ((unsigned char)(c))
+#define _STDTOLD strtold
+#define _STDTOD strtod
+#define _STDTOF strtof
+#endif
 
 #include "libc-alias.h"
 #include <stdio.h>
@@ -10,7 +35,12 @@
 #include <locale.h>
 #include <emx/io.h>
 #include <InnoTekLIBC/locale.h>
+#include <wchar.h>
+#ifdef _WIDECHAR
+#include <wctype.h>
+#else
 #include <ctype.h>
+#endif
 #include "getputc.h"
 
 #define FALSE   0
@@ -29,7 +59,7 @@ typedef struct
   int width;                    /* Field width or what's left over of it */
   int chars;                    /* Number of characters read */
   int volatile count;           /* Number of fields assigned */
-  char * volatile more;         /* Big buffer for %e format */
+  _CHAR * volatile more;         /* Big buffer for %e format */
   int collected;                /* Number of characters collected */
   size_t more_size;             /* Size of the above */
   int size;                     /* Size (0, 'h', SIZE_HH, 'l', SIZE_LL, 'L', 'j', 'z', 'Z', 't' or 'q') */
@@ -62,14 +92,14 @@ static int get0 (ilocal *v)
 
   /* Read a character from the stream. */
 
-  c = _getc_inline (v->stream);
-  if (c == EOF)
+  c = _GETC_INLINE (v->stream);
+  if (c == _EOF)
     {
       v->status = END_OF_FILE;
-      return EOF;
+      return _EOF;
     }
   ++v->chars;
-  return (unsigned char)c;
+  return _TO_INT(c);
 }
 
 
@@ -79,7 +109,7 @@ static int get0 (ilocal *v)
 static int get (ilocal *v)
 {
   if (v->width == 0)
-    return EOF;
+    return _EOF;
   --v->width;
   return get0 (v);
 }
@@ -98,7 +128,7 @@ static void make_unread (ilocal *v, int c)
              stream with ungetc(), so we must also push it back with
              ungetc(). */
 
-          _ungetc_nolock (c, v->stream);
+          _UNGETC_NOLOCK (c, v->stream);
         }
       else
         {
@@ -116,11 +146,11 @@ static void make_unread (ilocal *v, int c)
 }
 
 
-#define COLLECT(X) do { collect (v, (unsigned char *)buf, sizeof (buf), X); \
+#define COLLECT(X) do { collect (v, buf, sizeof (buf) / sizeof (buf[0]), X); \
                         if (v->status == OUT_OF_MEMORY) return; } while (0)
 
-static void collect (ilocal *v, unsigned char *buf, size_t buf_size,
-                     unsigned char c)
+static void collect (ilocal *v, _CHAR *buf, size_t buf_size,
+                     _CHAR c)
 {
   if (v->more == NULL && v->collected < buf_size)
     buf[v->collected] = c;
@@ -129,14 +159,14 @@ static void collect (ilocal *v, unsigned char *buf, size_t buf_size,
       if (v->collected >= v->more_size)
         {
           v->more_size += 512;
-          v->more = realloc (v->more, v->more_size);
+          v->more = realloc (v->more, v->more_size * sizeof(_CHAR));
           if (v->more == NULL)
             {
               v->status = OUT_OF_MEMORY;
               return;
             }
           if (v->collected == buf_size)
-            memcpy (v->more, buf, buf_size);
+            memcpy (v->more, buf, buf_size * sizeof(_CHAR));
         }
       v->more[v->collected] = c;
     }
@@ -155,10 +185,10 @@ static int skip (ilocal *v)
   do
     {
       c = get0 (v);
-      if (c == EOF)
+      if (c == _EOF)
         {
           v->status = INPUT_FAILURE;
-          return EOF;
+          return _EOF;
         }
     } while (isspace (c));
 
@@ -171,9 +201,13 @@ static int skip (ilocal *v)
 }
 
 
-static void inp_char (ilocal *v, unsigned char *dst)
+static void inp_char (ilocal *v, char *dst)
 {
   int c, ok;
+#ifdef _WIDECHAR
+  char mb[MB_LEN_MAX];
+  mbstate_t mbs = {{0}};
+#endif
 
   if (v->status == END_OF_FILE)
     {
@@ -183,11 +217,26 @@ static void inp_char (ilocal *v, unsigned char *dst)
   if (!v->width_given)
     v->width = 1;
   ok = FALSE;
-  while ((c = get (v)) != EOF)
+  while ((c = get (v)) != _EOF)
     {
+#ifndef _WIDECHAR
+      /* No conversion is needed. */
       ok = TRUE;
       if (dst != NULL)
-        *dst++ = (unsigned char)c;
+        *dst++ = c;
+#else
+      /* Convert from wchar_t to multibyte. */
+      size_t cb = wcrtomb(mb, c, &mbs);
+      if (cb > 0)
+        {
+          ok = TRUE;
+          if (dst != NULL)
+            for (size_t i = 0; i < cb; ++i)
+              *dst++ = mb[i];
+        }
+      else
+        break;
+#endif
     }
   if (!ok)
     v->status = INPUT_FAILURE;
@@ -198,9 +247,12 @@ static void inp_char (ilocal *v, unsigned char *dst)
 
 static void inp_wchar (ilocal *v, wchar_t *dst)
 {
-/** @todo implement sscanf(, "%lc", pwsz). */
   int c, ok;
-//  mbstate_t mbs;
+#ifndef _WIDECHAR
+  char mb[MB_LEN_MAX];
+  mbstate_t mbs = {{0}};
+  size_t len = 0;
+#endif
 
   if (v->status == END_OF_FILE)
     {
@@ -210,12 +262,29 @@ static void inp_wchar (ilocal *v, wchar_t *dst)
   if (!v->width_given)
     v->width = 1;
   ok = FALSE;
-//  mbsinit(&mbs);
-  while ((c = get (v)) != EOF)
+  while ((c = get (v)) != _EOF)
     {
+#ifdef _WIDECHAR
+      /* No conversion is needed. */
       ok = TRUE;
       if (dst != NULL)
-        *dst++ = (unsigned char)c;
+        *dst++ = c;
+#else
+      /* Convert from multibyte to wchar_t. */
+      mb[len++] = c;
+      wchar_t wc;
+      size_t cb = mbrtowc(&wc, mb, len, &mbs);
+      if (cb > 0)
+        {
+          ok = TRUE;
+          if (dst != NULL)
+            *dst++ = wc;
+          len = 0;
+        }
+      else if (len == MB_LEN_MAX || cb != (size_t) -2)
+        break;
+      /* -2 is incomplete sequence, read further */
+#endif
     }
   if (!ok)
     v->status = INPUT_FAILURE;
@@ -224,17 +293,35 @@ static void inp_wchar (ilocal *v, wchar_t *dst)
 }
 
 
-static void inp_str (ilocal *v, unsigned char *dst)
+static void inp_str (ilocal *v, char *dst)
 {
   int c;
+#ifdef _WIDECHAR
+  char mb[MB_LEN_MAX];
+  mbstate_t mbs = {{0}};
+#endif
 
   c = skip (v);
   if (v->status != OK)
     return;
-  while (c != EOF && !isspace (c))
+  while (c != _EOF && !isspace (c))
     {
+#ifndef _WIDECHAR
+      /* No conversion is needed. */
       if (dst != NULL)
-        *dst++ = (unsigned char)c;
+        *dst++ = c;
+#else
+      /* Convert from wchar_t to multibyte. */
+      size_t cb = wcrtomb(mb, c, &mbs);
+      if (cb > 0)
+        {
+          if (dst != NULL)
+            for (size_t i = 0; i < cb; ++i)
+              *dst++ = mb[i];
+        }
+      else
+        break;
+#endif
       c = get (v);
     }
   if (dst != NULL)
@@ -249,18 +336,37 @@ static void inp_str (ilocal *v, unsigned char *dst)
 static void inp_wstr (ilocal *v, wchar_t *dst)
 {
   int c;
-/** @todo implement sscanf(, "%ls", pwsz). */
-//  mbstate_t mbs;
+#ifndef _WIDECHAR
+  char mb[MB_LEN_MAX];
+  mbstate_t mbs = {{0}};
+  size_t len = 0;
+#endif
 
   c = skip (v);
   if (v->status != OK)
     return;
 
-//  mbsinit(&mbs);
-  while (c != EOF && !isspace (c))
+  while (c != _EOF && !isspace (c))
     {
+#ifdef _WIDECHAR
+      /* No conversion is needed. */
       if (dst != NULL)
-        *dst++ = (unsigned char)c;
+        *dst++ = c;
+#else
+      /* Convert from multibyte to wchar_t. */
+      mb[len++] = c;
+      wchar_t wc;
+      size_t cb = mbrtowc(&wc, mb, len, &mbs);
+      if (cb > 0)
+        {
+          if (dst != NULL)
+            *dst++ = wc;
+          len = 0;
+        }
+      else if (len == MB_LEN_MAX || cb != (size_t) -2)
+        break;
+      /* -2 is incomplete sequence, read further */
+#endif
       c = get (v);
     }
   if (dst != NULL)
@@ -268,16 +374,26 @@ static void inp_wstr (ilocal *v, wchar_t *dst)
       *dst = 0;
       ++v->count;
     }
+#ifndef _WIDECHAR
+  /* unread all failed bytes (in reverse order) */
+  if (len)
+    while (len)
+      make_unread (v, mb[--len]);
+  else
+#endif
   make_unread (v, c);
 }
 
 
-
-static void inp_set (ilocal *v, const char **pfmt, unsigned char *dst)
+/* TODO a simple array-based char map is not suitable for wchar_t since it
+   would need 65536 values, not 256, which is too much. We need a more complex
+   structure to track the scanset. */
+#ifndef _WIDECHAR
+static void inp_set (ilocal *v, const _CHAR **pfmt, unsigned char *dst)
 {
   char map[256], end, done;
   unsigned char f;
-  const char *format;
+  const _CHAR *format;
   int c, i, ok;
 
   if (v->status == END_OF_FILE)
@@ -326,7 +442,7 @@ static void inp_set (ilocal *v, const char **pfmt, unsigned char *dst)
     } while (!done);
   ok = FALSE;
   c = get (v);
-  while (c != EOF && map[c] != end)
+  while (c != _EOF && map[c] != end)
     {
       ok = TRUE;
       if (dst != NULL)
@@ -335,7 +451,7 @@ static void inp_set (ilocal *v, const char **pfmt, unsigned char *dst)
     }
   if (!ok)
     {
-      if (c != EOF)
+      if (c != _EOF)
         {
           make_unread (v, c);
           v->status = MATCHING_FAILURE;
@@ -351,6 +467,7 @@ static void inp_set (ilocal *v, const char **pfmt, unsigned char *dst)
     }
   make_unread (v, c);
 }
+#endif
 
 
 static void inp_int_base (ilocal *v, void *dst, int base)
@@ -399,7 +516,7 @@ static void inp_int_base (ilocal *v, void *dst, int base)
         ok = TRUE;          /* We've seen a digit! */
     }
 
-  while (c != EOF)
+  while (c != _EOF)
     {
       if (isdigit (c))
         digit = c - '0';
@@ -417,7 +534,7 @@ static void inp_int_base (ilocal *v, void *dst, int base)
     }
   if (!ok)
     {
-      if (c != EOF)
+      if (c != _EOF)
         {
           make_unread (v, c);
           v->status = MATCHING_FAILURE;
@@ -466,7 +583,7 @@ static void inp_int_base (ilocal *v, void *dst, int base)
 }
 
 
-static void inp_int (ilocal *v, unsigned char f, void *dst)
+static void inp_int (ilocal *v, _CHAR f, void *dst)
 {
   switch (f)
     {
@@ -501,10 +618,10 @@ static void inp_int (ilocal *v, unsigned char f, void *dst)
 static void inp_float (ilocal *v, void *dst)
 {
   int c;
-  const char *text;
-  char *p, *q;
+  const _CHAR *text;
+  _CHAR *p, *q;
   char ok;
-  char buf[128];
+  _CHAR buf[128];
   long double lx;
   double dx;
   float fx;
@@ -519,9 +636,9 @@ static void inp_float (ilocal *v, void *dst)
       c = get (v);
     }
   if (c == 'i' || c == 'I')
-    text = "infinity";
+    text = _LIT("infinity");
   else if (c == 'n' || c == 'N')
-    text = "nan";
+    text = _LIT("nan");
   else
     text = NULL;
 
@@ -564,7 +681,7 @@ static void inp_float (ilocal *v, void *dst)
           ok = TRUE;
           c = get (v);
         }
-      if (c == (unsigned char)__libc_gLocaleLconv.s.decimal_point[0])
+      if (c == _TO_INT(__libc_gLocaleLconv.s.decimal_point[0]))
         {
           COLLECT (c);
           c = get (v);
@@ -577,7 +694,7 @@ static void inp_float (ilocal *v, void *dst)
         }
       if (!ok)
         {
-          if (c != EOF)
+          if (c != _EOF)
             {
               make_unread (v, c);
               v->status = MATCHING_FAILURE;
@@ -598,7 +715,7 @@ static void inp_float (ilocal *v, void *dst)
             }
           if (!isdigit (c))
             {
-              if (c != EOF)
+              if (c != _EOF)
                 {
                   make_unread (v, c);
                   v->status = MATCHING_FAILURE;
@@ -623,13 +740,13 @@ static void inp_float (ilocal *v, void *dst)
   switch (v->size)
     {
     case 'L':
-      lx = strtold (p, &q);
+      lx = _STDTOLD (p, &q);
       break;
     case 'l':
-      dx = strtod (p, &q);
+      dx = _STDTOD (p, &q);
       break;
     default:
-      fx = strtof (p, &q);
+      fx = _STDTOF (p, &q);
       break;
     }
   if (q == buf || *q != 0) /* Ignore overflow! */
@@ -656,10 +773,10 @@ static void inp_float (ilocal *v, void *dst)
 }
 
 
-static int inp_main (ilocal *v, const char *format, char *arg_ptr)
+static int inp_main (ilocal *v, const _CHAR *format, char *arg_ptr)
 {
   void *dst;
-  unsigned char f;
+  _CHAR f;
   int c;
   char assign;
   int mbi, mbn;
@@ -697,8 +814,8 @@ static int inp_main (ilocal *v, const char *format, char *arg_ptr)
           for (mbi = 0; mbi < mbn; ++mbi)
             {
               c = get0 (v);
-              if (c == EOF) return (v->count == 0 ? EOF : v->count);
-              if (c != (unsigned char)*format)
+              if (c == _EOF) return (v->count == 0 ? _EOF : v->count);
+              if (c != _TO_INT(*format))
                 {
                   /* ISO 9899 does not allow us to leave the entire
                      multibyte character unread; only the non-matching
@@ -720,10 +837,10 @@ static int inp_main (ilocal *v, const char *format, char *arg_ptr)
               assign = FALSE;
               ++format;
             }
-          if (isdigit ((unsigned char)*format))
+          if (isdigit (_TO_INT(*format)))
             {
               v->width = 0;
-              while (isdigit ((unsigned char)*format))
+              while (isdigit (_TO_INT(*format)))
                 v->width = v->width * 10 + (*format++ - '0');
 
               /* The behavior for a zero width is declared undefined
@@ -752,11 +869,15 @@ static int inp_main (ilocal *v, const char *format, char *arg_ptr)
           f = *format;
           switch (f)
             {
+            /* TODO inp_set is not ready for wide char input */
+#ifndef _WIDECHAR
             case '[':
               if (assign)
                 dst = va_arg (arg_ptr, char *);
               inp_set (v, &format, dst);
               break;
+            /* TODO l modifier support (scanf("%l[abc]")) */
+#endif
 
             case 'c':
               if (v->size != 'l' && v->size != 'L')
@@ -892,7 +1013,7 @@ static int inp_main (ilocal *v, const char *format, char *arg_ptr)
           switch (v->status)
             {
             case INPUT_FAILURE:
-              return v->count == 0 ? EOF : v->count;
+              return v->count == 0 ? _EOF : v->count;
             case MATCHING_FAILURE:
             case OUT_OF_MEMORY:
               return v->count;
@@ -906,7 +1027,7 @@ static int inp_main (ilocal *v, const char *format, char *arg_ptr)
 }
 
 
-int _input (FILE *stream, const char *format, char *arg_ptr)
+int _INPUT (FILE *stream, const _CHAR *format, char *arg_ptr)
 {
   ilocal v;
   int rc;
