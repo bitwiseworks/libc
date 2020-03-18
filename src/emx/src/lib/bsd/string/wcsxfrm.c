@@ -25,6 +25,7 @@
  * SUCH DAMAGE.
  */
 
+#include "namespace.h"
 #include <sys/cdefs.h>
 #if 0
 __FBSDID("FreeBSD: src/lib/libc/string/strxfrm.c,v 1.15 2002/09/06 11:24:06 tjr Exp ");
@@ -34,7 +35,7 @@ __FBSDID("$FreeBSD$");
 #include <stdlib.h>
 #include <string.h>
 #include <wchar.h>
-#include "collate.h"
+/*#include "collate.h"*/
 
 static char *__mbsdup(const wchar_t *);
 
@@ -43,11 +44,12 @@ static char *__mbsdup(const wchar_t *);
  * the logic used.
  */
 size_t
-wcsxfrm(wchar_t * __restrict dest, const wchar_t * __restrict src, size_t len)
+_STD(wcsxfrm)(wchar_t * __restrict dest, const wchar_t * __restrict src, size_t len)
 {
-	int prim, sec, l;
+	/*int prim, sec, l;*/
 	size_t slen;
-	char *mbsrc, *s, *ss;
+	char *mbsrc/*, *s, *ss*/;
+	char *mbdst;
 
 	if (*src == L'\0') {
 		if (len != 0)
@@ -55,7 +57,7 @@ wcsxfrm(wchar_t * __restrict dest, const wchar_t * __restrict src, size_t len)
 		return (0);
 	}
 
-	if (__collate_load_error || MB_CUR_MAX > 1) {
+	if (/*__collate_load_error || */MB_CUR_MAX > 1) {
 		slen = wcslen(src);
 		if (len > 0) {
 			if (slen < len)
@@ -68,6 +70,21 @@ wcsxfrm(wchar_t * __restrict dest, const wchar_t * __restrict src, size_t len)
 		return (slen);
 	}
 
+#if 1
+	/* No __collate_* stuff in EMX, use strxfrm */
+	mbsrc = __mbsdup(src);
+	mbdst = malloc(len * 2); /* Make reserve for MBCS fun */
+	slen = strxfrm(mbdst, mbsrc, len * 2);
+	slen = mbstowcs(dest, mbdst, slen > len ? len : slen);
+	free(mbdst);
+	free(mbsrc);
+	/*
+	 * wcsxfrm is not supposed to return -1 on error, return len
+	 * to indicate that the contents of dest is unspecified.
+	 */
+	if (slen == (size_t)-1)
+		slen = len;
+#else
 	mbsrc = __mbsdup(src);
 	slen = 0;
 	prim = sec = 0;
@@ -91,6 +108,7 @@ wcsxfrm(wchar_t * __restrict dest, const wchar_t * __restrict src, size_t len)
 	if (len != 0)
 		*dest = L'\0';
 
+#endif
 	return (slen);
 }
 

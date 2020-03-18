@@ -2022,3 +2022,4 @@ EXPORTS
     "__std_fgetws_unlocked" @2013
     "__std_fputws" @2014
     "__std_fputws_unlocked" @2015
+    "__std_wcsxfrm" @2016
