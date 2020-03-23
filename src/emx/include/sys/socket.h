@@ -449,6 +449,13 @@ struct sf_parms {
 };
 #endif
 
+/*
+ * howto arguments for shutdown(2), specified by Posix.1g.
+ */
+#define	SHUT_RD		0		/* shut down the reading side */
+#define	SHUT_WR		1		/* shut down the writing side */
+#define	SHUT_RDWR	2		/* shut down both sides */
+
 int     TCPCALL accept (int, struct sockaddr *, int *);
 int     TCPCALL bind (int, const struct sockaddr *, int);
 int     TCPCALL connect (int, const struct sockaddr *, int);
