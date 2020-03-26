@@ -239,21 +239,21 @@
 /** @defgroup sys_signal_h_si_code_sigill   siginfo_t.si_code values - SIGILL
  * @{ */
 /** Illegal opcode. */
-#define ILL_ILLOPC      0x80001001
+#define ILL_ILLOPC      ((int)0x80001001)
 /** Illegal operand. */
-#define ILL_ILLOPN      0x80001002
+#define ILL_ILLOPN      ((int)0x80001002)
 /** Illegal addressing mode. */
-#define ILL_ILLADR      0x80001003
+#define ILL_ILLADR      ((int)0x80001003)
 /** Illegal trap. */
-#define ILL_ILLTRP      0x80001004
+#define ILL_ILLTRP      ((int)0x80001004)
 /** Privileged opcode. */
-#define ILL_PRVOPC      0x80001005
+#define ILL_PRVOPC      ((int)0x80001005)
 /** Privileged register. */
-#define ILL_PRVREG      0x80001006
+#define ILL_PRVREG      ((int)0x80001006)
 /** Coprocessor error. */
-#define ILL_COPROC      0x80001007
+#define ILL_COPROC      ((int)0x80001007)
 /** Internal stack error. */
-#define ILL_BADSTK      0x80001008
+#define ILL_BADSTK      ((int)0x80001008)
 /** @} */
 
 
@@ -266,63 +266,63 @@
 /** @defgroup sys_signal_h_si_code_sigsegv  siginfo_t.si_code values - SIGSEGV
  * @{ */
 /** Address not mapped to object. */
-#define SEGV_MAPERR     0x80003001
+#define SEGV_MAPERR     ((int)0x80003001)
 /** Invalid permissions for mapped object. */
-#define SEGV_ACCERR     0x80003002
+#define SEGV_ACCERR     ((int)0x80003002)
 /** @} */
 
 
 /** @defgroup sys_signal_h_si_code_sigbus  siginfo_t.si_code values - SIGBUS
  * @{ */
 /** Invalid address alignment. */
-#define BUS_ADRALN      0x80004001
+#define BUS_ADRALN      ((int)0x80004001)
 /** Nonexistent physical address. */
-#define BUS_ADRERR      0x80004002
+#define BUS_ADRERR      ((int)0x80004002)
 /** Object-specific hardware error. */
-#define BUS_OBJERR      0x80004003
+#define BUS_OBJERR      ((int)0x80004003)
 /** @} */
 
 
 /** @defgroup sys_signal_h_si_code_sigtrap siginfo_t.si_code values - SIGTRAP
  * @{ */
 /** Process breakpoint. */
-#define TRAP_BRKPT      0x80005001
+#define TRAP_BRKPT      ((int)0x80005001)
 /** Process trace trap. */
-#define TRAP_TRACE      0x80005002
+#define TRAP_TRACE      ((int)0x80005002)
 /** @} */
 
 
 /** @defgroup sys_signal_h_si_code_sigchild siginfo_t.si_code values - SIGCHLD
  * @{ */
 /** Child has exited. */
-#define CLD_EXITED      0x80006001
+#define CLD_EXITED      ((int)0x80006001)
 /** Child has terminated abnormally and did not create a core file. */
-#define CLD_KILLED      0x80006002
+#define CLD_KILLED      ((int)0x80006002)
 /** Child has terminated abnormally and created a core file. */
-#define CLD_DUMPED      0x80006003
+#define CLD_DUMPED      ((int)0x80006003)
 /** Traced child has trapped. */
-#define CLD_TRAPPED     0x80006004
+#define CLD_TRAPPED     ((int)0x80006004)
 /** Child has stopped. */
-#define CLD_STOPPED     0x80006005
+#define CLD_STOPPED     ((int)0x80006005)
 /** Stopped child has continued. */
-#define CLD_CONTINUED   0x80006006
+#define CLD_CONTINUED   ((int)0x80006006)
 /** @} */	
 
 
 /** @defgroup sys_signal_h_si_code_sigpoll siginfo_t.si_code values - SIGPOLL
  * @{ */
 /** Data input available. */
-#define POLL_IN         0x80007001
+#define POLL_IN         ((int)0x80007001)
 /** Output buffers available. */
-#define POLL_OUT        0x80007002
+#define POLL_OUT        ((int)0x80007002)
 /** Input message available. */
-#define POLL_MSG        0x80007003
+#define POLL_MSG        ((int)0x80007003)
 /** I/O error. */
-#define POLL_ERR        0x80007004
+#define POLL_ERR        ((int)0x80007004)
 /** High priority input available. */
-#define POLL_PRI        0x80007005
+#define POLL_PRI        ((int)0x80007005)
 /** Device disconnected. */
-#define POLL_HUP        0x80007006
+#define POLL_HUP        ((int)0x80007006)
 /** @} */
 
 
@@ -330,19 +330,19 @@
  * @{ */
 #if __POSIX_VISIBLE || __XSI_VISIBLE
 /** Sent by kill() or raise(). */
-#define SI_USER             0x00010001
+#define SI_USER             ((int)0x00010001)
 /** Sent by sigqueue(). */
-#define SI_QUEUE            0x00010002
+#define SI_QUEUE            ((int)0x00010002)
 /** Sent cause a timer expired. */
-#define SI_TIMER            0x00010003
+#define SI_TIMER            ((int)0x00010003)
 /** Sent upon AIO completion. */
-#define SI_ASYNCIO          0x00010004
+#define SI_ASYNCIO          ((int)0x00010004)
 /** Sent upon real time mesq state change. */
-#define SI_MESGQ            0x00010005
+#define SI_MESGQ            ((int)0x00010005)
 #endif
 #if __BSD_VISIBLE
 /** No idea. */
-#define SI_UNDEFINED        0x00000000
+#define SI_UNDEFINED        ((int)0x00000000)
 #endif
 /** @} */
 
