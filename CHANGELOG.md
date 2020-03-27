@@ -1,5 +1,26 @@
 # History of changes for LIBC Next
 
+#### Version 0.1.4 (2020-03-27)
+
+* Add more errors to strerror/perror [#8].
+* sys/stat.h: Swap st_mtim and st_mtimespec and friends [#45].
+* Add wide char output functions (wprintf, putwc and families) [#8].
+* Fix WCHAR_MIN/MAX and WINT_MIN/MAX definitions [#8].
+* b_timeHighResNano: Use integer arithmetics [#53].
+* Add clock_gettime and friends [#53].
+* Implement POSIX semaphores [#54].
+* Make new POSIX 2008 string functions available by default [#57].
+* Make isblank available by default [#61].
+* _sockaddr_storage.h: Change alignment to 32 bits [#62].
+* sys/socket.h: Add socklen_t, sa_family_t, sockaddr_storage [#62].
+* select: Do a simple wait cycle when nfds is 0 [bitwiseworks/libevent-os2#1].
+* Add wide char output functions (wscanf, getwc and families) [#8].
+* Add fgetws and fputws wide char functions [#8].
+* math.h: Align with latest FreeBSD [bitwiseworks/gcc-os2#15].
+* Add wcsxfrm function [#68].
+* sys/socket.h: Add SHUT_* constants for shutdown() [bitwiseworks/qtwebengine-chromium-os2#3].
+* signal.h: Force si_code constants to be (signed) int [bitwiseworks/qtwebengine-chromium-os2#3].
+
 #### Version 0.1.3 (2019-12-25)
 
 * Restrict 2-nd __cxchg operand to A/B/C/D registers [#47].
