@@ -5,8 +5,8 @@ This repository contains the source code for the LIBC Next project maintained by
 LIBC Next (or LIBCn, for short) is an attempt to provide an implementation of the C runtime library which is suitable for porting Unix and Linux applications to the OS/2 operating system using the GCC compiler. LIBC Next is heavily based on the kLIBC project. The original kLIBC home page is http://trac.netlabs.org/libc/wiki. The original kLIBC source code was imported into this repository as is (without the original commit history and with a few modifications mentioned below). This repository gets periodically synchronized with it to pick up latest changes. The modifications applied when importing include:
 
 * Import code from branch `libc-0.6` only (the original `trunk` is at version 0.7 which was never finished).
-* Remove the `/src/binutils` directory as we maintain a separate repository for binutils (http://trac.netlabs.org/ports/browser/binutils/trunk).
-* Remove the `/src/gcc` directory as we maintain a separate repository for a newer version of GCC (https://github.com/psmedley/gcc).
+* Remove the `/src/binutils` directory as we maintain a separate repository for binutils (https://github.com/bitwiseworks/binutils-os2).
+* Remove the `/src/gcc` directory as we maintain a separate repository for a much newer version of GCC (https://github.com/bitwiseworks/gcc-os2).
 
 Check `svn-import.sh` on the `vendor` branch for more details on what is imported and what is not.
 
