@@ -52,6 +52,11 @@ int __libc_native2errno(unsigned long rc);
  */
 void __libc_back_hooksInit(const char *pszSpec, unsigned long hmod);
 
+/**
+ * Internal _abspath entry with optional FS mutex locking.
+ */
+int __libc_abspath(char *pszDst, const char *pszSrc, int cbDst, int fLock);
+
 __END_DECLS
 
 #endif

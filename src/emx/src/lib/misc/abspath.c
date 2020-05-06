@@ -159,10 +159,19 @@ static int _abspath_is_likely_device_name(const char *pszSrc)
 }
 #endif
 
-int _abspath(char *pszDst, const char *pszSrc, int cbDst)
+
+/**
+ * Internal _abspath entry with optional FS mutex locking.
+ */
+int __libc_abspath(char *pszDst, const char *pszSrc, int cbDst, int fLock)
 {
     /*
      * Note! This code must mimick fsResolveUnix and fsResolveOS2
+     *
+     * Note2! The above comment is irrelevant now as this code is called
+     * to process relative paths and resolve .. and . right before calling
+     * fsResolveUnix and fsResolveOS2. For more info see
+     * https://github.com/bitwiseworks/libc/issues/73.
      */
 #ifdef __KLIBC_PATH_SLASH_ALT
     char const chSlash = !__libc_gfNoUnix ? __KLIBC_PATH_SLASH_ALT : __KLIBC_PATH_SLASH;
@@ -360,7 +369,8 @@ int _abspath(char *pszDst, const char *pszSrc, int cbDst)
              * something, return the relative path.
              */
             pszSrc += 2;
-            int rc = __libc_Back_fsDirCurrentGet(pszDst, cbDst, chDrive, 0 /*fFlags*/);
+            int rc = fLock ? __libc_Back_fsDirCurrentGet(pszDst, cbDst, chDrive, 0 /*fFlags*/)
+                           : __libc_back_fsDirCurrentGet(pszDst, cbDst, chDrive, 0 /*fFlags*/);
             if (rc == -ERANGE)
                 return _abspath_overflow();
             if (rc == 0)
@@ -387,7 +397,8 @@ int _abspath(char *pszDst, const char *pszSrc, int cbDst)
      */
     else if (*pszSrc)
     {
-        int rc = __libc_Back_fsDirCurrentGet(pszDst, cbDst, '\0' /* current drive */, 0 /*fFlags*/);
+        int rc = fLock ? __libc_Back_fsDirCurrentGet(pszDst, cbDst, '\0' /* current drive */, 0 /*fFlags*/)
+                       : __libc_back_fsDirCurrentGet(pszDst, cbDst, '\0' /* current drive */, 0 /*fFlags*/);
         if (rc == -ERANGE)
             return _abspath_overflow();
         if (rc == 0)
@@ -525,3 +536,8 @@ int _abspath(char *pszDst, const char *pszSrc, int cbDst)
     return _abspath_overflow();
 }
 
+
+int _abspath(char *pszDst, const char *pszSrc, int cbDst)
+{
+    return __libc_abspath(pszDst, pszSrc, cbDst, 1);
+}

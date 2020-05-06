@@ -466,6 +466,25 @@ int __libc_back_fsInfoSupportUnixEAs(const char *pszNativePath);
 
 int __libc_back_fsInfoPathConf(__LIBC_PFSINFO pFsInfo, int iName, long *plValue);
 
+/**
+ * Gets the current directory of the process on a
+ * specific drive or on the current one.
+ *
+ * @note Differs from __libc_Back_fsDirCurrentGet in that it doesn't lock the
+ * FS mutex assuming that the caller has locked it.
+ *
+ * @returns 0 on success.
+ * @returns Negative error code (errno.h) on failure.
+ * @param   pszPath     Where to store the path to the current directory.
+ *                      This will be prefixed with a drive letter if we're
+ *                      not in the unix tree.
+ * @param   cchPath     The size of the path buffer.
+ * @param   chDrive     The drive letter of the drive to get it for.
+ *                      If '\0' the current dir for the current drive is returned.
+ * @param   fFlags      Flags for skipping drive letter and slash.
+ */
+int __libc_back_fsDirCurrentGet(char *pszPath, size_t cchPath, char chDrive, int fFlags);
+
 __END_DECLS
 
 #endif

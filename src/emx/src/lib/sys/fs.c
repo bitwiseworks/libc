@@ -888,6 +888,25 @@ int __libc_back_fsResolve(const char *pszUserPath, unsigned fFlags, char *pszNat
 {
     if (pszUserPath && *pszUserPath)
     {
+        /*
+         * Always get the absolute path first with `.` and `..` resolved before
+         * going further in order to overcome the PATH_MAX limitation for paths
+         * containing a lot of `..` and `.`. This renders fsResolveUnix own
+         * code doing the same thing useless (as it won't ever get triggered)
+         * but it's left in for now because of its fragile nature. For more
+         * info see https://github.com/bitwiseworks/libc/issues/73.
+         */
+        char achAbsBuf[PATH_MAX];
+        if (__libc_abspath(achAbsBuf, pszUserPath, PATH_MAX, 0) == -1)
+        {
+            /* failure */
+            *pszNativePath = '\0';
+            if (pfInUnixTree)
+                *pfInUnixTree = 0;
+            return -errno;
+        }
+        pszUserPath = achAbsBuf;
+
         if (!__libc_gfNoUnix)
             return fsResolveUnix(pszUserPath, fFlags, pszNativePath, pfInUnixTree);
         else
