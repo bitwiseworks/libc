@@ -1312,7 +1312,7 @@ static void write_pubdef1 (int type, int index, int big, dword start)
                       error (lib_errmsg);
                   }
 
-                if (started && !fits (strlen (name) + 6 + (sym_more[i].hll_type > 127)))
+                if (started && !fits (cchPubName + 6 + (sym_more[i].hll_type > 127)))
                   {
                     write_rec ();
                     started = FALSE;
