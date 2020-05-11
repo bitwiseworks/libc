@@ -433,7 +433,7 @@ static char *udat_seg_string = NULL;
 
 /* Prototypes for private functions. */
 
-static void doesn_fit (void) NORETURN2;
+static void check_fits (int size);
 static void usage (void) NORETURN2;
 static int ar_read_header (struct ar_hdr *dst, long pos);
 static long ar_member_size (const struct ar_hdr *p);
@@ -772,9 +772,11 @@ static void write_rec (void)
    This cannot happen unless there is a bug in this program.  Display
    an error message and quit. */
 
-static void doesn_fit (void)
+static void check_fits (int size)
 {
-  error ("Record too long");
+  if (!fits(size))
+    error ("Record too long (adding %d bytes to %d exceeds maximum of %d)",
+           size, out_idx, MAX_REC_SIZE-4);
 }
 
 
@@ -865,8 +867,7 @@ static void put_nstr(const char *pszName, size_t cch)
 
     cch = make_nstr(pszName, cch, szName);
     
-    if (!fits(1 + cch))
-        doesn_fit();
+    check_fits(1 + cch);
     out_data[out_idx++] = (byte)cch;
     memcpy(out_data+out_idx, szName, cch);
     out_idx += cch;
@@ -910,8 +911,7 @@ static void put_sym (const char *src)
 
 static void put_16 (int x)
 {
-  if (!fits (2))
-    doesn_fit ();
+  check_fits (2);
   out_data[out_idx++] = (byte)x;
   out_data[out_idx++] = (byte)(x >> 8);
 }
@@ -923,8 +923,7 @@ static void put_16 (int x)
 
 static void put_24 (long x)
 {
-  if (!fits (3))
-    doesn_fit ();
+  check_fits (3);
   out_data[out_idx++] = (byte)x;
   out_data[out_idx++] = (byte)(x >> 8);
   out_data[out_idx++] = (byte)(x >> 16);
@@ -937,8 +936,7 @@ static void put_24 (long x)
 
 static void put_32 (long x)
 {
-  if (!fits (4))
-    doesn_fit ();
+  check_fits (4);
   out_data[out_idx++] = (byte)x;
   out_data[out_idx++] = (byte)(x >> 8);
   out_data[out_idx++] = (byte)(x >> 16);
@@ -959,14 +957,12 @@ static void put_idx (int x)
 {
   if (x <= 0x7f)
     {
-      if (!fits (1))
-        doesn_fit ();
+      check_fits (1);
       out_data[out_idx++] = (byte)x;
     }
   else if (x <=0x7fff)
     {
-      if (!fits (2))
-        doesn_fit ();
+      check_fits (2);
       out_data[out_idx++] = (byte)((x >> 8) | 0x80);
       out_data[out_idx++] = (byte)x;
     }
@@ -981,8 +977,7 @@ static void put_idx (int x)
 
 static void put_mem (const void *src, int size)
 {
-  if (!fits (size))
-    doesn_fit ();
+  check_fits (size);
   memcpy (out_data+out_idx, src, size);
   out_idx += size;
 }
