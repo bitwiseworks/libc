@@ -340,7 +340,7 @@ struct sockproto {
  * is called omsghdr in 4.4BSD
  */
 struct msghdr {
-	caddr_t	msg_name;		/* optional address */
+	void	*msg_name;		/* optional address */
 #ifdef TCPV40HDRS
 	int	msg_namelen;		/* size of address */
 	struct	iovec *msg_iov;		/* scatter/gather array */
@@ -351,7 +351,7 @@ struct msghdr {
         socklen_t   msg_namelen;            /* size of address */
         struct iovec *msg_iov;              /* scatter/gather array */
         u_int       msg_iovlen;             /* # elements in msg_iov */
-        caddr_t     msg_control;            /* ancillary data, see below */
+        void       *msg_control;            /* ancillary data, see below */
         socklen_t   msg_controllen;         /* ancillary data buffer len */
         long        msg_flags;              /* flags on received message */
 #endif
