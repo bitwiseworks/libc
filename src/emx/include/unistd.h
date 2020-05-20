@@ -310,7 +310,12 @@ typedef	__useconds_t	useconds_t;	/* microseconds (unsigned) */
 #if __BSD_VISIBLE
 #define	_SC_NPROCESSORS_CONF	57
 #define	_SC_NPROCESSORS_ONLN	58
+/*@todo #define	_SC_CPUSET_SIZE		122*/
 #endif
+
+/* Extensions found in Solaris and Linux. */
+#define	_SC_PHYS_PAGES		121
+#define	_SC_AVPHYS_PAGES	123 /* FreeBSD lacks it, LIBCn extension */
 
 /* Keys for the confstr(3) function. */
 #if __POSIX_VISIBLE >= 199209

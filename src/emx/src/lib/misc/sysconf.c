@@ -6,6 +6,7 @@
 #include <time.h>
 #include <errno.h>
 #include <sys/param.h>
+#include <InnoTekLIBC/errno.h>
 
 #define INCL_BASE
 #define INCL_FSMACROS
@@ -69,6 +70,41 @@ long _STD(sysconf) (int name)
                 FS_RESTORE();
             }
             return cCpus;
+        }
+
+        case _SC_PHYS_PAGES:
+        {
+            static long cPhysPages = 0;
+            if (!cPhysPages)
+            {
+                APIRET rc;
+                ULONG ul;
+                FS_VAR_SAVE_LOAD();
+                rc = DosQuerySysInfo(QSV_TOTPHYSMEM, QSV_TOTPHYSMEM, &ul, sizeof(ul));
+                FS_RESTORE();
+                if (rc)
+                {
+                    errno = __libc_native2errno(rc);
+                    return -1;
+                }
+                cPhysPages = ul / PAGE_SIZE;
+            }
+            return cPhysPages;
+        }
+
+        case _SC_AVPHYS_PAGES:
+        {
+            APIRET rc;
+            ULONG ul;
+            FS_VAR_SAVE_LOAD();
+            rc = DosQuerySysInfo(QSV_TOTAVAILMEM, QSV_TOTAVAILMEM, &ul, sizeof(ul));
+            FS_RESTORE();
+            if (rc)
+            {
+                errno = __libc_native2errno(rc);
+                return -1;
+            }
+            return ul / PAGE_SIZE;
         }
 
         default:
