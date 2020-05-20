@@ -45,7 +45,8 @@ __FBSDID("$FreeBSD: src/usr.sbin/pwd_mkdb/pwd_mkdb.c,v 1.47 2004/08/07 04:27:52 
 #include <sys/stat.h>
 #include <arpa/inet.h>
 
-#include <db.h>
+/* HASHINFO is in the old header */
+#include "../../include/db.h"
 #include <err.h>
 #include <errno.h>
 #include <fcntl.h>
