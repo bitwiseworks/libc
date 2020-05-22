@@ -189,7 +189,7 @@ int __libc_Back_fsDirCurrentGet(char *pszPath, size_t cchPath, char chDrive, int
      */
     int rc = __libc_back_fsMutexRequest();
     if (rc)
-        LIBCLOG_ERROR_RETURN_INT(rc);
+        return rc;
 
     rc = __libc_back_fsDirCurrentGet(pszPath, cchPath, chDrive, fFlags);
 

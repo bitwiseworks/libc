@@ -27,7 +27,8 @@
 # include <InnoTekLIBC/pathrewrite.h>
 extern int  __libc_gcchUnixRoot; /* fs.c  / b_fs.h */
 #endif
-
+#include "backend.h"
+#include "b_fs.h"
 
 /** Macro that advance the a_pszSrc variable past all leading slashes. */
 #define _ABSPATH_SKIP_SLASHES(a_pszSrc) \

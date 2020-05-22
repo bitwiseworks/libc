@@ -44,7 +44,8 @@ libc: $.stmp-libc-std
  -Isrc/lib/lgpl/sysdeps/os2 \
  -Isrc/lib/lgpl/sysdeps/i386 \
  -Isrc/lib/lgpl/sysdeps/generic \
- -Isrc/lib/lgpl/include
+ -Isrc/lib/lgpl/include \
+ -Isrc/lib/sys
 .TSF	+= $(.TCF)
 .INSDIR	= lib/
 .TKEEP	:= 1
