@@ -59,7 +59,7 @@
  */
 int __libc_back_fsNativeFileTimesSet(const char *pszNativePath, const struct timeval *paTimes)
 {
-    LIBCLOG_ENTER("pszNativePath=%p:{%s} paTimes=%p:{{.tv_sec=%ld, .tv_usec=%ld}, {.tv_sec=%ld, .tv_usec=%ld}}\n",
+    LIBCLOG_ENTER("pszNativePath=%p:{%s} paTimes=%p:{{.tv_sec=%d, .tv_usec=%ld}, {.tv_sec=%d, .tv_usec=%ld}}\n",
                   (void *)pszNativePath, pszNativePath, (void *)paTimes,
                   paTimes ? paTimes[0].tv_sec : ~0, paTimes ? paTimes[0].tv_usec : ~0,
                   paTimes ? paTimes[1].tv_sec : ~0, paTimes ? paTimes[1].tv_usec : ~0);

@@ -3667,7 +3667,7 @@ static int      wldTempFile(PWLD pWld, char *pszFile, const char *pszPrefix, con
         if (c++ >= 200)
             return -1;
         gettimeofday(&tv, NULL);
-        sprintf(pszFile, "%s\\%s%x%lx%d%lx%s", s_szTmp, pszPrefix, pid, tv.tv_sec, c, tv.tv_usec, pszSuffix);
+        sprintf(pszFile, "%s\\%s%x%x%d%lx%s", s_szTmp, pszPrefix, pid, tv.tv_sec, c, tv.tv_usec, pszSuffix);
     } while (!stat(pszFile, &s));
 
     return 0;

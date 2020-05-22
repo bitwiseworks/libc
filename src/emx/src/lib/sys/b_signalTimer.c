@@ -303,7 +303,7 @@ void __libc_back_signalTimerNotifyTerm(void)
  */
 int __libc_Back_signalTimer(int iWhich, const struct itimerval *pValue, struct itimerval *pOldValue)
 {
-    LIBCLOG_ENTER("iWhich=%d pValue=%p{.ti_value={.ti_sec=%ld, .ti_usec=%ld}, ti_interval={.ti_sec=%ld, .ti_usec=%ld}} pOldValue=%p\n",
+    LIBCLOG_ENTER("iWhich=%d pValue=%p{.ti_value={.tv_sec=%d, .tv_usec=%ld}, ti_interval={.tv_sec=%d, .tv_usec=%ld}} pOldValue=%p\n",
                   iWhich, (void *)pValue,
                   pValue ? pValue->it_value.tv_sec : -1,
                   pValue ? pValue->it_value.tv_usec : -1,
@@ -333,7 +333,7 @@ int __libc_Back_signalTimer(int iWhich, const struct itimerval *pValue, struct i
             ||  Value.it_value.tv_usec < 0
             ||  Value.it_value.tv_usec > 1000000)
         {
-            LIBC_ASSERTM_FAILED("Invalid Value! {.ti_value={.ti_sec=%ld, .ti_usec=%ld}, ti_interval={.ti_sec=%ld, .ti_usec=%ld}}\n",
+            LIBC_ASSERTM_FAILED("Invalid Value! {.ti_value={.tv_sec=%d, .tv_usec=%ld}, ti_interval={.tv_sec=%d, .tv_usec=%ld}}\n",
                                 Value.it_value.tv_sec, Value.it_value.tv_usec, Value.it_interval.tv_sec, Value.it_interval.tv_usec);
             LIBCLOG_RETURN_INT(-EINVAL);
         }
@@ -484,7 +484,7 @@ int __libc_Back_signalTimer(int iWhich, const struct itimerval *pValue, struct i
      * Check for failure and return.
      */
     if (!rc)
-        LIBCLOG_RETURN_MSG(0, "ret 0 *pOldValue={.ti_value={.ti_sec=%ld, .ti_usec=%ld}, ti_interval={.ti_sec=%ld, .ti_usec=%ld}}\n",
+        LIBCLOG_RETURN_MSG(0, "ret 0 *pOldValue={.ti_value={.tv_sec=%d, .tv_usec=%ld}, ti_interval={.tv_sec=%d, .tv_usec=%ld}}\n",
                            pOldValue ? pOldValue->it_value.tv_sec : -1,
                            pOldValue ? pOldValue->it_value.tv_usec : -1,
                            pOldValue ? pOldValue->it_interval.tv_sec : -1,

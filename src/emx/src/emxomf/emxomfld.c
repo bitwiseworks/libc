@@ -675,7 +675,7 @@ static int      make_tempfile(char *pszFile, const char *pszPrefix, const char *
         if (c++ >= 200)
             return -1;
         gettimeofday(&tv, NULL);
-        sprintf(pszFile, "%s\\%s%s%x%lx%d%lx%s", s_szTmp, pszPrefix, pszLooklike, pid, tv.tv_sec, c, tv.tv_usec, pszSuffix);
+        sprintf(pszFile, "%s\\%s%s%x%x%d%lx%s", s_szTmp, pszPrefix, pszLooklike, pid, tv.tv_sec, c, tv.tv_usec, pszSuffix);
     } while (!stat(pszFile, &s));
 
     return 0;

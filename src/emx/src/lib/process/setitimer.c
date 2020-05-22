@@ -50,7 +50,7 @@
  */
 int _STD(setitimer)(int iWhich, const struct itimerval *pValue, struct itimerval *pOldValue)
 {
-    LIBCLOG_ENTER("iWhich=%d pValue=%p{.ti_value={.ti_sec=%ld, .ti_usec=%ld}, ti_interval={.ti_sec=%ld, .ti_usec=%ld}} pOldValue=%p\n",
+    LIBCLOG_ENTER("iWhich=%d pValue=%p{.ti_value={.tv_sec=%d, .tv_usec=%ld}, ti_interval={.tv_sec=%d, .tv_usec=%ld}} pOldValue=%p\n",
                   iWhich, (void *)pValue,
                   pValue ? pValue->it_value.tv_sec : -1,
                   pValue ? pValue->it_value.tv_usec : -1,
@@ -59,7 +59,7 @@ int _STD(setitimer)(int iWhich, const struct itimerval *pValue, struct itimerval
                   (void *)pOldValue);
     int rc = __libc_Back_signalTimer(iWhich, pValue, pOldValue);
     if (!rc)
-        LIBCLOG_RETURN_MSG(0, "ret 0 *pOldValue={.ti_value={.ti_sec=%ld, .ti_usec=%ld}, ti_interval={.ti_sec=%ld, .ti_usec=%ld}}\n",
+        LIBCLOG_RETURN_MSG(0, "ret 0 *pOldValue={.ti_value={.tv_sec=%d, .tv_usec=%ld}, ti_interval={.tv_sec=%d, .tv_usec=%ld}}\n",
                            pOldValue ? pOldValue->it_value.tv_sec : -1,
                            pOldValue ? pOldValue->it_value.tv_usec : -1,
                            pOldValue ? pOldValue->it_interval.tv_sec : -1,

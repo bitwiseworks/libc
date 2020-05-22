@@ -60,7 +60,7 @@
  */
 int __libc_Back_fsFileTimesSetFH(int fh, const struct timeval *paTimes)
 {
-    LIBCLOG_ENTER("fh=%d paTimes=%p:{{.tv_sec=%ld, .tv_usec=%ld}, {.tv_sec=%ld, .tv_usec=%ld}}\n",
+    LIBCLOG_ENTER("fh=%d paTimes=%p:{{.tv_sec=%d, .tv_usec=%ld}, {.tv_sec=%d, .tv_usec=%ld}}\n",
                   fh, (void *)paTimes,
                   paTimes ? paTimes[0].tv_sec : ~0, paTimes ? paTimes[0].tv_usec : ~0,
                   paTimes ? paTimes[1].tv_sec : ~0, paTimes ? paTimes[1].tv_usec : ~0);

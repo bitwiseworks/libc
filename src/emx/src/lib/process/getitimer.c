@@ -51,7 +51,7 @@ int _STD(getitimer)(int iWhich, struct itimerval *pValue)
 
     int rc = __libc_Back_signalTimer(iWhich, NULL, pValue);
     if (!rc)
-        LIBCLOG_RETURN_MSG(0, "ret 0 *pValue={.ti_value={.ti_sec=%ld, .ti_usec=%ld}, ti_interval={.ti_sec=%ld, .ti_usec=%ld}}\n",
+        LIBCLOG_RETURN_MSG(0, "ret 0 *pValue={.ti_value={.tv_sec=%d, .tv_usec=%ld}, ti_interval={.tv_sec=%d, .tv_usec=%ld}}\n",
                            pValue->it_value.tv_sec, pValue->it_value.tv_usec, pValue->it_interval.tv_sec, pValue->it_interval.tv_usec);
     errno = -rc;
     LIBCLOG_ERROR_RETURN_INT(-1);

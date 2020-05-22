@@ -53,7 +53,7 @@ typedef	__time_t	time_t;
  */
 #pragma pack(4)                         /* bird: IBM TCP paranoia */
 struct timeval {
-	long		tv_sec;		/* seconds (XXX should be time_t) */
+	time_t		tv_sec;		/* seconds */
 	suseconds_t	tv_usec;	/* and microseconds */
 };
 #pragma pack()                          /* bird: IBM TCP paranoia */

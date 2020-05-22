@@ -39,7 +39,7 @@
 
 int bsdselect(int nfds, struct fd_set *readfds, struct fd_set *writefds, struct fd_set *exceptfds, struct timeval *tv)
 {
-    LIBCLOG_ENTER("nfds=%d readfds=%p writefds=%p exceptfds=%p tv=%p={tv_sec=%ld, rv_usec=%ld}\n",
+    LIBCLOG_ENTER("nfds=%d readfds=%p writefds=%p exceptfds=%p tv=%p={tv_sec=%d, tv_usec=%ld}\n",
                   nfds, (void *)readfds, (void *)writefds, (void *)exceptfds, (void *)tv,
                   tv ? tv->tv_sec : -1, tv ? tv->tv_usec : -1);
     int rc = TCPNAMEG(bsdselect)(nfds, readfds, writefds, exceptfds, tv);
