@@ -58,5 +58,7 @@ struct strpool *strpool_init (void);
 void strpool_free (struct strpool *p);
 const char *strpool_addn (struct strpool *p, const char *s, int len);
 const char *strpool_add (struct strpool *p, const char *s);
-const char *strpool_addnu ( struct strpool *p, const char *s, int len);
-const char *strpool_addu ( struct strpool *p, const char *s);
+const char *strpool_addnu (struct strpool *p, const char *s, int len);
+const char *strpool_addu (struct strpool *p, const char *s);
+int strpool_len (const char *s);
+

@@ -36,6 +36,7 @@ Boston, MA 02111-1307, USA.  */
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
+#include <assert.h>
 #include "defs.h"
 #include "grow.h"
 
@@ -249,6 +250,7 @@ void buffer_patch_word (struct buffer *b, int index, word x)
 struct string
 {
   struct string *next;          /* Pointer to next string in same bucket */
+  int len;                      /* The string length. */
   char string[1];               /* The string */
 };
 
@@ -309,11 +311,13 @@ const char *strpool_addn (struct strpool *p, const char *s, int len)
     hash = hash * 65599 + s[i];
   hash %= STRPOOL_HASH_SIZE;
   for (v = p->table[hash]; v != NULL; v = v->next)
-    if (strlen (v->string) == len && memcmp (v->string, s, len) == 0)
+    if (v->len == len && memcmp (v->string, s, len) == 0)
       return v->string;
   v = xmalloc (sizeof (*v) + len);
+  assert(((uintptr_t)v & (sizeof(int) - 1)) == 0);
   memcpy (v->string, s, len);
   v->string[len] = 0;
+  v->len = len;
   v->next = p->table[hash];
   p->table[hash] = v;
   return v->string;
@@ -347,12 +351,21 @@ const char *strpool_addnu (struct strpool *p, const char *s, int len)
       hash = hash * 65599 + toupper(s[i]);
   hash %= STRPOOL_HASH_SIZE;
   for (v = p->table[hash]; v != NULL; v = v->next)
-    if (strlen (v->string) == len && memcmp (v->string, s, len) == 0)
-      return v->string;
+    if (v->len == len)
+      {
+        i = len;
+        while (--i >= 0)
+          if (toupper(s[i]) != v->string[i])
+            break;
+        if (i < 0)
+            return v->string;
+      }
   v = xmalloc (sizeof (*v) + len);
+  assert(((uintptr_t)v & (sizeof(int) - 1)) == 0);
   memcpy (v->string, s, len);
   v->string[len] = 0;
-  strupr(v->string);
+  v->len = len;
+  strupr (v->string);
   v->next = p->table[hash];
   p->table[hash] = v;
   return v->string;
@@ -366,5 +379,15 @@ const char *strpool_addu (struct strpool *p, const char *s)
   if (s == NULL)
     return NULL;
   return strpool_addnu (p, s, strlen (s));
+}
+
+/* Get the length of a string pool string.  This is very quick since we store
+   the lenght before the string data.  */
+int strpool_len (const char *s)
+{
+    assert(((uintptr_t)s & (sizeof(int) - 1)) == 0);
+    if (!s)
+      return 0;
+    return ((size_t *)s)[-1];
 }
 
