@@ -46,7 +46,7 @@
 /*******************************************************************************
 *   Defined Constants And Macros                                               *
 *******************************************************************************/
-#define WLDSYM_HASH_SIZE    211
+#define WLDSYM_HASH_SIZE    49999 /* must be large for huge DLLs, see #83 */
 #define OMF_MAX_REC         1024
 
 /** helper to make verbose only output. */

@@ -242,7 +242,7 @@ void buffer_patch_word (struct buffer *b, int index, word x)
 
 /* The size of the string pool hash table.  Should be prime. */
 
-#define STRPOOL_HASH_SIZE 211
+#define STRPOOL_HASH_SIZE 49999 /* must be large for huge DLLs, see #83 */
 
 /* This structure holds one string.  Note that the first character of
    the string is part of this structure. */
