@@ -36,6 +36,7 @@ Boston, MA 02111-1307, USA.  */
 #include <getopt.h>
 #include <alloca.h>
 #include <sys/omflib.h>
+#include <InnoTekLIBC/FastInfoBlocks.h>
 #include "defs.h"
 #include "weakld.h"
 
@@ -192,6 +193,17 @@ static void cleanup (void);
 static void arg_init (int rsp);
 static void arg_end (void);
 int main (int argc, char *argv[]);
+
+/* Profiling macros that enable mllisecond counter in -t -t -t mode */
+#define MSCOUNT_INIT() unsigned long msTSStart = 0
+#define MSCOUNT_START() do { if (opt_t > 2) msTSStart = fibGetMsCount(); } while(0)
+#define MSCOUNT_STOP(msg) do { \
+  if (opt_t > 2) { \
+    unsigned long msTSEnd = fibGetMsCount(); \
+    fprintf(stderr, "*** MSCOUNT: %s: %lu ms\n", msg, msTSEnd - msTSStart); \
+    msTSStart = fibGetMsCount(); \
+  } \
+} while(0)
 
 /* To avoid including os2.h... */
 #ifndef _System
@@ -1103,6 +1115,8 @@ static void weak_prelink ()
         ||  !strnicmp(pOpt->name, "/NOI", 4))
         fFlags &= ~WLDC_CASE_INSENSITIVE;
 
+  MSCOUNT_INIT();
+
   /* create the linker and to the linking. */
   if (opt_t)
     fprintf(stderr, "*** Invoking weak prelinker with flags %x.\n", fFlags);
@@ -1123,15 +1137,21 @@ static void weak_prelink ()
       /* objects */
       for (pcur = obj_fnames; !rc && pcur; pcur = pcur->next)
         {
+          MSCOUNT_START();
           phfile = find_obj (szname, pcur->name);
+          MSCOUNT_STOP("find_obj");
           rc = WLDAddObject (pwld, phfile, szname);
+          MSCOUNT_STOP("WLDAddObject");
         }
 
       /* libraries */
       for (pcur = lib_fnames; !rc && pcur; pcur = pcur->next)
         {
+          MSCOUNT_START();
           phfile = find_lib (szname, pcur->name, !pcur->flags);
+          MSCOUNT_STOP("find_lib");
           rc = WLDAddLibrary (pwld, phfile, szname);
+          MSCOUNT_STOP("WLDAddLibrary");
           free(pcur->name);
           pcur->name = xstrdup(szname);
         }
@@ -1139,7 +1159,9 @@ static void weak_prelink ()
       /* complete pass 1 */
       if (!rc)
         {
+          MSCOUNT_START();
           rc = WLDPass1 (pwld);
+          MSCOUNT_STOP("WLDPass1");
           /* ignore unresolved externals for now. */
           if (rc == 42)
             {
@@ -1150,7 +1172,11 @@ static void weak_prelink ()
 
       /* generate weak aliases. */
       if (!rc)
-        rc = WLDGenerateWeakAliases (pwld, weakobj_fname, weakdef_fname);
+        {
+          MSCOUNT_START();
+          rc = WLDGenerateWeakAliases (pwld, weakobj_fname, weakdef_fname);
+          MSCOUNT_STOP("WLDGenerateWeakAliases");
+        }
       if (!rc && weakobj_fname[0])
         {
           char *pszTmp = _realrealpath(weakobj_fname, NULL, 0);
