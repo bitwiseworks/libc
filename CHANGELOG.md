@@ -1,5 +1,17 @@
 # History of changes for LIBC Next
 
+#### Version 0.1.5 (2020-07-22)
+
+* Make realpath not fail on long paths with lots of '..' and '.' [#73].
+* emxomf: Provide more verbose `Record too long` error message [#74].
+* emxomf: Fix `Record too long` error for objects with really long names [#74].
+* sys/socket.h: Use void * instead of caddr_t in msghdr [[bitwiseworks/qtwebengine-chromium-os2#3].
+* Implement sysconf for _SC_PHYS_PAGES and _SC_AVPHYS_PAGES [#79].
+* Make timeval::tv_sec have type time_t instead of long as per POSIX [#80].
+* emxomfld: Add simple profiling in -t -t -t mode [#83].
+* emxomfld: Backport kLIBC r3669 [#83].
+* emxomf[ld]: Greatly increase hash table sizes to speed things up [#83].
+
 #### Version 0.1.4 (2020-03-27)
 
 * Add more errors to strerror/perror [#8].
