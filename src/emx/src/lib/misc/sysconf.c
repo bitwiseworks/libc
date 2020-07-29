@@ -57,6 +57,7 @@ long _STD(sysconf) (int name)
         case _SC_PAGESIZE:
             return PAGE_SIZE;
 
+        case _SC_NPROCESSORS_CONF:
         case _SC_NPROCESSORS_ONLN:
         {
             static long cCpus = 0;
