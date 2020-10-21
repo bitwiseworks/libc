@@ -80,6 +80,16 @@ int __select(int nfds, struct fd_set *readfds, struct fd_set *writefds,
     int i;
 
     /*
+     * Validate arguments.
+     */
+    if (nfds < 0 || nfds > FD_SETSIZE)
+    {
+        errno = EINVAL;
+        return -1;
+    }
+
+
+    /*
      * Wait operation?
      */
     if (nfds == 0 || (!readfds && !writefds && !exceptfds))
