@@ -10,6 +10,7 @@
 #include <emx/syscalls.h>
 #define __LIBC_LOG_GROUP __LIBC_LOG_GRP_TIME
 #include <InnoTekLIBC/logstrict.h>
+#include <sys/smutex.h>
 
 int _STD(daylight) = 0;
 long _STD(timezone) = 0;
@@ -177,6 +178,15 @@ static int parse_switchtime (char **src, int *m, int *w, int *d, int *t)
  */
 void _STD(tzset) (void)
 {
+  /* Provide thread safety */
+  static volatile _smutex mtx = 0;
+  _smutex_request (&mtx);
+  if (_tzset_flag)
+    {
+      _smutex_release (&mtx);
+      return;
+    }
+
   LIBCLOG_ENTER("\n");
   struct _tzinfo ntz;
   struct timeb tb;
@@ -189,12 +199,18 @@ void _STD(tzset) (void)
   LIBCLOG_MSG("TZ=%s\n", p);
 
   if (!copy_tzname (ntz.tzname, &p))
-    LIBCLOG_ERROR_RETURN_VOID();
+    {
+      _smutex_release (&mtx);
+      LIBCLOG_ERROR_RETURN_VOID();
+    }
 
   if (*p == 0)
     offset = 0;                 /* TZ=XYZ is valid (in contrast to POSIX.1) */
   else if (!parse_delta (&p, &offset, 1))
-    LIBCLOG_ERROR_RETURN_VOID();
+    {
+      _smutex_release (&mtx);
+      LIBCLOG_ERROR_RETURN_VOID();
+    }
 
   ntz.tz = offset;
 
@@ -205,17 +221,29 @@ void _STD(tzset) (void)
     {
       ntz.dst = 1;
       if (!copy_tzname (ntz.dstzname, &p))
-        LIBCLOG_ERROR_RETURN_VOID();
+        {
+          _smutex_release (&mtx);
+          LIBCLOG_ERROR_RETURN_VOID();
+        }
       if (*p == ',')
         {
           p++;
           /* Parse DST start date/time */
           if (!parse_switchtime (&p, &ntz.sm, &ntz.sw, &ntz.sd, &ntz.st))
-            LIBCLOG_ERROR_RETURN_VOID();
+            {
+              _smutex_release (&mtx);
+              LIBCLOG_ERROR_RETURN_VOID();
+            }
           if (!parse_switchtime (&p, &ntz.em, &ntz.ew, &ntz.ed, &ntz.et))
-            LIBCLOG_ERROR_RETURN_VOID();
+            {
+              _smutex_release (&mtx);
+              LIBCLOG_ERROR_RETURN_VOID();
+            }
           if (!dnum (&ntz.shift, &p, 0, 86400, 0, 0))
-            LIBCLOG_ERROR_RETURN_VOID();
+            {
+              _smutex_release (&mtx);
+              LIBCLOG_ERROR_RETURN_VOID();
+            }
         }
       else if (*p == 0)
         {
@@ -227,6 +255,7 @@ void _STD(tzset) (void)
       else
         {
           /* TODO: POSIX.1 */
+          _smutex_release (&mtx);
           LIBCLOG_ERROR_RETURN_VOID();
         }
       _STD(daylight) = 1;
@@ -235,7 +264,6 @@ void _STD(tzset) (void)
     _STD(daylight) = 0;
 
 
-  /* TODO: Make this thread-safe! */
   _tzi = ntz;
   _STD(tzname)[0] = _tzi.tzname;
   _STD(tzname)[1] = _tzi.dstzname;
@@ -246,6 +274,8 @@ void _STD(tzset) (void)
   _STD(timezone) = _tzi.tz;
 
   _tzset_flag = 1;
+
+  _smutex_release (&mtx);
   LIBCLOG_RETURN_MSG_VOID("ret void - _tzi={.tzname=\"%s\", .dstzname=\"%s\" .tz=%d, .dst=%d, .shift=%d, .sm=%d, .sw=%d, .sd=%d, .st=%d, .em=%d, .ew=%d, .ed=%d, .et=%d}\n",
                           ntz.tzname, ntz.dstzname, ntz.tz, ntz.dst, ntz.shift, ntz.sm, ntz.sw, ntz.sd, ntz.st, ntz.em, ntz.ew, ntz.ed, ntz.et);
 }

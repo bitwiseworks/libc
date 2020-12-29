@@ -27,7 +27,7 @@
 #include <time.h>
 #include <emx/time.h>
 #include <emx/syscalls.h>
-#include <386/builtin.h>
+#include <sys/smutex.h>
 #include "syscalls.h"
 
 #ifdef CALCDIFF
@@ -135,22 +135,31 @@ void __ftime(struct timeb *ptr)
     static volatile unsigned uDiff;
 
     /*
-     * Init.
+     * Init (in a thread safe way).
      */
+    static volatile _smutex mtx = 0;
     if (!uGIS.pGIS)
     {
+        _smutex_request(&mtx);
+        if (!uGIS.pGIS)
+        {
 #ifdef CALCDIFF
-        uDiff = calcdiff();
+            uDiff = calcdiff();
 #endif
-        uGIS.pGIS = GETGINFOSEG();
+            uGIS.pGIS = GETGINFOSEG();
+        }
+        _smutex_release(&mtx);
     }
 
     /*
-     * Get the value and convert it to the return format.
+     * Get the value and convert it to the return format
+     * (use the mutex to atomically read more than 32 bits).
      */
     /* read times */
+    _smutex_request(&mtx);
     union combined  Combined = *uGIS.pCombined;
     union last      LastCopy = LastStatic;
+    _smutex_release(&mtx);
 
     /* calc now */
     union last Now;
@@ -169,7 +178,7 @@ void __ftime(struct timeb *ptr)
         int iDiffMilli = Now.s.milli - LastCopy.s.milli;
         if (iDiffMilli < 0)
         {
-            uDiff -= -iDiffMilli + 1;
+            __atomic_sub(&uDiff, -iDiffMilli + 1);
             Now = LastCopy;
         }
     }
@@ -179,13 +188,15 @@ void __ftime(struct timeb *ptr)
         unsigned    uDiffMilli = Now.s.milli + 1000 - LastCopy.s.milli;
         if (uDiffMilli > uDiffMsecs + 500)
         {
-            uDiff += 1000 - Now.s.milli;
+            __atomic_add(&uDiff, 1000 - Now.s.milli);
             Now.s.milli = 0;
         }
     }
 
-    /* update the last know ok value */
+    /* update the last know ok value (atomically, since more than 32 bits) */
+    _smutex_request(&mtx);
     LastStatic = Now; /** @todo 8byte + 4 byte exchange! */
+    _smutex_release(&mtx);
 
     /* store the result in the user buffer */
     ptr->time       = Now.s.secs;

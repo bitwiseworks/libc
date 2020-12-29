@@ -32,6 +32,7 @@
 #define  INCL_BASE
 #include <os2emx.h>
 #include <InnoTekLIBC/backend.h>
+#include <sys/smutex.h>
 
 /* Prefer integer arithmetics (should be faster) */
 #define USE_INTEGER
@@ -44,14 +45,23 @@
 hrtime_t __libc_Back_timeHighResNano(void)
 {
     /*
-     * Calc factor the first time.
+     * Calc factor the first time (in a thread safe way).
      */
-    static ULONG        ulFreq;
+    static volatile _smutex mtx = 0;
+    static ULONG ulFreq = 0;
     if (!ulFreq)
     {
-        int rc = DosTmrQueryFreq(&ulFreq);
-        if (rc)
-            return HRTIME_INFINITY;
+        _smutex_request(&mtx);
+        if (!ulFreq)
+        {
+            int rc = DosTmrQueryFreq(&ulFreq);
+            if (rc)
+            {
+                _smutex_release(&mtx);
+                return HRTIME_INFINITY;
+            }
+        }
+        _smutex_release(&mtx);
     }
 
     /*
