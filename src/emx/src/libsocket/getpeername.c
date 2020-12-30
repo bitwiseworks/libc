@@ -36,7 +36,7 @@
 #include <InnoTekLIBC/logstrict.h>
 #include "socket.h"
 
-int getpeername(int socket, struct sockaddr *addr, int *addrlen)
+int getpeername(int socket, struct sockaddr *addr, socklen_t *addrlen)
 {
     LIBCLOG_ENTER("socket=%d addr=%p addrlen=%p\n", socket, (void *)addr, (void *)addrlen);
     int             rc        = -1;
@@ -44,12 +44,12 @@ int getpeername(int socket, struct sockaddr *addr, int *addrlen)
     if (pFHSocket)
     {
         __LIBSOCKET_SAFEADDR SafeAddr;
-        if (__libsocket_safe_addr_pre(addr, addrlen, &SafeAddr) == 0)
+        if (__libsocket_safe_addr_pre(addr, (int *)addrlen, &SafeAddr) == 0)
         {
             rc = __libsocket_getpeername(pFHSocket->iSocket, SafeAddr.pAddr, SafeAddr.pcbAddr);
             if (rc < 0)
                 __libc_TcpipUpdateErrno();
-            if (__libsocket_safe_addr_post(addr, addrlen, &SafeAddr, rc >= 0) != 0)
+            if (__libsocket_safe_addr_post(addr, (int *)addrlen, &SafeAddr, rc >= 0) != 0)
                 rc = -1;
         }
     }

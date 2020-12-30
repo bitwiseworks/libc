@@ -36,7 +36,7 @@
 #include <InnoTekLIBC/logstrict.h>
 #include "socket.h"
 
-int getsockopt(int socket, int level, int optname, void *optval, int *optlen)
+int getsockopt(int socket, int level, int optname, void *optval, socklen_t *optlen)
 {
     LIBCLOG_ENTER("socket=%d level=%#x optname=%#x optval=%p optlen=%p\n",
                   socket, level, optname, (void *)optval, (void *)optlen);
@@ -44,7 +44,7 @@ int getsockopt(int socket, int level, int optname, void *optval, int *optlen)
     if (pFHSocket)
     {
         int rc;
-        rc = __libsocket_getsockopt(pFHSocket->iSocket, level, optname, optval, optlen);
+        rc = __libsocket_getsockopt(pFHSocket->iSocket, level, optname, optval, (int *)optlen);
         if (rc >= 0)
         {
             switch (level)

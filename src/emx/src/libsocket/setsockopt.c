@@ -36,7 +36,7 @@
 #include <InnoTekLIBC/logstrict.h>
 #include "socket.h"
 
-int setsockopt(int socket, int level, int optname, const void *optval, int optlen)
+int setsockopt(int socket, int level, int optname, const void *optval, socklen_t optlen)
 {
     LIBCLOG_ENTER("socket=%d level=%#x optname=%#x optval=%p optlen=%d\n",
                   socket, level, optname, optval, optlen);

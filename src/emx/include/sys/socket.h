@@ -60,6 +60,11 @@ typedef	__socklen_t	socklen_t;
 #define	_SOCKLEN_T_DECLARED
 #endif
 
+#ifndef _SSIZE_T_DECLARED
+typedef __ssize_t       ssize_t;
+#define _SSIZE_T_DECLARED
+#endif
+
 #if defined (__cplusplus)
 extern "C" {
 #endif
@@ -456,21 +461,21 @@ struct sf_parms {
 #define	SHUT_WR		1		/* shut down the writing side */
 #define	SHUT_RDWR	2		/* shut down both sides */
 
-int     TCPCALL accept (int, struct sockaddr *, int *);
-int     TCPCALL bind (int, const struct sockaddr *, int);
-int     TCPCALL connect (int, const struct sockaddr *, int);
+int     TCPCALL accept (int, struct sockaddr *, socklen_t *);
+int     TCPCALL bind (int, const struct sockaddr *, socklen_t);
+int     TCPCALL connect (int, const struct sockaddr *, socklen_t);
 int     TCPCALL gethostid (void);
-int     TCPCALL getpeername (int, struct sockaddr *, int *);
-int     TCPCALL getsockname (int, struct sockaddr *, int *);
-int     TCPCALL getsockopt (int, int, int, void *, int *);
+int     TCPCALL getpeername (int, struct sockaddr *, socklen_t *);
+int     TCPCALL getsockname (int, struct sockaddr *, socklen_t *);
+int     TCPCALL getsockopt (int, int, int, void *, socklen_t *);
 int     TCPCALL listen (int, int);
-int     TCPCALL recv (int, void *, int, int);
-int     TCPCALL recvfrom (int, void *, int, int, struct sockaddr *, int *);
-int     TCPCALL recvmsg (int, struct msghdr *, int);
-int     TCPCALL send (int, const void *, int, int);
-int     TCPCALL sendto (int, const void *, int, int, const struct sockaddr *, int);
-int     TCPCALL sendmsg (int, const struct msghdr *, int);
-int     TCPCALL setsockopt (int, int, int, const void *, int);
+ssize_t TCPCALL recv (int, void *, size_t, int);
+ssize_t TCPCALL recvfrom (int, void *, size_t, int, struct sockaddr *, socklen_t *);
+ssize_t TCPCALL recvmsg (int, struct msghdr *, int);
+ssize_t TCPCALL send (int, const void *, size_t, int);
+ssize_t TCPCALL sendto (int, const void *, size_t, int, const struct sockaddr *, socklen_t);
+ssize_t TCPCALL sendmsg (int, const struct msghdr *, int);
+int     TCPCALL setsockopt (int, int, int, const void *, socklen_t);
 int     TCPCALL shutdown (int, int);
 int     TCPCALL socket (int, int, int);
 int     TCPCALL socketpair (int, int, int, int *);

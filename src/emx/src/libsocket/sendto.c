@@ -36,7 +36,7 @@
 #include <InnoTekLIBC/logstrict.h>
 #include "socket.h"
 
-int sendto(int socket, const void *buf, int len, int flags, const struct sockaddr *to, int tolen)
+ssize_t sendto(int socket, const void *buf, size_t len, int flags, const struct sockaddr *to, socklen_t tolen)
 {
     LIBCLOG_ENTER("socket=%d buf=%p len=%d flags=%#x to=%p tolen=%d\n",
                   socket, buf, len, flags, (void *)to, tolen);

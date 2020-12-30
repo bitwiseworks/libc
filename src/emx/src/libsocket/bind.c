@@ -36,7 +36,7 @@
 #include <InnoTekLIBC/logstrict.h>
 #include "socket.h"
 
-int bind(int socket, const struct sockaddr *addr, int addrlen)
+int bind(int socket, const struct sockaddr *addr, socklen_t addrlen)
 {
     LIBCLOG_ENTER("socket=%d addr=%p addrlen=%d\n", socket, addr, addrlen);
     int             rc = -1;
@@ -44,7 +44,7 @@ int bind(int socket, const struct sockaddr *addr, int addrlen)
     if (pFHSocket)
     {
         __LIBSOCKET_SAFEADDR SafeAddr;
-        if (__libsocket_safe_addr_pre(addr, &addrlen, &SafeAddr) == 0)
+        if (__libsocket_safe_addr_pre(addr, (int *)&addrlen, &SafeAddr) == 0)
         {
             rc = __libsocket_bind(pFHSocket->iSocket, SafeAddr.pAddr, addrlen);
             if (rc < 0)

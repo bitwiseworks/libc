@@ -68,8 +68,8 @@ typedef	__int64_t	__off_t;	/* file offset */
 typedef	__int32_t	__pid_t;	/* process [group] */
 typedef	__int64_t	__rlim_t;	/* resource limit (XXX not unsigned) */
 typedef	__uint8_t	__sa_family_t;
-#if 1
-/* Be compatible with OS/2 TCP/IP headers that use int */
+#if 0
+/* Be compatible with OS/2 TCP/IP function defs that use int */
 typedef	int		__socklen_t;
 #else
 typedef	__uint32_t	__socklen_t;

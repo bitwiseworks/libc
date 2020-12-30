@@ -37,7 +37,7 @@
 #include <InnoTekLIBC/logstrict.h>
 #include "socket.h"
 
-int recvfrom(int socket, void *buf, int len, int flags, struct sockaddr *from, int *fromlen)
+ssize_t recvfrom(int socket, void *buf, size_t len, int flags, struct sockaddr *from, socklen_t *fromlen)
 {
     LIBCLOG_ENTER("socket=%d buf=%p len=%d flags=%#x from=%p from=%p\n",
                   socket, buf, len, flags, (void *)from, (void *)fromlen);
@@ -45,7 +45,7 @@ int recvfrom(int socket, void *buf, int len, int flags, struct sockaddr *from, i
     if (pFHSocket)
     {
         int rc;
-        rc = __libsocket_recvfrom(pFHSocket->iSocket, buf, len, flags, from, fromlen);
+        rc = __libsocket_recvfrom(pFHSocket->iSocket, buf, len, flags, from, (int *)fromlen);
         if (rc >= 0)
         {
             if (from && fromlen)

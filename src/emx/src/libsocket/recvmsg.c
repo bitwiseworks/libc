@@ -37,7 +37,7 @@
 #include <InnoTekLIBC/logstrict.h>
 #include "socket.h"
 
-int recvmsg(int socket, struct msghdr *msg, int flags)
+ssize_t recvmsg(int socket, struct msghdr *msg, int flags)
 {
     LIBCLOG_ENTER("socket=%d msg=%p flags=%d\n", socket, msg, flags);
     PLIBCSOCKETFH   pFHSocket = __libc_TcpipFH(socket);

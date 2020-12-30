@@ -38,7 +38,7 @@
 #include <InnoTekLIBC/logstrict.h>
 #include "socket.h"
 
-int accept(int socket, struct sockaddr *addr, int *addrlen)
+int accept(int socket, struct sockaddr *addr, socklen_t *addrlen)
 {
     LIBCLOG_ENTER("socket=%d socketaddr=%p addrlen=%p:{%d}\n",
                   socket, (void *)addr, (void *)addrlen, addrlen ? *addrlen : -1);
@@ -47,12 +47,12 @@ int accept(int socket, struct sockaddr *addr, int *addrlen)
     if (pFHSocket)
     {
         __LIBSOCKET_SAFEADDR SafeAddr;
-        if (__libsocket_safe_addr_pre(addr, addrlen, &SafeAddr) == 0)
+        if (__libsocket_safe_addr_pre(addr, (int *)addrlen, &SafeAddr) == 0)
         {
             s = __libsocket_accept(pFHSocket->iSocket, SafeAddr.pAddr, SafeAddr.pcbAddr);
             if (s >= 0)
             {
-                if (__libsocket_safe_addr_post(addr, addrlen, &SafeAddr, 1) == 0)
+                if (__libsocket_safe_addr_post(addr, (int *)addrlen, &SafeAddr, 1) == 0)
                 {
                     int             fh;
                     PLIBCSOCKETFH   pFH = TCPNAMEG(AllocFH)(s, &fh);
@@ -68,7 +68,7 @@ int accept(int socket, struct sockaddr *addr, int *addrlen)
             else
             {
                 __libc_TcpipUpdateErrno();
-                __libsocket_safe_addr_post(addr, addrlen, &SafeAddr, 0);
+                __libsocket_safe_addr_post(addr, (int *)addrlen, &SafeAddr, 0);
             }
         }
     }
