@@ -1,11 +1,19 @@
 # History of changes for LIBC Next
 
+#### Version 0.1.6 (2020-12-31)
+
+* Implement `sysconf(_SC_NPROCESSORS_CONF)` (addon to [#5]).
+* Fix broken nearbyint returning arbitrary values [#87].
+* select: Return -1 and ENIVAL when nfds < 0 or > FD_SETSIZE [#91].
+* Make `tzset`, `__ftime` and `gethrtime` thread safe [#90].
+* Use `socklen_t` in socket function prototypes [#63].
+
 #### Version 0.1.5 (2020-07-22)
 
 * Make realpath not fail on long paths with lots of '..' and '.' [#73].
 * emxomf: Provide more verbose `Record too long` error message [#74].
 * emxomf: Fix `Record too long` error for objects with really long names [#74].
-* sys/socket.h: Use void * instead of caddr_t in msghdr [[bitwiseworks/qtwebengine-chromium-os2#3].
+* sys/socket.h: Use void * instead of caddr_t in msghdr [bitwiseworks/qtwebengine-chromium-os2#3].
 * Implement sysconf for _SC_PHYS_PAGES and _SC_AVPHYS_PAGES [#79].
 * Make timeval::tv_sec have type time_t instead of long as per POSIX [#80].
 * emxomfld: Add simple profiling in -t -t -t mode [#83].
