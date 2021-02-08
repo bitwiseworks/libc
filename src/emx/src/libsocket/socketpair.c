@@ -15,6 +15,9 @@
 /*******************************************************************************
 *   Header Files                                                               *
 *******************************************************************************/
+#define INCL_BASE
+#include <os2emx.h>
+
 #include "libc-alias.h"
 #include <sys/types.h>
 #include <sys/time.h>
@@ -27,7 +30,6 @@
 #include <sys/socket.h>
 #include <sys/fcntl.h>
 #include <emx/io.h>
-#include <os2emx.h>
 #include <InnoTekLIBC/sharedpm.h>
 #define __LIBC_LOG_GROUP __LIBC_LOG_GRP_SOCKET
 #include <InnoTekLIBC/logstrict.h>
@@ -126,18 +128,33 @@ failure:
     int             fh2;
     int             aNativeFDs[2] = {-1, -1};
     PLIBCSOCKETFH   pFH1;
+    int             cNotSockTries = 3;
 
     /* Make sure we crash here if parameter is invalid. */
     osfd[0] = -1;
     osfd[1] = -1;
 
-    /* Call the native API. */
-    rc = __libsocket_socketpair(af, type, flags, aNativeFDs);
-    if (rc < 0)
+    /*
+     * Call the native API. Observations demonstrate that sometimes this API
+     * returns ENOTSOCK for no reason and simply retrying the operation cures
+     * it. Do that here to avoid integrating it in every app.
+     */
+    while (1)
     {
-        __libc_TcpipUpdateErrno();
-        LIBCLOG_RETURN_INT(-1);
+        rc = __libsocket_socketpair(af, type, flags, aNativeFDs);
+        if (rc < 0)
+        {
+            __libc_TcpipUpdateErrno();
+            if (errno == ENOTSOCK && --cNotSockTries)
+            {
+                DosSleep(1);
+                continue;
+            }
+        }
+        break;
     }
+    if (rc < 0)
+        LIBCLOG_RETURN_INT(-1);
 
     /*
      * Allocate LIBC sockets.
@@ -153,7 +170,7 @@ failure:
 
             LIBCLOG_RETURN_MSG(0, "ret 0 osfd[0]=%d osfd[1]=%d\n", osfd[0], osfd[1]);
         }
-         
+
         __libsocket_soclose(aNativeFDs[1]);
         __libc_FHClose(fh1);
     }
