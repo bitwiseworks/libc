@@ -164,15 +164,50 @@ void __libc_Back_panicV(unsigned fFlags, void *pvCtx, const char *pszFormat, va_
 {
     LIBCLOG_ENTER("fFlags=%#x pvCtx=%p pszFormat=%p:{%s}\n", fFlags, pvCtx, (void *)pszFormat, pszFormat);
 
-    /*
-     * First, terminate the exception handler chain to avoid recursive trouble.
-     */
     FS_VAR();
     FS_SAVE_LOAD();
     PTIB pTib;
     PPIB pPib;
     DosGetInfoBlocks(&pTib, &pPib);
-    pTib->tib_pexchain = END_OF_CHAIN;
+
+    /*
+     * First, check if we have an EXCEPTQ handler installed.
+     *
+     * NOTE: If we are inside an exception handler which is below the EXCEPTQ
+     * one, we won't see it - this is fine since it means that it already had a
+     * chance to generate a trap report (.TRP file).
+     */
+    BOOL fHaveExceptq = FALSE;
+    void APIENTRY (*SetExceptqOptions)(const char* pszOptions,
+                                       const char* pszReportInfo) = NULL;
+    {
+        HMODULE hmod;
+        if (!DosQueryModuleHandle((PSZ)"EXCEPTQ", &hmod))
+        {
+            PFN pfn;
+            if (!DosQueryProcAddr(hmod, 0, (PSZ)"MYHANDLER", &pfn))
+            {
+                PEXCEPTIONREGISTRATIONRECORD pRec = pTib->tib_pexchain;
+                while (pRec != END_OF_CHAIN)
+                {
+                    if ((PFN)pRec->ExceptionHandler == pfn)
+                    {
+                        fHaveExceptq = TRUE;
+                        /*
+                         * Make sure EXCEPTQ is the only one in chain to avoid
+                         * recursive trouble.
+                         */
+                        pRec->prev_structure = END_OF_CHAIN;
+                        pTib->tib_pexchain = pRec;
+                        break;
+                    }
+                    pRec = pRec->prev_structure;
+                }
+            }
+
+            DosQueryProcAddr(hmod, 0, (PSZ)"SetExceptqOptions", (PPFN)&SetExceptqOptions);
+        }
+    }
 
     /*
      * Set the exit reason in SPM.
@@ -186,7 +221,8 @@ void __libc_Back_panicV(unsigned fFlags, void *pvCtx, const char *pszFormat, va_
     BOOL fQuiet = FALSE;
     BOOL fVerbose = TRUE;
     BOOL fBreakpoint = DosSysCtl(DOSSYSCTL_AM_I_DEBUGGED, NULL) == TRUE;
-    BOOL fDumpProcess = TRUE;
+    BOOL fDumpProcess = FALSE;
+
     const char *pszPanicCfg = NULL;
     int rc = DosScanEnv((PCSZ)"LIBC_PANIC", (PSZ *)(void *)&pszPanicCfg);
     if (!rc && pszPanicCfg && strnlen(pszPanicCfg, 512) < 512)
@@ -196,20 +232,22 @@ void __libc_Back_panicV(unsigned fFlags, void *pvCtx, const char *pszFormat, va_
         {
             if (panicStrICmp(&pszPanicCfg, "quiet", "QUIET"))
                 fQuiet = TRUE;
-            //else if (panicStrICmp(&pszPanicCfg, "noquiet", "NOQUIET"))
-            //    fQuiet = FALSE;
+            else if (panicStrICmp(&pszPanicCfg, "noquiet", "NOQUIET"))
+                fQuiet = FALSE;
             else if (panicStrICmp(&pszPanicCfg, "terse", "TERSE"))
                 fVerbose = FALSE;
-            //else if (panicStrICmp(&pszPanicCfg, "verbose", "VERBOSE"))
-            //    fVerbose = TRUE;
+            else if (panicStrICmp(&pszPanicCfg, "verbose", "VERBOSE"))
+                fVerbose = TRUE;
             else if (panicStrICmp(&pszPanicCfg, "breakpoint", "BREAKPOINT"))
                 fBreakpoint = TRUE;
             else if (panicStrICmp(&pszPanicCfg, "nobreakpoint", "NOBREAKPOINT"))
                 fBreakpoint = FALSE;
-            //else if (panicStrICmp(&pszPanicCfg, "dump", "DUMP"))
-            //    fDumpProcess = TRUE;
+            else if (panicStrICmp(&pszPanicCfg, "dump", "DUMP"))
+                fDumpProcess = TRUE;
             else if (panicStrICmp(&pszPanicCfg, "nodump", "NODUMP"))
                 fDumpProcess = FALSE;
+            else if (panicStrICmp(&pszPanicCfg, "noexceptq", "NOEXCEPTQ"))
+                fHaveExceptq = FALSE;
             else
                 pszPanicCfg++;
         }
@@ -217,28 +255,49 @@ void __libc_Back_panicV(unsigned fFlags, void *pvCtx, const char *pszFormat, va_
 
     ULONG   cb;
     char    szHexNum[12];
-    if (!fQuiet)
+    char    szMsg[80]; /* 80 chars - current EXCEPTQ limitation... */
+    size_t  cbMsg = 0;
+    if (!fQuiet || fHaveExceptq)
     {
         /*
          * Write user message to stderr.
          */
-#define PRINT_CHAR(ch)  DosWrite(HFILE_STDERR, &ch,      1,                                    &cb)
-#define PRINT_C(msg)    DosWrite(HFILE_STDERR, msg,      sizeof(msg) - 1,                      &cb)
-#define PRINT_P(msg)    DosWrite(HFILE_STDERR, msg,      panicStrLen(msg),           &cb)
-#define PRINT_H(hex)    DosWrite(HFILE_STDERR, szHexNum, panicHex(szHexNum, hex, 0), &cb)
-#define PRINT_H16(hex)  DosWrite(HFILE_STDERR, szHexNum, panicHex(szHexNum, hex, 4), &cb)
-#define PRINT_H32(hex)  DosWrite(HFILE_STDERR, szHexNum, panicHex(szHexNum, hex, 8), &cb)
+#define TO_CON 0x1
+#define TO_BUF 0x2
+#define TO_BOTH (TO_CON | TO_BUF)
+#define PRINT_BUF_(to, buf, size) do { \
+    if ((to) & TO_CON) DosWrite(HFILE_STDERR, (buf), (size), &cb); \
+    if (((to) & TO_BUF) && cbMsg < sizeof(szMsg) - 1) { memcpy(szMsg + cbMsg, (buf), (size)); cbMsg += (size); szMsg[cbMsg] = 0; } \
+} while (0)
+/* Compatibility */
+#define PRINT_CHAR(ch)  PRINT_BUF_(TO_CON, &ch,      1)
+#define PRINT_C(msg)    PRINT_BUF_(TO_CON, msg,      sizeof(msg) - 1)
+#define PRINT_P(msg)    PRINT_BUF_(TO_CON, msg,      panicStrLen(msg))
+#define PRINT_H(hex)    PRINT_BUF_(TO_CON, szHexNum, panicHex(szHexNum, hex, 0))
+#define PRINT_H16(hex)  PRINT_BUF_(TO_CON, szHexNum, panicHex(szHexNum, hex, 4))
+#define PRINT_H32(hex)  PRINT_BUF_(TO_CON, szHexNum, panicHex(szHexNum, hex, 8))
+/* Flexible */
+#define PRINT_CHAR_(to, ch) PRINT_BUF_(to, &ch,      1)
+#define PRINT_C_(to, msg)   PRINT_BUF_(to, msg,      sizeof(msg) - 1)
+#define PRINT_P_(to, msg)   PRINT_BUF_(to, msg,      panicStrLen(msg))
+#define PRINT_H_(to, hex)   PRINT_BUF_(to, szHexNum, panicHex(szHexNum, hex, 0))
+#define PRINT_H16_(to, hex) PRINT_BUF_(to, szHexNum, panicHex(szHexNum, hex, 4))
+#define PRINT_H32_(to, hex) PRINT_BUF_(to, szHexNum, panicHex(szHexNum, hex, 8))
         if (!(fFlags & __LIBC_PANIC_SIGNAL) && fVerbose)
             PRINT_C("\r\nLIBC PANIC!!\r\n");
         else
             PRINT_C("\r\n");
+        if (!(fFlags & __LIBC_PANIC_SIGNAL))
+            PRINT_C_(TO_BUF, "LIBC PANIC!! ");
+        else
+            PRINT_C_(TO_BUF, "LIBC: ");
         char ch;
         while ((ch = *pszFormat++) != '\0')
         {
             switch (ch)
             {
                 case '\n':
-                    PRINT_C("\r\n");
+                    PRINT_C_(TO_BOTH, "\r\n");
                     break;
                 case '\r':
                     break;
@@ -251,14 +310,14 @@ void __libc_Back_panicV(unsigned fFlags, void *pvCtx, const char *pszFormat, va_
                         {
                             const char *psz = va_arg(args, const char *);
                             if ((uintptr_t)psz >= 0x10000 && (uintptr_t)psz < 0xe0000000)
-                                PRINT_P(psz);
+                                PRINT_P_(TO_BOTH, psz);
                             else if (!psz)
-                                PRINT_C("<null>");
+                                PRINT_C_(TO_BOTH, "<null>");
                             else
                             {
-                                PRINT_C("<bogus string ptr 0x");
-                                PRINT_H((uintptr_t)psz);
-                                PRINT_C(">");
+                                PRINT_C_(TO_BOTH, "<bogus string ptr 0x");
+                                PRINT_H_(TO_BOTH, (uintptr_t)psz);
+                                PRINT_C_(TO_BOTH, ">");
                             }
                             break;
                         }
@@ -269,37 +328,37 @@ void __libc_Back_panicV(unsigned fFlags, void *pvCtx, const char *pszFormat, va_
                         case 'u':
                         {
                             unsigned u = va_arg(args, unsigned);
-                            PRINT_C("0x");
-                            PRINT_H(u);
+                            PRINT_C_(TO_BOTH, "0x");
+                            PRINT_H_(TO_BOTH, u);
                             break;
                         }
 
                         case 'p':
                         {
                             uintptr_t u = va_arg(args, uintptr_t);
-                            PRINT_H(u);
+                            PRINT_H_(TO_BOTH, u);
                             break;
                         }
 
                         case '%':
-                            PRINT_C("%");
+                            PRINT_C_(TO_BOTH, "%");
                             break;
 
                         default:
                         {
-                            PRINT_C("<Unknown format %");
-                            PRINT_CHAR(ch);
-                            PRINT_C(" arg 0x");
+                            PRINT_C_(TO_BOTH, "<Unknown format %");
+                            PRINT_CHAR_(TO_BOTH, ch);
+                            PRINT_C_(TO_BOTH, " arg 0x");
                             unsigned u = va_arg(args, unsigned);
-                            PRINT_H(u);
-                            PRINT_C(">");
+                            PRINT_H_(TO_BOTH, u);
+                            PRINT_C_(TO_BOTH, ">");
                             break;
                         }
                     }
                     break;
 
                 default:
-                    PRINT_CHAR(ch);
+                    PRINT_CHAR_(TO_BOTH, ch);
                     break;
             }
         } /* print loop */
@@ -399,16 +458,6 @@ void __libc_Back_panicV(unsigned fFlags, void *pvCtx, const char *pszFormat, va_
     } /* !QUIET */
 
     /*
-     * Breakpoint
-     */
-    if (fBreakpoint)
-    {
-        LIBCLOG_MSG("Breakpoint\n");
-        __asm__ __volatile__ ("int3\n\t"
-                              "nop\n\t");
-    }
-
-    /*
      * Attempt dumping the process.
      */
     if (fDumpProcess)
@@ -428,6 +477,42 @@ void __libc_Back_panicV(unsigned fFlags, void *pvCtx, const char *pszFormat, va_
                 PRINT_C("\r\n");
             }
         }
+    }
+
+    /*
+     * EXCEPTQ report
+     */
+    if (fHaveExceptq && SetExceptqOptions)
+    {
+        LIBCLOG_MSG("EXCEPTQ report\n");
+
+        /* Make sure EXCEPTQ_DEBUG_EXCEPTION is enabled (and set extended report info) */
+        SetExceptqOptions("D", szMsg);
+
+        EXCEPTIONREPORTRECORD  ERepRec;
+
+        ERepRec.ExceptionNum                = 0x71785158; /* EXCEPTQ_DEBUG_EXCEPTION */
+        ERepRec.fHandlerFlags               = 0;
+        ERepRec.NestedExceptionReportRecord = NULL;
+        ERepRec.ExceptionAddress            = NULL;
+        ERepRec.cParameters                 = 0;
+
+        DosRaiseException(&ERepRec);
+    }
+
+    /*
+     * Terminate the exception handler chain to avoid recursive trouble.
+     */
+    pTib->tib_pexchain = END_OF_CHAIN;
+
+    /*
+     * Breakpoint
+     */
+    if (fBreakpoint)
+    {
+        LIBCLOG_MSG("Breakpoint\n");
+        __asm__ __volatile__ ("int3\n\t"
+                              "nop\n\t");
     }
 
     /*
