@@ -173,7 +173,15 @@ unsigned __fmutex_request_internal(_fmutex *sem, unsigned flags, signed char fs)
              */
             unsigned Owner = sem->Owner;
             if (!Owner)
+            {
+                /*
+                 * The owner could have released the mutex after we timed out.
+                 * Reset rc to loop again (and possibly grab the mutex) rather
+                 * than return a failure.
+                 */
+                rc = 0;
                 break;
+            }
             rc = DosVerifyPidTid(Owner >> 16, Owner & 0xffff);
             if (rc)
             {
@@ -316,7 +324,15 @@ unsigned __fmutex_request_internal_must_complete(_fmutex *sem, unsigned flags)
              */
             unsigned Owner = sem->Owner;
             if (!Owner)
+            {
+                /*
+                 * The owner could have released the mutex after we timed out.
+                 * Reset rc to loop again (and possibly grab the mutex) rather
+                 * than return a failure.
+                 */
+                rc = 0;
                 break;
+            }
             rc = DosVerifyPidTid(Owner >> 16, Owner & 0xffff);
             if (rc)
             {
