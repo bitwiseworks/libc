@@ -210,7 +210,9 @@ static int  dosexRequestMutex(void)
     }
 
     FS_SAVE_LOAD();
-    rc = DosRequestMutexSem(gmtxPools, 10*60*1000 /* 10 minuttes */);
+    do
+        rc = DosRequestMutexSem(gmtxPools, 10*60*1000 /* 10 minuttes */);
+    while (rc == ERROR_INTERRUPT);
     if (!rc)
     {
         ULONG ul;
