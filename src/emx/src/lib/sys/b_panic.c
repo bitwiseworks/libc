@@ -34,12 +34,13 @@
 #define INCL_ERRORS
 #define INCL_FSMACROS
 #define INCL_DOSUNDOCUEMENTED
+#define INCL_EXAPIS
 #define _GNU_SOURCE
+#include <os2emx.h>
 #include <string.h>
 #include <InnotekLIBC/backend.h>
 #include <InnotekLIBC/sharedpm.h>
 #include <InnotekLIBC/logstrict.h>
-#include <os2emx.h>
 
 
 /*******************************************************************************
@@ -156,7 +157,8 @@ void __libc_Back_panic(unsigned fFlags, void *pvCtx, const char *pszFormat, ...)
  * Print a panic message and dump/kill the process.
  *
  * @param   fFlags      A combination of the __LIBC_PANIC_* defines.
- * @param   pvCtx       Pointer to a context record if available. This is a PCONTEXTRECORD.
+ * @param   pvCtx       Pointer to a context record (or exception parameter list) if available.
+ *                      This is a PCONTEXTRECORD (or PXCPTPARAMS if __LIBC_PANIC_XCPTPARAMS is set in fFlags).
  * @param   pszFormat   User message which may contain %s and %x.
  * @param   args        String pointers and unsigned intergers as specified by the %s and %x in pszFormat.
  */
@@ -171,41 +173,22 @@ void __libc_Back_panicV(unsigned fFlags, void *pvCtx, const char *pszFormat, va_
     DosGetInfoBlocks(&pTib, &pPib);
 
     /*
-     * First, check if we have an EXCEPTQ handler installed.
-     *
-     * NOTE: If we are inside an exception handler which is below the EXCEPTQ
-     * one, we won't see it - this is fine since it means that it already had a
-     * chance to generate a trap report (.TRP file).
+     * First, check if we have an EXCEPTQ DLL available.
      */
     BOOL fHaveExceptq = FALSE;
     void APIENTRY (*SetExceptqOptions)(const char* pszOptions,
                                        const char* pszReportInfo) = NULL;
+    ULONG APIENTRY (*ExceptqHandler)(EXCEPTIONREPORTRECORD* pExRepRec,
+                                     EXCEPTIONREGISTRATIONRECORD* pExRegRec,
+                                     CONTEXTRECORD* pCtxRec,
+                                     void* p) = NULL;
     {
-        HMODULE hmod;
-        if (!DosQueryModuleHandle((PSZ)"EXCEPTQ", &hmod))
+        HMODULE hmod = NULLHANDLE;
+        if (!DosLoadModuleEx(NULL, 0, (PSZ)"EXCEPTQ", &hmod))
         {
-            PFN pfn;
-            if (!DosQueryProcAddr(hmod, 0, (PSZ)"MYHANDLER", &pfn))
-            {
-                PEXCEPTIONREGISTRATIONRECORD pRec = pTib->tib_pexchain;
-                while (pRec != END_OF_CHAIN)
-                {
-                    if ((PFN)pRec->ExceptionHandler == pfn)
-                    {
-                        fHaveExceptq = TRUE;
-                        /*
-                         * Make sure EXCEPTQ is the only one in chain to avoid
-                         * recursive trouble.
-                         */
-                        pRec->prev_structure = END_OF_CHAIN;
-                        pTib->tib_pexchain = pRec;
-                        break;
-                    }
-                    pRec = pRec->prev_structure;
-                }
-            }
-
             DosQueryProcAddr(hmod, 0, (PSZ)"SetExceptqOptions", (PPFN)&SetExceptqOptions);
+            DosQueryProcAddr(hmod, 0, (PSZ)"MYHANDLER", (PPFN)&ExceptqHandler);
+            fHaveExceptq = !!SetExceptqOptions && !!ExceptqHandler;
         }
     }
 
@@ -482,22 +465,87 @@ void __libc_Back_panicV(unsigned fFlags, void *pvCtx, const char *pszFormat, va_
     /*
      * EXCEPTQ report
      */
-    if (fHaveExceptq && SetExceptqOptions)
+    if (fHaveExceptq && SetExceptqOptions && ExceptqHandler)
     {
         LIBCLOG_MSG("EXCEPTQ report\n");
 
         /* Make sure EXCEPTQ_DEBUG_EXCEPTION is enabled (and set extended report info) */
         SetExceptqOptions("D", szMsg);
 
-        EXCEPTIONREPORTRECORD  ERepRec;
+        EXCEPTIONREPORTRECORD XcptRepRec, *pXcptRepRec = NULL;
+        EXCEPTIONREGISTRATIONRECORD *pXcptRegRec = NULL;
+        CONTEXTRECORD Ctx, *pCtx = NULL;
+        PVOID pvWhatEver = NULL;
 
-        ERepRec.ExceptionNum                = 0x71785158; /* EXCEPTQ_DEBUG_EXCEPTION */
-        ERepRec.fHandlerFlags               = 0;
-        ERepRec.NestedExceptionReportRecord = NULL;
-        ERepRec.ExceptionAddress            = NULL;
-        ERepRec.cParameters                 = 0;
+        if (pvCtx && (fFlags & __LIBC_PANIC_XCPTPARAMS))
+        {
+            /* Use the existing exception parameters */
+            pXcptRepRec = ((PXCPTPARAMS)pvCtx)->pXcptRepRec;
+            pXcptRegRec = ((PXCPTPARAMS)pvCtx)->pXcptRegRec;
+            pCtx = ((PXCPTPARAMS)pvCtx)->pCtx;
+            pvWhatEver = ((PXCPTPARAMS)pvCtx)->pvWhatEver;
+        }
+        else
+        {
+            /* Compose exception parameters ourselves */
+            XcptRepRec.ExceptionNum                = 0x71785158; /* EXCEPTQ_DEBUG_EXCEPTION */
+            XcptRepRec.fHandlerFlags               = 0;
+            XcptRepRec.NestedExceptionReportRecord = NULL;
+            XcptRepRec.ExceptionAddress            = NULL;
+            XcptRepRec.cParameters                 = 0;
 
-        DosRaiseException(&ERepRec);
+            pXcptRepRec = &XcptRepRec;
+
+            if (pvCtx)
+            {
+                pCtx = (PCONTEXTRECORD)pvCtx;
+
+                /* Set the exception address to EIP (otherwise EXCEPTQ won't generate disassembly */
+                if (pCtx->ContextFlags & CONTEXT_CONTROL)
+                    XcptRepRec.ExceptionAddress = (PVOID)pCtx->ctx_RegEip;
+            }
+            else
+            {
+                memset(&Ctx, 0, sizeof(Ctx));
+
+                /*
+                 * Grab the current thread's context. Note that this is a "syntethic" exception
+                 * where we are only interested in the stack trace for .TRP reports so we grab
+                 * control registers (and segments - for information) and not integer registers
+                 * which are useless.  We also leave ExceptionAddress NULL to suppress
+                 * disassembly generation as it's useless too (it will always show our own assembly
+                 * below.
+                 */
+                __asm__(
+                    "mov %%gs,   %0\n\t"
+                    "mov %%fs,   %1\n\t"
+                    "mov %%es,   %2\n\t"
+                    "mov %%ds,   %3\n\t"
+                    "movl %%ebp, %4\n\t"
+                    "movl $.,    %5\n\t"
+                    "mov %%cs,   %6\n\t"
+                    "pushf; pop  %7\n\t"
+                    "movl %%esp, %8\n\t"
+                    "mov %%ss,   %9\n\t"
+                    :
+                    "=m" (Ctx.ctx_SegGs),
+                    "=m" (Ctx.ctx_SegFs),
+                    "=m" (Ctx.ctx_SegEs),
+                    "=m" (Ctx.ctx_SegDs),
+                    "=m" (Ctx.ctx_RegEbp),
+                    "=m" (Ctx.ctx_RegEip),
+                    "=m" (Ctx.ctx_SegCs),
+                    "=m" (Ctx.ctx_EFlags),
+                    "=m" (Ctx.ctx_RegEsp),
+                    "=m" (Ctx.ctx_SegSs)
+                );
+
+                Ctx.ContextFlags = CONTEXT_CONTROL | CONTEXT_SEGMENTS;
+                pCtx = &Ctx;
+            }
+        }
+
+        ExceptqHandler(pXcptRepRec, pXcptRegRec, pCtx, pvWhatEver);
     }
 
     /*

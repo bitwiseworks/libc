@@ -207,18 +207,6 @@ typedef struct SigSchedEnumParam
 } SIGSCHEDENUMPARAM, *PSIGSCHEDENUMPARAM;
 
 
-/**
- * Exception handler argument list.
- */
-typedef struct XcptParams
-{
-    PEXCEPTIONREPORTRECORD       pXcptRepRec;
-    PEXCEPTIONREGISTRATIONRECORD pXcptRegRec;
-    PCONTEXTRECORD               pCtx;
-    PVOID                        pvWhatEver;
-} XCPTPARAMS, *PEXCPTPARAMS;
-
-
 /*******************************************************************************
 *   Global Variables                                                           *
 *******************************************************************************/
@@ -2021,11 +2009,10 @@ static void signalTerminateAbnormal(int iSignalNo, void *pvXcptParams)
     /*
      * Panic
      */
-    PCONTEXTRECORD pCtx = pvXcptParams ? pCtx = ((PEXCPTPARAMS)pvXcptParams)->pCtx : NULL;
     if (iSignalNo < sizeof(gaszSignalNames) / sizeof(gaszSignalNames[0]))
-        __libc_Back_panic(__LIBC_PANIC_SIGNAL | __LIBC_PANIC_NO_SPM_TERM, pCtx, "Killed by %s\n", gaszSignalNames[iSignalNo]);
+        __libc_Back_panic(__LIBC_PANIC_SIGNAL | __LIBC_PANIC_NO_SPM_TERM | __LIBC_PANIC_XCPTPARAMS, pvXcptParams, "Killed by %s\n", gaszSignalNames[iSignalNo]);
     else
-        __libc_Back_panic(__LIBC_PANIC_SIGNAL | __LIBC_PANIC_NO_SPM_TERM, pCtx, "Killed by unknown signal %d\n", iSignalNo);
+        __libc_Back_panic(__LIBC_PANIC_SIGNAL | __LIBC_PANIC_NO_SPM_TERM | __LIBC_PANIC_XCPTPARAMS, pvXcptParams, "Killed by unknown signal %d\n", iSignalNo);
     LIBCLOG_MSG("panic failed\n"); /* shuts up gcc */
     __asm__("int3");
 }
@@ -2541,8 +2528,8 @@ int         __libc_back_signalRaisePoked(void *pvXcptParams, int tidPoker)
 
 /**
  * This is a hack to deal with potentially lost thread pokes.
- * 
- * For some reason or another we loose the async signal in some situations. It's 
+ *
+ * For some reason or another we loose the async signal in some situations. It's
  * been observed happening after/when opening files (fopen), but it's not known
  * whether this is really related or not.
  */

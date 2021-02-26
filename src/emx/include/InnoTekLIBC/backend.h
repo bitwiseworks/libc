@@ -517,9 +517,9 @@ ssize_t __libc_Back_ioDirGetEntries(int fh, void *pvBuf, size_t cbBuf, __off_t *
 
 /**
  * File Control.
- * 
+ *
  * Deals with file descriptor flags, file descriptor duplication and locking.
- * 
+ *
  * @returns 0 on success and *piRet set.
  * @returns Negated errno on failure and *piRet set to -1.
  * @param   fh          File handle (descriptor).
@@ -533,10 +533,10 @@ int __libc_Back_ioFileControl(int fh, int iRequest, intptr_t iArg, int *prc);
 
 /**
  * File Control operation - OS/2 standard handle.
- * 
+ *
  * @returns 0 on success.
  * @returns OS/2 error code or negated errno on failure.
- * 
+ *
  * @param   pFH         Pointer to the handle structure to operate on.
  * @param   fh          It's associated filehandle.
  * @param   iRequest    Which file file descriptior request to perform.
@@ -546,7 +546,7 @@ int __libc_Back_ioFileControl(int fh, int iRequest, intptr_t iArg, int *prc);
  *                      returned to the caller.
  */
 int __libc_Back_ioFileControlStandard(__LIBC_PFH pFH, int fh, int iRequest, intptr_t iArg, int *prc);
-    
+
 /**
  * Try resolve a filehandle to a path.
  *
@@ -884,8 +884,8 @@ int __libc_Back_signalTimer(int iWhich, const struct itimerval *pValue, struct i
 
 /**
  * This is a hack to deal with potentially lost thread pokes.
- * 
- * For some reason or another we loose the async signal in some situations. It's 
+ *
+ * For some reason or another we loose the async signal in some situations. It's
  * been observed happening after/when opening files (fopen), but it's not known
  * whether this is really related or not.
  */
@@ -1287,12 +1287,33 @@ int __libc_Back_safesemEvWakeup(__LIBC_PSAFESEMEV pev);
 /** Don't set the SPM termination code / status. When set the caller is
  * responsible for doing this. */
 #define __LIBC_PANIC_NO_SPM_TERM    2
+/** The pvCtx argument is a pointer to PXCPTPARAMS rather than to PCONTEXTRECORD. */
+#define __LIBC_PANIC_XCPTPARAMS     4
+
+/**
+ * Exception handler argument list.
+ */
+typedef struct XcptParams
+{
+#if (defined(_OS2EMX_H) || defined(OS2_INCLUDED)) && defined(INCL_DOSEXCEPTIONS)
+    PEXCEPTIONREPORTRECORD       pXcptRepRec;
+    PEXCEPTIONREGISTRATIONRECORD pXcptRegRec;
+    PCONTEXTRECORD               pCtx;
+    PVOID                        pvWhatEver;
+#else
+    void *pXcptRepRec;
+    void *XcptRegRec;
+    void *pCtx;
+    void *pvWhatEver;
+#endif
+} XCPTPARAMS, *PXCPTPARAMS;
 
 /**
  * Print a panic message and dump/kill the process.
  *
  * @param   fFlags      A combination of the __LIBC_PANIC_* defines.
- * @param   pvCtx       Pointer to a context record if available. This is a PCONTEXTRECORD.
+ * @param   pvCtx       Pointer to a context record (or exception parameter list) if available.
+ *                      This is a PCONTEXTRECORD (or PXCPTPARAMS if __LIBC_PANIC_XCPTPARAMS is set in fFlags).
  * @param   pszFormat   User message which may contain %s and %x.
  * @param   ...         String pointers and unsigned intergers as specified by the %s and %x in pszFormat.
  */
@@ -1302,7 +1323,8 @@ void __libc_Back_panic(unsigned fFlags, void *pvCtx, const char *pszFormat, ...)
  * Print a panic message and dump/kill the process.
  *
  * @param   fFlags      A combination of the __LIBC_PANIC_* defines.
- * @param   pvCtx       Pointer to a context record if available. This is a PCONTEXTRECORD.
+ * @param   pvCtx       Pointer to a context record (or exception parameter list) if available.
+ *                      This is a PCONTEXTRECORD (or PXCPTPARAMS if __LIBC_PANIC_XCPTPARAMS is set in fFlags).
  * @param   pszFormat   User message which may contain %s and %x.
  * @param   args        String pointers and unsigned intergers as specified by the %s and %x in pszFormat.
  */
