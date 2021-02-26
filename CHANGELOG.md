@@ -1,5 +1,12 @@
 # History of changes for LIBC Next
 
+#### Version 0.1.7 (2021-02-26)
+
+* libsocket: Retry after bogus ENOTSOCK in socketpair [#94].
+* Add support for EXCEPTQ to LIBC panic handler [#96].
+* Fix false wait loop break in `_fmutex_request_internal` [#97].
+* Retry on ERROR_INTERRUPT in dosexRequestMutex [bitwiseworks/qtwebengine-chromium-os2#12].
+
 #### Version 0.1.6 (2020-12-31)
 
 * Implement `sysconf(_SC_NPROCESSORS_CONF)` (addon to [#5]).
@@ -43,7 +50,7 @@
 
 #### Version 0.1.3 (2019-12-25)
 
-* Restrict 2-nd __cxchg operand to A/B/C/D registers [#47].
+* Restrict 2-nd `__cxchg` operand to A/B/C/D registers [#47].
 * symlink: Return EEXIST if path name exists and is directory [#48].
 * posix_spawn: Return errno on failure instead of -1 [#46].
 * sys/stat.h: Add more BSD-like aliases like st_mtimensec and st_mtim [#45].
