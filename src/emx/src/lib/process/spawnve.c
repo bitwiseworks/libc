@@ -57,6 +57,12 @@ int _STD(spawnve)(int mode, const char *name, char * const argv[], char * const 
     for (p = (const char * const *)envp; *p != NULL; ++p)
     {
         i = strlen(*p);
+        /*
+         * Skip empty strings to prevent DosExecPgm from interpreting them
+         * as end of list and ignoring the rest (see #100).
+         */
+        if (!i)
+            continue;
         memcpy(d, *p, i + 1);
         d += i + 1;
     }
