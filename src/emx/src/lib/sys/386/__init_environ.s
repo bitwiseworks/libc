@@ -46,20 +46,32 @@ __sys_init_environ:
      * Init registers.
      */
     movl    %esp, %esi
-    xorl    %eax, %eax
-    xorl    %ecx, %ecx
-    decl    %ecx
     movl    8(%ebp), %edi
     cld
 
     /*
      * Scan loop (pszEnv may point to `\0` which means no env so check it upfront).
+     * Also skip strings with no `=` to avoid polluting the environment with dead
+     * (inaccessible as if they never existed) variables, see #102.
      */
     jmp     env_loop_start
 env_loop:
-    push    %edi
+    xorl    %ecx, %ecx
+    decl    %ecx
+    movl    %edi, %edx
     repnz   scasb
+    push    %edi
+    movl    %edi, %ecx
+    subl    %edx, %ecx
+    decl    %ecx
+    movl    %edx, %edi
+    movb    $'=', %al
+    repnz   scasb
+    pop     %edi
+    jnz     env_loop_start
+    push    %edx
 env_loop_start:
+    xorl    %eax, %eax
     cmpb    %al, (%edi)
     jnz     env_loop
     push    %eax

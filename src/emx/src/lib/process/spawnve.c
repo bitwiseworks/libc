@@ -63,6 +63,12 @@ int _STD(spawnve)(int mode, const char *name, char * const argv[], char * const 
          */
         if (!i)
             continue;
+        /*
+         * Also skip variables with no `=` as they are dead anyway (inaccessible
+         * as if never existed), see #102.
+         */
+        if (memchr(*p, '=', i) == NULL)
+            continue;
         memcpy(d, *p, i + 1);
         d += i + 1;
     }
