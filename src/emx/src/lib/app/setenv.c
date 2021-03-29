@@ -104,7 +104,7 @@ int _STD(setenv)(const char *envname, const char *envval, int overwrite)
         }
         /* if the older is larger then overwrite it */
         LIBCLOG_MSG("exists, overwrite\n");
-        if (strlen(*p + lenname + 1) >= lenval)
+        if (*(*p + lenname) == '=' && strlen(*p + lenname + 1) >= lenval)
         {
             memcpy(*p + lenname + 1, envval, lenval + 1);
             LIBCLOG_RETURN_INT(0);
