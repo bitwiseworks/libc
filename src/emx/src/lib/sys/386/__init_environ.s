@@ -53,11 +53,13 @@ __sys_init_environ:
     cld
 
     /*
-     * Scan loop.
+     * Scan loop (pszEnv may point to `\0` which means no env so check it upfront).
      */
+    jmp     env_loop_start
 env_loop:
     push    %edi
     repnz   scasb
+env_loop_start:
     cmpb    %al, (%edi)
     jnz     env_loop
     push    %eax
