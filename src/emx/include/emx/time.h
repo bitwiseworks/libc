@@ -13,6 +13,8 @@ extern "C" {
 #define _YEARS          (2059 - 1900 + 1)
 #define TIME_T_MAX      0x7fffffffL
 #define TIME_T_MIN      (-0x7fffffffL - 1)
+#define TIME64_T_MAX    0x7fffffffffffffffLL
+#define TIME64_T_MIN    (-0x7fffffffffffffffLL - 1)
 
 #if !defined(_TIME_T_DECLARED) && !defined(_TIME_T) /* bird: EMX */
 typedef	__time_t	time_t;

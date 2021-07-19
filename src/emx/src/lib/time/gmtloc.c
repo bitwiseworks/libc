@@ -16,11 +16,11 @@
 
 struct _dstswitch
 {
-  time_t time;                  /* UTC */
+  time64_t time;                  /* UTC */
   int shift;
 };
 
-static struct _dstswitch _dstsw[2*_YEARS+2] = {{TIME_T_MIN, 0}, {TIME_T_MAX, 0}};
+static struct _dstswitch _dstsw[2*_YEARS+2] = {{TIME64_T_MIN, 0}, {TIME64_T_MAX, 0}};
 static int _dstsw_count = 2;
 
 
@@ -62,40 +62,40 @@ void _compute_dst_table (void)
 {
   int y, i, ywday, d_year, d_start, d_end;
   const unsigned short *month_table;
-  time_t t_year, t_start, t_end;
+  time64_t t_year, t_start, t_end;
 
   if (!_tzi.dst)
     {
-      _dstsw[0].time = TIME_T_MIN;
+      _dstsw[0].time = TIME64_T_MIN;
       _dstsw[0].shift = 0;
-      _dstsw[1].time = TIME_T_MAX;
+      _dstsw[1].time = TIME64_T_MAX;
       _dstsw[1].shift = 0;
       _dstsw_count = 2;
       return;
     }
 
   i = 0;
-  for (y = 2; _year_day[y] != SHRT_MAX; ++y) /* 1900, 1901, 1902 underflows second count. */
+  for (y = 0; _year_day[y] != SHRT_MAX; ++y)
     {
       month_table = (_leap_year (y + 1900)
                      ? _month_day_leap : _month_day_non_leap);
       d_year = _year_day[y];
       ywday = d_year + 4;       /* 01-Jan-1970 was a Thursday, ie, 4 */
-      t_year = d_year * 24 * 60 * 60;
+      t_year = (time64_t)d_year * 24 * 60 * 60;
 
       d_start = switch_day (_tzi.sm, _tzi.sw, _tzi.sd, ywday, month_table);
-      t_start = d_start * 24 * 60 * 60 + _tzi.st + _tzi.tz;
+      t_start = (time64_t)d_start * 24 * 60 * 60 + _tzi.st + _tzi.tz;
       if (ADD_OK (t_start, t_year))
         t_start += t_year;
       else
-        t_start = t_year >= 0 ? TIME_T_MAX : TIME_T_MIN;
+        t_start = t_year >= 0 ? TIME64_T_MAX : TIME64_T_MIN;
 
       d_end = switch_day (_tzi.em, _tzi.ew, _tzi.ed, ywday, month_table);
-      t_end = d_end * 24 * 60 * 60 + _tzi.et + _tzi.tz - _tzi.shift;
+      t_end = (time64_t)d_end * 24 * 60 * 60 + _tzi.et + _tzi.tz - _tzi.shift;
       if (ADD_OK (t_end, t_year))
         t_end += t_year;
       else
-        t_end = t_year >= 0 ? TIME_T_MAX : TIME_T_MIN;
+        t_end = t_year >= 0 ? TIME64_T_MAX : TIME64_T_MIN;
 
       if (d_start < d_end || (d_start == d_end && _tzi.st <= _tzi.et))
         {
@@ -103,7 +103,7 @@ void _compute_dst_table (void)
 
           if (i == 0)
             {
-              _dstsw[0].time = TIME_T_MIN;
+              _dstsw[0].time = TIME64_T_MIN;
               _dstsw[0].shift = 0;
               ++i;
             }
@@ -120,7 +120,7 @@ void _compute_dst_table (void)
 
           if (i == 0)
             {
-              _dstsw[0].time = TIME_T_MIN;
+              _dstsw[0].time = TIME64_T_MIN;
               _dstsw[0].shift = _tzi.shift;
               ++i;
             }
@@ -132,20 +132,20 @@ void _compute_dst_table (void)
           ++i;
         }
     }
-  _dstsw[i].time = TIME_T_MAX;
+  _dstsw[i].time = TIME64_T_MAX;
   _dstsw[i].shift = TIME_T_MAX;
   ++i;
   _dstsw_count = i;
 
-  assert (_dstsw_count == sizeof (_dstsw) / sizeof (_dstsw[0]) - 4);
+  assert (_dstsw_count == sizeof (_dstsw) / sizeof (_dstsw[0]));
 }
 
 
-static struct _dstswitch *find_switch (time_t t)
+static struct _dstswitch *find_switch (time64_t t)
 {
   int lo, hi, i;
 
-  if (t == TIME_T_MAX)
+  if (t == TIME64_T_MAX)
     {
       i = _dstsw_count - 2;
       assert (_dstsw[i].time <= t);
@@ -197,7 +197,7 @@ int _gmt2loc (time_t *p)
 int _gmt2loc64 (time64_t *p)
 {
     struct _dstswitch *sw;
-    sw = find_switch ((time_t)*p); //fixme!
+    sw = find_switch (*p);
     time64_t t = *p - (_tzi.tz - sw->shift);
     if (_tzi.tz - sw->shift > 0 ? t > *p : t < *p)
         return -1;
