@@ -305,7 +305,7 @@ static const unsigned short    gafSignalProperties[__SIGSET_MAXSIGNALS] =
     SPR_CONTINUE | SPA_KILL    | SPP_ANYTHRD,                           /* SIGINT    2     /-- ANSI: Interrupt (Ctrl-C) */
     SPR_CONTINUE | SPA_CORE    | SPP_ANYTHRD,                           /* SIGQUIT   3     /-- POSIX: Quit */
     SPR_CONTINUE | SPA_NEXT_CORE | SPP_NORESET,                         /* SIGILL    4     /-- ANSI: Illegal instruction */
-    SPR_CONTINUE | SPA_NEXT_KILL | SPP_NORESET,                         /* SIGTRAP   5     /-- POSIX: Single step (debugging) */
+    SPR_CONTINUE | SPA_NEXT_CORE | SPP_NORESET,                         /* SIGTRAP   5     /-- POSIX: Single step (debugging) */
     SPR_CONTINUE | SPA_CORE,                                            /* SIGABRT   6     /-- ANSI: abort () */
     SPR_CONTINUE | SPA_CORE    | SPP_ANYTHRD,                           /* SIGEMT    7     /-- BSD: EMT instruction */
     SPR_CONTINUE | SPA_NEXT_CORE,                                       /* SIGFPE    8     /-- ANSI: Floating point */
