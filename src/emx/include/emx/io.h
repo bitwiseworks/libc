@@ -171,17 +171,17 @@ __BEGIN_DECLS
 #define _FLUSH_FLUSH  (-1)
 #define _FLUSH_FILL   (-2)
 
-#define nbuf(s) (((s)->_flags & _IOBUFMASK) == _IOBUFNONE)
-#define cbuf(s) (((s)->_flags & _IOBUFMASK) == _IOBUFCHAR)
-#define ubuf(s) (((s)->_flags & _IOBUFMASK) == _IOBUFUSER)
-#define lbuf(s) (((s)->_flags & _IOBUFMASK) == _IOBUFLIB)
-#define tbuf(s) (((s)->_flags & _IOBUFMASK) == _IOBUFTMP)
+#define _nbuf(s) (((s)->_flags & _IOBUFMASK) == _IOBUFNONE)
+#define _cbuf(s) (((s)->_flags & _IOBUFMASK) == _IOBUFCHAR)
+#define _ubuf(s) (((s)->_flags & _IOBUFMASK) == _IOBUFUSER)
+#define _lbuf(s) (((s)->_flags & _IOBUFMASK) == _IOBUFLIB)
+#define _tbuf(s) (((s)->_flags & _IOBUFMASK) == _IOBUFTMP)
 
-#define bbuf(s) (ubuf (s) || lbuf (s) || tbuf (s))
+#define _bbuf(s) (_ubuf (s) || _lbuf (s) || _tbuf (s))
 
-#define _tmpbuf(s,b) (nbuf (s) || cbuf (s) \
+#define _tmpbuf(s,b) (_nbuf (s) || _cbuf (s) \
                       ? b = alloca (BUFSIZ), _tmpbuf1 (s, b) : 0)
-#define _endbuf(s) (tbuf (s) ? _endbuf1 (s) : 0)
+#define _endbuf(s) (_tbuf (s) ? _endbuf1 (s) : 0)
 
 struct streamvec
 {
