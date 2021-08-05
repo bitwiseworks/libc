@@ -36,6 +36,8 @@
 //#define MAX(a, b)  ((a) >= (b) ? (a) : (b))
 //#define MIN(a, b)  ((a) < (b) ? (a) : (b))
 
+#define CHLOWER(ch)     ((ch) < 'A' || (ch) > 'Z' ? (ch) : (ch) + ('a' - 'A'))
+
 #define NTSF_CAPITAL    0x0001
 #define NTSF_LEFT       0x0002
 #define NTSF_ZEROPAD    0x0004
@@ -452,7 +454,6 @@ void __libc_LogGroupInit(__LIBC_PLOGGROUPS pGroups, const char *pszEnvVar)
                 {
                     const char *psz2    = (const char*)pszStart;
                     int         cchLeft = cch;
-                    #define CHLOWER(ch)     ((ch) < 'A' && (ch) > 'Z' ? (ch) : (ch) + ('a' - 'A'))
                     while (CHLOWER(*psz1) == CHLOWER(*psz2))
                     {
                         psz1++;
