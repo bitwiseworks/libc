@@ -981,53 +981,59 @@ static int __libc_logBuildMsg(char *pszMsg, const char *pszFormatMsg, va_list ar
  */
 static void __libc_logWrite(__LIBC_PLOGINST pInst, unsigned fGroupAndFlags, const char *pszMsg, size_t cch, int fStdErr)
 {
-    APIRET  rcSem;
-    APIRET  rcMC;
-    ULONG   ulIgnore = 0;
-    HMTX    hmtx = pInst->hmtx;
-    int     fOutputToConsole = __libc_logIsOutputToConsole(pInst);
-    FS_VAR();
-    FS_SAVE_LOAD();
+    int fOutputToConsole = FALSE;
 
-    /*
-     * Aquire mutex ownership.
-     * We enter a must-complete section here to avoid getting interrupted
-     * while writing and creating deadlocks.
-     */
-    rcMC = DosEnterMustComplete(&ulIgnore);
-    rcSem = DosRequestMutexSem(hmtx, 5000);
-    switch (rcSem)
+    if (pInst)
     {
-        case NO_ERROR:
-            break;
+        APIRET  rcSem;
+        APIRET  rcMC;
+        ULONG   ulIgnore = 0;
+        HMTX    hmtx = pInst->hmtx;
+        FS_VAR();
+        FS_SAVE_LOAD();
 
-        /* recreate the semaphore for some odd. */
-        case ERROR_INVALID_HANDLE:
-        case ERROR_SEM_OWNER_DIED:
+        fOutputToConsole = __libc_logIsOutputToConsole(pInst);
+
+        /*
+         * Aquire mutex ownership.
+         * We enter a must-complete section here to avoid getting interrupted
+         * while writing and creating deadlocks.
+         */
+        rcMC = DosEnterMustComplete(&ulIgnore);
+        rcSem = DosRequestMutexSem(hmtx, 5000);
+        switch (rcSem)
         {
-            HMTX    hmtxNew;
-            rcSem = DosCreateMutexSem(NULL, &hmtxNew, 0, TRUE);
-            if (!rcSem)
-            {
-                hmtx = __lxchg((int*)&pInst->hmtx, hmtxNew);
-                DosCloseMutexSem(hmtx);
-            }
-            break;
-        }
-        /* ignore other errors. */
-    }
+            case NO_ERROR:
+                break;
 
-    /*
-     * Write message and release the semaphore (if owned).
-     */
-    MyDosWrite(pInst->hFile, pszMsg, cch, fOutputToConsole);
-    if (fGroupAndFlags & __LIBC_LOG_MSGF_FLUSH)
-        DosResetBuffer(pInst->hFile);
-    if (!rcSem)
-        DosReleaseMutexSem(pInst->hmtx);
-    if (!rcMC)
-        DosExitMustComplete(&ulIgnore);
-    FS_RESTORE();
+            /* recreate the semaphore for some odd. */
+            case ERROR_INVALID_HANDLE:
+            case ERROR_SEM_OWNER_DIED:
+            {
+                HMTX    hmtxNew;
+                rcSem = DosCreateMutexSem(NULL, &hmtxNew, 0, TRUE);
+                if (!rcSem)
+                {
+                    hmtx = __lxchg((int*)&pInst->hmtx, hmtxNew);
+                    DosCloseMutexSem(hmtx);
+                }
+                break;
+            }
+            /* ignore other errors. */
+        }
+
+        /*
+         * Write message and release the semaphore (if owned).
+         */
+        MyDosWrite(pInst->hFile, pszMsg, cch, fOutputToConsole);
+        if (fGroupAndFlags & __LIBC_LOG_MSGF_FLUSH)
+            DosResetBuffer(pInst->hFile);
+        if (!rcSem)
+            DosReleaseMutexSem(pInst->hmtx);
+        if (!rcMC)
+            DosExitMustComplete(&ulIgnore);
+        FS_RESTORE();
+    }
 
     /*
      * Write to stderr too?
@@ -1721,8 +1727,6 @@ void     __libc_LogAssert(void *pvInstance, unsigned fGroupAndFlags,
     if (!pvInstance)
     {
         pvInstance = __libc_logDefault();
-        if (!pvInstance)
-            return;
         if (pThread)
             cDepth = pThread->cDefLoggerDepth;
     }
@@ -1732,7 +1736,7 @@ void     __libc_LogAssert(void *pvInstance, unsigned fGroupAndFlags,
     /*
      * Check if this group is enabled.
      */
-    if (pInst->pGroups)
+    if (pInst && pInst->pGroups)
     {
         int iGroup = __LIBC_LOG_GETGROUP(fGroupAndFlags);
         if (    iGroup >= 0
