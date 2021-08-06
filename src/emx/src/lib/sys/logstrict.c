@@ -64,10 +64,14 @@
 #include <machine/param.h>
 #include <InnoTekLIBC/thread.h>
 #include <InnoTekLIBC/fork.h>
+#include <InnoTekLIBC/errno.h>
 
 #define INCL_BASE
 #define INCL_FSMACROS
 #include <os2.h>
+#ifndef HFILE_STDOUT
+#define HFILE_STDOUT 1
+#endif
 #ifndef HFILE_STDERR
 #define HFILE_STDERR 2
 #endif
@@ -85,8 +89,17 @@ typedef struct __libc_logInstance
     HFILE                   hFile;
     /** Api groups. */
     __LIBC_PLOGGROUPS       pGroups;
+    /** Flags. */
+    unsigned                fFlags;
+    /** Origin. */
+    const char             *pszOrigin;
 } __LIBC_LOGINST, *__LIBC_PLOGINST;
 
+/** Internal logger instance flags. */
+#define __LIBC_LOG_INTF_MASK            0xFFFF0000
+#define __LIBC_LOG_INTF_OUTPUT_MASK     0x0F000000
+#define __LIBC_LOG_INTF_OUTPUT_STDOUT   0x01000000
+#define __LIBC_LOG_INTF_OUTPUT_STDERR   0x02000000
 
 /** Extended exception registration record for usewith __libc_logXcptHandler(). */
 typedef struct __libc_XCPTRegistrationRec
@@ -110,7 +123,7 @@ static __LIBC_PLOGINST  gpDefault;
 /*******************************************************************************
 *   Internal Functions                                                         *
 *******************************************************************************/
-static void *   __libc_logInit(__LIBC_PLOGINST pInst, unsigned fFlags, __LIBC_PLOGGROUPS pGroups, const char *pszFilename);
+static void *   __libc_logInit(__LIBC_PLOGINST pInst,const char *pszEnvVar, const char *pszFilename);
 static void *   __libc_logDefault(void);
 static int      __libc_logBuildMsg(char *pszMsg, const char *pszFormatMsg, va_list args, const char *pszFormatPrefix, ...) __printflike(4, 5);
 static void     __libc_logWrite(__LIBC_PLOGINST pInst, unsigned fGroupAndFlags, const char *pszMsg, size_t cch, int fStdErr);
@@ -122,6 +135,109 @@ static int      __libc_logVSNPrintf(char *pszBuffer, size_t cchBuffer, const cha
 static int      __libc_logSNPrintf(char *pszBuffer, size_t cchBuffer, const char *pszFormat, ...) __printflike(3, 4);
 int __libc_logForkParent(__LIBC_PFORKHANDLE pForkHandle, __LIBC_FORKOP enmOperation);
 
+static inline int __libc_logIsOutputToConsole(__LIBC_PLOGINST pInst)
+{
+    return    (pInst->fFlags & __LIBC_LOG_INTF_OUTPUT_MASK) == __LIBC_LOG_INTF_OUTPUT_STDOUT
+           || (pInst->fFlags & __LIBC_LOG_INTF_OUTPUT_MASK) == __LIBC_LOG_INTF_OUTPUT_STDERR;
+}
+
+
+/**
+ * Compares chars from pcsz1 to chars from pcsz2 ignoring case.
+ *
+ * Only ASCII chars A-Z are probed for case, all other chars are compared as is.
+ *
+ * Returns NULL if pcsz1 is equal to pcsz2 or a pointer to the mismatching char
+ * in pcsz1.
+ */
+static const char *__stricmp_ascii(const char *pcsz1, const char *pcsz2)
+{
+    const char *pcszCur = pcsz1;
+
+    while (*pcszCur && *pcsz2)
+    {
+        if (CHLOWER(*pcszCur) != CHLOWER(*pcsz2))
+            break;
+        ++pcszCur;
+        ++pcsz2;
+    }
+
+    if (!*pcszCur && !*pcsz2)
+        return NULL;
+    return pcszCur;
+}
+
+
+/**
+ * Copies a maximum of cchDst - 1 chars from pcszSrc to pszDst followed by a
+ * terminating null char unless cchDst is 0 on input in which case does nothing.
+ *
+ * Advances pszDst and reduces cchDst on output by the number of chars copied
+ * excluding null so that *pszDst always points to it and cchDst is at least
+ * 1 when this function returns (unless cchDst was 0 on input).
+ */
+static void __copystr(char **pszDst, unsigned *cchDst, const char *pcszSrc)
+{
+    while (*pcszSrc && *cchDst > 1)
+    {
+        *(*pszDst)++ = *pcszSrc++;
+        --(*cchDst);
+    }
+
+    if (*cchDst)
+        **pszDst = '\0';
+}
+
+
+/**
+ * Wrapper for DosWrite that expands '\n' to '\r\n' (note: pcb is used as a dummy
+ * and doesn't reflect the actual number of chars written).
+ */
+static void DosWriteConvertEOL(HFILE hFile, const char *pcszMsg, ULONG cch, PULONG pcb)
+{
+    const char *pszNewLine = NULL;
+    do
+    {
+        int cchWrite;
+
+        /* look for next new line */
+        pszNewLine = memchr(pcszMsg, '\n', cch);
+        while (pszNewLine > pcszMsg && pszNewLine[-1] == '\r')
+        {
+            cchWrite = cch - (pszNewLine - pcszMsg + 1);
+            if (cchWrite <= 0)
+            {
+                pszNewLine = NULL;
+                break;
+            }
+            pszNewLine = memchr(pszNewLine + 1, '\n', cchWrite);
+        }
+        cchWrite = pszNewLine ? pszNewLine - pcszMsg : strnlen(pcszMsg, cch);
+        DosWrite(hFile, pcszMsg, cchWrite, pcb);
+
+        /* Write newline. */
+        if (!pszNewLine)
+            break; /* done */
+        DosWrite(hFile, "\r\n", 2, pcb);
+        pcszMsg = pszNewLine + 1;
+        cch -= cchWrite + 1;
+    } while (cch);
+}
+
+
+/**
+ * Calls DosWriteConvertEOL if fConvertEOL is TRUE and DosWrite otherwise.
+ */
+static inline void MyDosWrite(HFILE hFile, const char *pcszMsg, size_t cch, int fConvertEOL)
+{
+    ULONG cb = 0;
+
+    if (fConvertEOL)
+        DosWriteConvertEOL(hFile, pcszMsg, cch, &cb);
+    else
+        DosWrite(hFile, pcszMsg, cch, &cb);
+
+}
 
 
 /**
@@ -129,7 +245,7 @@ int __libc_logForkParent(__LIBC_PFORKHANDLE pForkHandle, __LIBC_FORKOP enmOperat
  *
  * @returns Pointer to a logger instance on success.
  * @returns NULL on failure, errno set.
- * @param   fFlags              Flags reserved for future use. Set to zero.
+ * @param   fFlags              Combination of __LIBC_LOG_INIT_* flags or zero.
  * @param   pGroups             Pointer to a table of logging groups used for this
  *                              logger instance.
  * @param   pszFilenameFormat   Format string for making up the log filename.
@@ -137,16 +253,57 @@ int __libc_logForkParent(__LIBC_PFORKHANDLE pForkHandle, __LIBC_FORKOP enmOperat
  */
 void *__libc_LogInit(unsigned fFlags, __LIBC_PLOGGROUPS pGroups, const char *pszFilenameFormat, ...)
 {
+    char            szFilename[CCHMAXPATH];
+    va_list         args;
+
+    /*
+     * Validate input.
+     */
+    if (pszFilenameFormat == NULL)
+    {
+        errno = EINVAL;
+        return NULL;
+    }
+
+    /*
+     * Format the filename.
+     */
+    va_start(args, pszFilenameFormat);
+    __libc_logVSNPrintf(szFilename, CCHMAXPATH, pszFilenameFormat, args);
+    va_end(args);
+
+    return __libc_LogInitEx(NULL, fFlags, pGroups, NULL, szFilename);
+}
+
+
+/**
+ * Create a logger (extended version).
+ *
+ * @returns Pointer to a logger instance on success.
+ * @returns NULL on failure. errno is set.
+ * @param   pszOrigin           Log origin (symbolic library or application name) or NULL.
+ * @param   fFlags              Combination of __LIBC_LOG_INIT_* flags or zero.
+ * @param   pGroups             Pointer to a table of logging groups used for this
+ *                              logger instance.
+ * @param   pszEnvVar           Name of the environment variable.
+ *                              This is taken from the initial environment of the process
+ *                              and not from the current!!
+ * @param   pszFilenameFormat   Format string for making up the log filename.
+ * @param   ...                 Arguments to the format string.
+ */
+void *__libc_LogInitEx(const char *pszOrigin, unsigned fFlags, __LIBC_PLOGGROUPS pGroups, const char *pszEnvVar, const char *pszFilenameFormat, ...)
+{
+    size_t          cchOrigin;
     __LIBC_PLOGINST pInst;
     char           *pszFilename;
+    char            szFilename[CCHMAXPATH];
     va_list         args;
     void           *pvRet;
 
     /*
      * Validate input.
      */
-    if (    fFlags != 0
-        ||  pszFilenameFormat == NULL
+    if (    (fFlags & __LIBC_LOG_INTF_MASK)
         ||  (   pGroups
              && (   !pGroups->paGroups
                  || !pGroups->cGroups
@@ -159,26 +316,45 @@ void *__libc_LogInit(unsigned fFlags, __LIBC_PLOGGROUPS pGroups, const char *psz
         return NULL;
     }
 
+    cchOrigin = pszOrigin ? strlen(pszOrigin) + 1 : 0;
+
     /*
      * Allocate a logger instance.
      */
-    pInst = _hmalloc(sizeof(__LIBC_LOGINST) + CCHMAXPATH);
+    pInst = _hmalloc(sizeof(__LIBC_LOGINST) + cchOrigin);
     if (!pInst)
         return NULL;
-    pszFilename = (char*)(pInst + 1);
 
-    /*
-     * Format the filename.
-     */
-    va_start(args, pszFilenameFormat);
-    __libc_logVSNPrintf(pszFilename, CCHMAXPATH, pszFilenameFormat, args);
-    va_end(args);
+    if (cchOrigin)
+    {
+        pInst->pszOrigin = (char*)(pInst + 1);
+        memcpy((char*)pInst->pszOrigin, pszOrigin, cchOrigin);
+    }
+    else
+        pInst->pszOrigin = NULL;
+
+    if (pszFilenameFormat)
+    {
+        pszFilename = szFilename;
+
+        /*
+         * Format the filename.
+         */
+        va_start(args, pszFilenameFormat);
+        __libc_logVSNPrintf(pszFilename, CCHMAXPATH, pszFilenameFormat, args);
+        va_end(args);
+    }
+    else
+        pszFilename = NULL;
+
+    pInst->fFlags = fFlags;
+    pInst->pGroups = pGroups;
 
     /*
      * Call internal inititation worker.
      * (shared with the default logger init code)
      */
-    pvRet = __libc_logInit(pInst, fFlags, pGroups, pszFilename);
+    pvRet = __libc_logInit(pInst, pszEnvVar, pszFilename);
     if (!pvRet)
     {
         free(pInst);                /* failure. */
@@ -195,21 +371,52 @@ void *__libc_LogInit(unsigned fFlags, __LIBC_PLOGGROUPS pGroups, const char *psz
  * @returns Pointer to pInst on success.
  * @returns NULL on failure.
  * @param   pInst       Pointer to logger instance (to be initiated).
- * @param   fFlags      Flags. (reserved for future use, thus 0)
- * @param   pGroups     Pointer to message groups.
+ * @param   pszEnvVar   Name of the environment variable.
  * @param   pszFilename Name of the log file.
  */
-static void *   __libc_logInit(__LIBC_PLOGINST pInst, unsigned fFlags, __LIBC_PLOGGROUPS pGroups, const char *pszFilename)
+static void *   __libc_logInit(__LIBC_PLOGINST pInst, const char *pszEnvVar, const char *pszFilename)
 {
     ULONG       ulAction;
     int         rc;
     char       *pszMsg;
+    PSZ         pszEnv = NULL;
+    int         fCurDir = 0;
     FS_VAR();
     FS_SAVE_LOAD();
 
+    /*
+     * Get and process the env.var. containing the logging output override.
+     */
+    if (pszEnvVar)
+    {
+        if (!DosScanEnv((PCSZ)pszEnvVar, &pszEnv) && pszEnv && *pszEnv)
+        {
+            if (!__stricmp_ascii((char *)pszEnv, "curdir"))
+                fCurDir = 1;
+            else if (!__stricmp_ascii((char *)pszEnv, "stdout"))
+                pInst->fFlags |= __LIBC_LOG_INTF_OUTPUT_STDOUT;
+            else if (!__stricmp_ascii((char *)pszEnv, "stderr"))
+                pInst->fFlags |= __LIBC_LOG_INTF_OUTPUT_STDERR;
+        }
+    }
+    else
+        fCurDir = 1;
+
+    if (   !fCurDir
+        && pszFilename
+        && (
+               (   (pszFilename[0] == '/' || pszFilename[0] == '\\')
+                && (pszFilename[1] == '/' || pszFilename[1] == '\\'))
+            || (   (   (pszFilename[0] >= 'A' && pszFilename[0] <= 'Z')
+                    || (pszFilename[0] >= 'a' && pszFilename[0] <= 'z'))
+                && (pszFilename[1] == ':'))))
+    {
+        /* Suppress prepending the system log path if we have a full path */
+        fCurDir = 1;
+    }
+
     pInst->hmtx     = NULLHANDLE;
     pInst->hFile    = NULLHANDLE;
-    pInst->pGroups  = pGroups;
 
     /*
      * Create the mutex.
@@ -218,47 +425,149 @@ static void *   __libc_logInit(__LIBC_PLOGINST pInst, unsigned fFlags, __LIBC_PL
     if (rc)
     {
         FS_RESTORE();
+        errno =  __libc_native2errno(rc);
         return NULL;
     }
 
-    /*
-     * Open the file.
-     * Make sure the filehandle is above the frequently used range (esp. std handles).
-     */
-    rc = DosOpen((PCSZ)pszFilename, &pInst->hFile, &ulAction, 0, FILE_NORMAL,
-                 OPEN_ACTION_CREATE_IF_NEW | OPEN_ACTION_REPLACE_IF_EXISTS,
-                 OPEN_FLAGS_SEQUENTIAL | OPEN_FLAGS_NOINHERIT | OPEN_SHARE_DENYWRITE | OPEN_ACCESS_WRITEONLY,
-                 NULL);
-    if (rc)
+    if ((pInst->fFlags & __LIBC_LOG_INTF_OUTPUT_MASK) == __LIBC_LOG_INTF_OUTPUT_STDOUT)
+        pInst->hFile = HFILE_STDOUT;
+    else if ((pInst->fFlags & __LIBC_LOG_INTF_OUTPUT_MASK) == __LIBC_LOG_INTF_OUTPUT_STDERR)
+        pInst->hFile = HFILE_STDERR;
+    else
     {
-        DosCloseMutexSem(pInst->hmtx);
-        FS_RESTORE();
-        return NULL;
-    }
-    if (pInst->hFile < 10)
-    {
-        int     i;
-        HFILE   ah[10];
-        for (i = 0; i < 10; i++)
-        {
-            ah[i] = -1;
-            rc = DosDupHandle(pInst->hFile, &ah[i]);
-            if (rc)
-                break;
-        }
-        if (i-- > 0)
-        {
-            DosClose(pInst->hFile);
-            pInst->hFile = ah[i];
-            while (i-- > 0)
-                DosClose(ah[i]);
+        char szBuf[CCHMAXPATH];
+        char *pszBuf = szBuf;
+        unsigned cchBuf = sizeof(szBuf);
 
-            ULONG fulFlags = ~0U;
-            if (DosQueryFHState(pInst->hFile, &fulFlags) == NO_ERROR)
+        if (!fCurDir)
+        {
+            PSZ pszLogDir = NULL;
+
+            /*
+             * Get the system log directory and create the "app" subdirectory in
+             * it (ignoring errors as they will pop up later in DosOpen anyway).
+             */
+            if (!DosScanEnv((PCSZ)"LOGFILES", &pszLogDir) && pszLogDir && *pszLogDir)
             {
-                fulFlags |= OPEN_FLAGS_NOINHERIT;
-                fulFlags &= OPEN_FLAGS_WRITE_THROUGH | OPEN_FLAGS_FAIL_ON_ERROR | OPEN_FLAGS_NO_CACHE | OPEN_FLAGS_NOINHERIT; /* Turn off non-participating bits. */
-                DosSetFHState(pInst->hFile, fulFlags);
+                __copystr(&pszBuf, &cchBuf, (char *)pszLogDir);
+                __copystr(&pszBuf, &cchBuf, "\\app");
+                DosCreateDir((PCSZ)szBuf, NULL);
+            }
+            else if (!DosScanEnv((PCSZ)"UNIXROOT", &pszLogDir) && pszLogDir && *pszLogDir)
+            {
+                __copystr(&pszBuf, &cchBuf, (char *)pszLogDir);
+                __copystr(&pszBuf, &cchBuf, "\\var");
+                DosCreateDir((PCSZ)szBuf, NULL);
+                __copystr(&pszBuf, &cchBuf, "\\log");
+                DosCreateDir((PCSZ)szBuf, NULL);
+                __copystr(&pszBuf, &cchBuf, "\\app");
+                DosCreateDir((PCSZ)szBuf, NULL);
+            }
+            else
+            {
+              ULONG drv;
+              DosQuerySysInfo(QSV_BOOT_DRIVE, QSV_BOOT_DRIVE, &drv, sizeof(drv));
+              pszBuf[0] = '@' + drv;
+              pszBuf[1] = ':';
+              cchBuf -= 2;
+
+            }
+
+            __copystr(&pszBuf, &cchBuf, "\\");
+        }
+
+        if (pszFilename)
+        {
+            if (pszBuf > szBuf)
+                __copystr(&pszBuf, &cchBuf, pszFilename);
+        }
+        else
+        {
+            /*
+             * We don't query QSV_TIME_HIGH as it will remain 0 until 19-Jan-2038 and for
+             * our purposes (generate an unique log name sorted by date) it's fine.
+             */
+            ULONG ulTime;
+            DosQuerySysInfo(QSV_TIME_LOW, QSV_TIME_LOW, &ulTime, sizeof(ulTime));
+
+            /* Get program name and remove .EXE and path info if any. */
+            char szExeName[CCHMAXPATH];
+            char *pszExeName = szExeName;
+            PPIB ppib = NULL;
+            DosGetInfoBlocks(NULL, &ppib);
+            if (DosQueryModuleName(ppib->pib_hmte, CCHMAXPATH, szExeName))
+                szExeName[0] = '\0';
+            else
+            {
+                char *pszEnd = pszExeName;
+                while (*pszEnd)
+                    ++pszEnd;
+                if (pszEnd - pszExeName >= 4 && !__stricmp_ascii(pszEnd - 4, ".exe"))
+                {
+                    pszEnd -= 4;
+                    *pszEnd = '\0';
+                }
+                while (   pszEnd > pszExeName
+                       && (*pszEnd != '/' && *pszEnd != '\\')
+                       && *pszEnd != ':')
+                    --pszEnd;
+                if (pszEnd > pszExeName)
+                    pszExeName = pszEnd + 1;
+            }
+
+            int cch;
+            if (pInst->pszOrigin)
+                cch =__libc_logSNPrintf(pszBuf, cchBuf, "%08lX-%04X-%s-%s.log", ulTime, getPid(), pszExeName, pInst->pszOrigin);
+            else
+                cch = __libc_logSNPrintf(pszBuf, cchBuf, "%08lX-%04X-%s.log", ulTime, getPid(), pszExeName);
+            pszBuf += cch;
+            cchBuf -= cch;
+        }
+
+        /* Use the new filename if we have made it up. */
+        if (pszBuf > szBuf)
+            pszFilename = szBuf;
+
+        /*
+         * Open the file.
+         * Make sure the filehandle is above the frequently used range (esp. std handles).
+         */
+        rc = DosOpen((PCSZ)pszFilename, &pInst->hFile, &ulAction, 0, FILE_NORMAL,
+                     OPEN_ACTION_CREATE_IF_NEW | OPEN_ACTION_REPLACE_IF_EXISTS,
+                     OPEN_FLAGS_SEQUENTIAL | OPEN_FLAGS_NOINHERIT | OPEN_SHARE_DENYWRITE | OPEN_ACCESS_WRITEONLY,
+                     NULL);
+        if (rc)
+        {
+            DosCloseMutexSem(pInst->hmtx);
+            FS_RESTORE();
+            errno =  __libc_native2errno(rc);
+            return NULL;
+        }
+        if (pInst->hFile < 10)
+        {
+            int     i;
+            HFILE   ah[10];
+            for (i = 0; i < 10; i++)
+            {
+                ah[i] = -1;
+                rc = DosDupHandle(pInst->hFile, &ah[i]);
+                if (rc)
+                    break;
+            }
+            if (i-- > 0)
+            {
+                DosClose(pInst->hFile);
+                pInst->hFile = ah[i];
+                while (i-- > 0)
+                    DosClose(ah[i]);
+
+                ULONG fulFlags = ~0U;
+                if (DosQueryFHState(pInst->hFile, &fulFlags) == NO_ERROR)
+                {
+                    fulFlags |= OPEN_FLAGS_NOINHERIT;
+                    fulFlags &= OPEN_FLAGS_WRITE_THROUGH | OPEN_FLAGS_FAIL_ON_ERROR | OPEN_FLAGS_NO_CACHE | OPEN_FLAGS_NOINHERIT; /* Turn off non-participating bits. */
+                    DosSetFHState(pInst->hFile, fulFlags);
+                }
             }
         }
     }
@@ -266,23 +575,26 @@ static void *   __libc_logInit(__LIBC_PLOGINST pInst, unsigned fFlags, __LIBC_PL
     /*
      * Write log header.
      */
-    pszMsg = alloca(CCHTMPMSGBUFFER);
+    pszMsg = __libc_logIsOutputToConsole(pInst) || (pInst->fFlags & __LIBC_LOG_INIT_NOHEADER) ? NULL : alloca(CCHTMPMSGBUFFER);
     if (pszMsg)
     {
         PTIB        pTib;
         PPIB        pPib;
         DATETIME    dt;
+        ULONG       ulTs;
         const char *psz;
         ULONG       cb;
         int         cch;
+        int         i;
 
         /* The current time+date and basic process attributes. */
         DosGetInfoBlocks(&pTib, &pPib);
         DosGetDateTime(&dt);
+        DosQuerySysInfo(QSV_MS_COUNT, QSV_MS_COUNT, &ulTs, sizeof(ulTs));
         cch = __libc_logSNPrintf(pszMsg, CCHTMPMSGBUFFER,
-                                 "Opened log at %04d-%02d-%02d %02d:%02d:%02d.%02d\n"
+                                 "Opened log at %04d-%02d-%02d %02d:%02d:%02d.%02d (%08lx ms since boot)\n"
                                  "Process ID: %#x (%d) Parent PID: %#x (%d) Type: %d\n",
-                                 dt.year, dt.month, dt.day, dt.hours, dt.minutes, dt.seconds, dt.hundredths,
+                                 dt.year, dt.month, dt.day, dt.hours, dt.minutes, dt.seconds, dt.hundredths, ulTs,
                                  (int)pPib->pib_ulpid, (unsigned)pPib->pib_ulpid, (int)pPib->pib_ulppid, (unsigned)pPib->pib_ulppid,
                                  (int)pPib->pib_ultype);
         DosWrite(pInst->hFile, pszMsg, cch, &cb);
@@ -300,15 +612,18 @@ static void *   __libc_logInit(__LIBC_PLOGINST pInst, unsigned fFlags, __LIBC_PL
         DosWrite(pInst->hFile, pszMsg, cch, &cb);
 
         /* The raw arguments. */
-        cch = __libc_logSNPrintf(pszMsg, CCHTMPMSGBUFFER,
-                                 "First arg : %s\n"
-                                 "Second arg: ",
-                                 pPib->pib_pchcmd);
-        DosWrite(pInst->hFile, pszMsg, cch, &cb);
-        psz = pPib->pib_pchcmd + strlen(pPib->pib_pchcmd) + 1;
-        cch = strlen(psz);
-        DosWrite(pInst->hFile, psz, cch, &cb);
-        DosWrite(pInst->hFile, "\n", 1, &cb);
+        psz = pPib->pib_pchcmd;
+        i = 0;
+        while (*psz)
+        {
+            cch = __libc_logSNPrintf(pszMsg, CCHTMPMSGBUFFER,
+                                     "Arg %-3d   : ", i++);
+            DosWrite(pInst->hFile, pszMsg, cch, &cb);
+            cch = strlen(psz);
+            DosWrite(pInst->hFile, psz, cch, &cb);
+            DosWrite(pInst->hFile, "\n", 1, &cb);
+            psz += cch + 1;
+        }
 
         /* The current drive and directory. */
         ULONG ulDisk = 0;
@@ -356,19 +671,44 @@ static void *   __libc_logInit(__LIBC_PLOGINST pInst, unsigned fFlags, __LIBC_PL
                                  (void *)__libc_logInit, iObj, offObj);
         DosWrite(pInst->hFile, pszMsg, cch, &cb);
 
+        /* origin */
+        DosWrite(pInst->hFile, "Origin        : ", 16, &cb);
+        if (pInst->pszOrigin)
+            DosWrite(pInst->hFile, pInst->pszOrigin, strlen(pInst->pszOrigin), &cb);
+        else
+            DosWrite(pInst->hFile, "<not set>", 9, &cb);
+        DosWrite(pInst->hFile, "\n", 1, &cb);
+
+        /* enabled groups */
+        DosWrite(pInst->hFile, "Enabled groups: ", 16, &cb);
+        for (i = 0; i < pInst->pGroups->cGroups; i++)
+        {
+            if (pInst->pGroups->paGroups[i].fEnabled)
+            {
+                cch = __libc_logSNPrintf(pszMsg, CCHTMPMSGBUFFER,
+                                         "%s (%x) ",
+                                         pInst->pGroups->paGroups[i].pszGroupName, i);
+                DosWrite(pInst->hFile, pszMsg, cch, &cb);
+            }
+        }
+        DosWrite(pInst->hFile, "\n", 1, &cb);
+
         /* column headers */
-        cch = __libc_logSNPrintf(pszMsg, CCHTMPMSGBUFFER,
-                                 "   Millsecond Timestamp.\n"
-                                 "   |     Thread ID.\n"
-                                 "   |     |  Call Nesting Level.\n"
-                                 "   |     |  |   Log Group.\n"
-                                 "   |     |  |   |    Message Type.\n"
-                                 "   |     |  |   |    |    errno in hex (0xface if not available).\n"
-                                 "   |     |  |   |    |    |      Function Name.\n"
-                                 "   |     |  |   |    |    |      |       Millisconds In function (Optional).\n"
-                                 "   v     v  v   v    v    v      v       v\n"
-                                 "xxxxxxxx tt nn gggg dddd eeee function [(ms)]: message\n");
-        DosWrite(pInst->hFile, pszMsg, cch, &cb);
+        if (!(pInst->fFlags & __LIBC_LOG_INIT_NOLEGEND))
+        {
+            cch = __libc_logSNPrintf(pszMsg, CCHTMPMSGBUFFER,
+                                     "   Millsecond Timestamp.\n"
+                                     "   |     Thread ID.\n"
+                                     "   |     |  Call Nesting Level.\n"
+                                     "   |     |  |   Log Group.\n"
+                                     "   |     |  |   |    Message Type.\n"
+                                     "   |     |  |   |    |    errno in hex (0xface if not available).\n"
+                                     "   |     |  |   |    |    |      Function Name.\n"
+                                     "   |     |  |   |    |    |      |       Millisconds In function (Optional).\n"
+                                     "   v     v  v   v    v    v      v       v\n"
+                                     "xxxxxxxx tt nn gggg dddd eeee function [(ms)]: message\n");
+            DosWrite(pInst->hFile, pszMsg, cch, &cb);
+        }
     }
 
     FS_RESTORE();
@@ -477,6 +817,31 @@ void __libc_LogGroupInit(__LIBC_PLOGGROUPS pGroups, const char *pszEnvVar)
 
 
 /**
+ * Returns 1 if this log instance's output is set to the standard output or
+ * standard input, and 0 otherwise.
+ *
+ * @returns 1 for TRUE and 0 for FALSE.
+ * @param   pvInstance      Logger instance.
+ */
+int __libc_LogIsOutputToConsole(void *pvInstance)
+{
+    return __libc_logIsOutputToConsole((__LIBC_PLOGINST)pvInstance);
+}
+
+
+/**
+ * Returns the origin of this log instance.
+ *
+ * @returns The origin string.
+ * @param   pvInstance      Logger instance.
+ */
+const char *__libc_LogGetOrigin(void *pvInstance)
+{
+    return ((__LIBC_PLOGINST)pvInstance)->pszOrigin;
+}
+
+
+/**
  * Get the default logger instance.
  * This call will open the default logger instance if required.
  *
@@ -492,7 +857,6 @@ static void *__libc_logDefault(void)
         return gpDefault;
     else if (!fAlreadyTried)
     {
-        static __LIBC_LOGINST   DefInst;
         static __LIBC_LOGGROUP  aDefGrps[__LIBC_LOG_GRP_MAX + 1] =
         {
             { 1, "NOGROUP" },           /*  0 */
@@ -540,20 +904,26 @@ static void *__libc_logDefault(void)
             __LIBC_LOG_GRP_MAX + 1,     /* cGroups */
             &aDefGrps[0]                /* paGroups */
         };
-        char                    szFilename[20];
+        static __LIBC_LOGINST   DefInst =
+        {
+            NULLHANDLE,                 /* hmtx */
+            NULLHANDLE,                 /* hFile*/
+            &DefGrps,                   /* pGroups*/
+            0,                          /* fFlags */
+            "libc"                      /* pszOrigin */
+        };
         fAlreadyTried = 1;
+
+        /*
+         * Init the groups (before the instance init to have enabled groups there).
+         */
+        __libc_LogGroupInit(&DefGrps, "LIBC_LOGGING");
 
         /*
          * Create the log instance.
          */
-        __libc_logSNPrintf(szFilename, sizeof(szFilename), "libc_%04x.log", getPid());
-        if (__libc_logInit(&DefInst, 0, &DefGrps, szFilename))
+        if (__libc_logInit(&DefInst, "LIBC_LOGGING_OUTPUT", NULL))
             gpDefault = &DefInst;
-
-        /*
-         * Init the groups.
-         */
-        __libc_LogGroupInit(&DefGrps, "LIBC_LOGGING");
     }
 
     return gpDefault;
@@ -614,8 +984,8 @@ static void __libc_logWrite(__LIBC_PLOGINST pInst, unsigned fGroupAndFlags, cons
     APIRET  rcSem;
     APIRET  rcMC;
     ULONG   ulIgnore = 0;
-    ULONG   cb = 0;
     HMTX    hmtx = pInst->hmtx;
+    int     fOutputToConsole = __libc_logIsOutputToConsole(pInst);
     FS_VAR();
     FS_SAVE_LOAD();
 
@@ -650,7 +1020,7 @@ static void __libc_logWrite(__LIBC_PLOGINST pInst, unsigned fGroupAndFlags, cons
     /*
      * Write message and release the semaphore (if owned).
      */
-    DosWrite(pInst->hFile, pszMsg, cch, &cb);
+    MyDosWrite(pInst->hFile, pszMsg, cch, fOutputToConsole);
     if (fGroupAndFlags & __LIBC_LOG_MSGF_FLUSH)
         DosResetBuffer(pInst->hFile);
     if (!rcSem)
@@ -662,42 +1032,9 @@ static void __libc_logWrite(__LIBC_PLOGINST pInst, unsigned fGroupAndFlags, cons
     /*
      * Write to stderr too?
      */
-    if (fStdErr)
-    {
-        /*
-         * Need to convert '\n' to '\r\n'.
-         */
-        const char *pszNewLine = NULL;
-        do
-        {
-            int cchWrite;
-
-            /* look for next new line */
-            pszNewLine = memchr(pszMsg, '\n', cch);
-            while (pszNewLine > pszMsg && pszNewLine[-1] == '\r')
-            {
-                cchWrite = cch - (pszNewLine - pszMsg + 1);
-                if (cchWrite <= 0)
-                {
-                    pszNewLine = NULL;
-                    break;
-                }
-                pszNewLine = memchr(pszNewLine + 1, '\n', cchWrite);
-            }
-            cchWrite = pszNewLine ? pszNewLine - pszMsg : strnlen(pszMsg, cch);
-            DosWrite(HFILE_STDERR, pszMsg, cchWrite, &cb);
-
-            /* Write newline. */
-            if (!pszNewLine)
-                break; /* done */
-            DosWrite(HFILE_STDERR, "\r\n", 2, &cb);
-            pszMsg = pszNewLine + 1;
-            cch -= cchWrite + 1;
-        } while (cch);
-
-    }
+    if (fStdErr && !fOutputToConsole)
+        MyDosWrite(HFILE_STDERR, pszMsg, cch, TRUE);
 }
-
 
 
 /**

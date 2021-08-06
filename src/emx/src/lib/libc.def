@@ -2023,3 +2023,8 @@ EXPORTS
     "__std_fputws" @2014
     "__std_fputws_unlocked" @2015
     "__std_wcsxfrm" @2016
+
+    ; LIBC Next 0.1.8
+    "___libc_LogInitEx" @2017
+    "___libc_LogIsOutputToConsole" @2018
+    "___libc_LogGetOrigin" @2019

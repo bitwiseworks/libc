@@ -196,6 +196,17 @@
 #define LIBCLOG_MIX0_RETURN_INT(rc)           do { if (rc) LIBCLOG_ERROR_RETURN_INT(rc); LIBCLOG_RETURN_INT(rc); } while (0)
 
 
+/** @defgroup   __libc_log_init_flags    Flags for __libc_LogInitEx
+ *
+ * @{
+ */
+/** Do not write the log header. */
+#define __LIBC_LOG_INIT_NOHEADER    0x00000001
+/** Do not write the log entry column headers to the log header. */
+#define __LIBC_LOG_INIT_NOLEGEND    0x00000002
+/** @} */
+
+
 /** @defgroup   __libc_log_flags    Message Flags (to be combined with group)
  *
  * In source files which uses the logger you can or these flags together
@@ -480,15 +491,87 @@ __BEGIN_DECLS
 /**
  * Create a logger.
  *
+ * This is equivalent to calling __libc_LogInitEx(NULL, fFlags, pGroups, NULL, pszFilenameFormat, ...).
+ *
  * @returns Pointer to a logger instance on success.
  * @returns NULL on failure. errno is set.
- * @param   fFlags              Flags reserved for future use. Set to zero.
+ * @param   fFlags              Combination of __LIBC_LOG_INIT_* flags or zero.
  * @param   pGroups             Pointer to a table of logging groups used for this
  *                              logger instance.
  * @param   pszFilenameFormat   Format string for making up the log filename.
  * @param   ...                 Arguments to the format string.
  */
 extern void *__libc_LogInit(unsigned fFlags, __LIBC_PLOGGROUPS pGroups, const char *pszFilenameFormat, ...) __printflike(3, 4);
+
+/**
+ * Create a logger (extended version).
+ *
+ * Each logger has an origin, i.e. an entity that emits log entries. It is
+ * specified in the pszOrigin argument and usually is a symbolic library or
+ * application name. Depending on flags and other arguments, it may be used as
+ * part of the log file name or in log entries themselves to distinguish from
+ * other log entities. The origin string must not contain symbols that are not
+ * valid in filenames (e.g. slashes, colons, angle braces etc.).
+ *
+ * By default, log entries are written to a file with a name made up using the
+ * pszFilenameFormat argument which is created in an "app" subdirectory of a
+ * directory pointed to by the LOGFILES environment variable. If it is not set,
+ * then in a "var\\log\\app" subdirectory of a directory pointed to by the
+ * UNIXROOT environment variable. If it's also not set, then in the root
+ * directory of the boot drive. Note that this function will attempt to create
+ * the specified subdirectories if they do not exist.
+ *
+ * Normally, pszFilenameFormat should not provide any path information. If it
+ * does and making up results in an absolute path specification, the described
+ * log directory selection will be turned off. If the path is not absolute, the
+ * file will be created relative to the selected log directory. However, if any
+ * component of its path does not exist, it will not be created and this
+ * function will fail.
+ *
+ * If pszFilenameFormat is NULL, then a default filename will be made up using
+ * the following format: "TTTTTTTT-PPPP-EXE[-ORIGIN].log" where TTTTTTTT is a
+ * value of QSV_TIME_LOW (the number of seconds since 01.01.1970) in hex, PPPP
+ * is the current PID in hex, EXE is the current executable name (w/o extension)
+ * and ORIGIN is the value of pszOrigin unless it's NULL in which case ORIGIN is
+ * omitted. It is always recommended to use the default filename in order to
+ * avoid filename clashes between different processes and applications which is
+ * especially important when many processes and applications write logs to the
+ * same directory.
+ *
+ * The environment variable passed in pszEnvVar allows to change the destination
+ * of logging at runtime and recognizes the following values:
+ *
+ * CURDIR - the log file will be created relative to the current directory.
+ * STDOUT - log entries will be written to the standard output stream.
+ * STDERR - log entries will be written to the standard error stream.
+ *
+ * Setting the destination to STDOUT or STDERR will have the following impact on
+ * the way how the logger works:
+ *
+ * - The standard log file header will not be written.
+ *
+ * It's best to name the environment variable similarly to the environment
+ * variable passed to __libc_LogGroupInit. E.g., if you pass "MYAPP_LOGGING" to
+ * __libc_LogGroupInit, pass something like "MYAPP_LOGGING_OUTPUT" to
+ * __libc_LogInitEx.
+ *
+ * Passing NULL in pszEnvVar is also supported and will force log files to be
+ * always created in the current directory without a possibility to change the
+ * destination to stdout/stderr at runtime (for backward compatibility).
+ *
+ * @returns Pointer to a logger instance on success.
+ * @returns NULL on failure. errno is set.
+ * @param   pszOrigin           Log origin or NULL.
+ * @param   fFlags              Combination of __LIBC_LOG_INIT_* flags or zero.
+ * @param   pGroups             Pointer to a table of logging groups used for this
+ *                              logger instance.
+ * @param   pszEnvVar           Name of the environment variable.
+ *                              This is taken from the initial environment of the process
+ *                              and not from the current!!
+ * @param   pszFilenameFormat   Format string for making up the log filename.
+ * @param   ...                 Arguments to the format string.
+ */
+extern void *__libc_LogInitEx(const char *pszOrigin, unsigned fFlags, __LIBC_PLOGGROUPS pGroups, const char *pszEnvVar, const char *pszFilenameFormat, ...) __printflike(5, 6);
 
 /**
  * Parses the given environment variable and sets the group
@@ -518,6 +601,23 @@ extern void __libc_LogGroupInit(__LIBC_PLOGGROUPS pGroups, const char *pszEnvVar
  * @param   pvInstance      Logger instance.
  */
 extern int   __libc_LogTerm(void *pvInstance);
+
+/**
+ * Returns 1 if this log instance's output is set to the standard output or
+ * standard input, and 0 otherwise.
+ *
+ * @returns 1 for TRUE and 0 for FALSE.
+ * @param   pvInstance      Logger instance.
+ */
+extern int   __libc_LogIsOutputToConsole(void *pvInstance);
+
+/**
+ * Returns the origin of this log instance.
+ *
+ * @returns The origin string (may be NULL).
+ * @param   pvInstance      Logger instance.
+ */
+extern const char *__libc_LogGetOrigin(void *pvInstance);
 
 /**
  * Output an enter function log message.
