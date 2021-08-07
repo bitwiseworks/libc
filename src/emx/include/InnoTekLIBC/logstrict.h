@@ -490,6 +490,32 @@ typedef struct __libc_log_groups
 *******************************************************************************/
 __BEGIN_DECLS
 /**
+ * Returns a default log directory for LIBC logging API.
+ *
+ * This is a directory where logger instances create log files by default. See
+ * __libc_LogInitEx for more info.
+ *
+ * The default log directory is selected from the environment in the following
+ * order (the respective environment variable must be defined and be non-empty,
+ * otherwise the next path will be selected):
+ *
+ * 1. %LOGFILES%\app
+ * 2. %UNIXROOT%\var\log\app
+ * 3. Root of boot drive
+ *
+ * If a path pointed to by the environment variable does not actually exist, or
+ * if a specified subdirectory in it cannot be created, path 3 (which always
+ * exists) will be used as a fallback. For logger instances using the default
+ * log directory this means that log files will be created (in the root
+ * directory) even if there is a failure or misconfiguration of the system
+ * directory structure.
+ *
+ * Note that the returned string does not have a trailing backslash unless it's
+ * a root directory.
+ */
+extern const char *__libc_LogGetDefaultLogDir(void);
+
+/**
  * Create a logger.
  *
  * This is equivalent to calling __libc_LogInitEx(NULL, fFlags, pGroups, NULL, pszFilenameFormat, ...).
@@ -515,12 +541,8 @@ extern void *__libc_LogInit(unsigned fFlags, __LIBC_PLOGGROUPS pGroups, const ch
  * valid in filenames (e.g. slashes, colons, angle braces etc.).
  *
  * By default, log entries are written to a file with a name made up using the
- * pszFilenameFormat argument which is created in an "app" subdirectory of a
- * directory pointed to by the LOGFILES environment variable. If it is not set,
- * then in a "var\\log\\app" subdirectory of a directory pointed to by the
- * UNIXROOT environment variable. If it's also not set, then in the root
- * directory of the boot drive. Note that this function will attempt to create
- * the specified subdirectories if they do not exist.
+ * pszFilenameFormat argument which is created in a directory returned by
+ * __libc_LogGetDefaultLogDir (check it for more info on directory selection).
  *
  * Normally, pszFilenameFormat should not provide any path information. If it
  * does and making up results in an absolute path specification, the described

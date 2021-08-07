@@ -239,6 +239,99 @@ static inline void MyDosWrite(HFILE hFile, const char *pcszMsg, size_t cch, int 
 
 
 /**
+ * Returns a default log directory for LIBC logging API.
+ *
+ * This is a directory where logger instances create log files by default. See
+ * __libc_LogInitEx for more info.
+ *
+ * The default log directory is selected from the environment in the following
+ * order (the respective environment variable must be defined and be non-empty,
+ * otherwise the next path will be selected):
+ *
+ * 1. %LOGFILES%\app
+ * 2. %UNIXROOT%\var\log\app
+ * 3. Root of boot drive
+ *
+ * If a path pointed to by the environment variable does not actually exist, or
+ * if a specified subdirectory in it cannot be created, path 3 (which always
+ * exists) will be used as a fallback. For logger instances using the default
+ * log directory this means that log files will be created (in the root
+ * directory) even if there is a failure or misconfiguration of the system
+ * directory structure.
+ *
+ * Note that the returned string does not have a trailing backslash unless it's
+ * a root directory.
+ */
+const char *__libc_LogGetDefaultLogDir(void)
+{
+    static _smutex lock;
+    static char pszLogDir[CCHMAXPATH] = {0};
+
+    _smutex_request(&lock);
+
+    if (*pszLogDir)
+    {
+        _smutex_release(&lock);
+        return pszLogDir;
+    }
+
+    PSZ pszEnv = NULL;
+    char *psz = pszLogDir;
+    unsigned cch = sizeof(pszLogDir);
+    FILESTATUS3 status;
+    int fDone = 0;
+
+    /*
+     * Get the system log directory and create the "app" subdirectory.
+     */
+    if (!DosScanEnv((PCSZ)"LOGFILES", &pszEnv) && pszEnv && *pszEnv)
+    {
+        __copystr(&psz, &cch, (char *)pszEnv);
+        if (!DosQueryPathInfo((PSZ)pszLogDir, FIL_STANDARD, &status, sizeof(status)))
+        {
+            __copystr(&psz, &cch, "\\app");
+            DosCreateDir((PCSZ)pszLogDir, NULL);
+            if (!DosQueryPathInfo((PSZ)pszLogDir, FIL_STANDARD, &status, sizeof(status)))
+                fDone = 1;
+        }
+    }
+    else if (!DosScanEnv((PCSZ)"UNIXROOT", &pszEnv) && pszEnv && *pszEnv)
+    {
+        __copystr(&psz, &cch, (char *)pszEnv);
+        if (!DosQueryPathInfo((PSZ)pszLogDir, FIL_STANDARD, &status, sizeof(status)))
+        {
+            __copystr(&psz, &cch, "\\var");
+            DosCreateDir((PCSZ)pszLogDir, NULL);
+            if (!DosQueryPathInfo((PSZ)pszLogDir, FIL_STANDARD, &status, sizeof(status)))
+            {
+                __copystr(&psz, &cch, "\\log");
+                DosCreateDir((PCSZ)pszLogDir, NULL);
+                if (!DosQueryPathInfo((PSZ)pszLogDir, FIL_STANDARD, &status, sizeof(status)))
+                {
+                    __copystr(&psz, &cch, "\\app");
+                    DosCreateDir((PCSZ)pszLogDir, NULL);
+                    if (!DosQueryPathInfo((PSZ)pszLogDir, FIL_STANDARD, &status, sizeof(status)))
+                        fDone = 1;
+                }
+            }
+        }
+    }
+
+    if (!fDone)
+    {
+      ULONG drv;
+      DosQuerySysInfo(QSV_BOOT_DRIVE, QSV_BOOT_DRIVE, &drv, sizeof(drv));
+      pszLogDir[0] = '@' + drv;
+      pszLogDir[1] = ':';
+      pszLogDir[2] = '\0';
+    }
+
+    _smutex_release(&lock);
+    return pszLogDir;
+}
+
+
+/**
  * Create a logger.
  *
  * @returns Pointer to a logger instance on success.
@@ -439,39 +532,9 @@ static void *   __libc_logInit(__LIBC_PLOGINST pInst, const char *pszEnvVar, con
 
         if (!fCurDir)
         {
-            PSZ pszLogDir = NULL;
-
-            /*
-             * Get the system log directory and create the "app" subdirectory in
-             * it (ignoring errors as they will pop up later in DosOpen anyway).
-             */
-            if (!DosScanEnv((PCSZ)"LOGFILES", &pszLogDir) && pszLogDir && *pszLogDir)
-            {
-                __copystr(&pszBuf, &cchBuf, (char *)pszLogDir);
-                __copystr(&pszBuf, &cchBuf, "\\app");
-                DosCreateDir((PCSZ)szBuf, NULL);
-            }
-            else if (!DosScanEnv((PCSZ)"UNIXROOT", &pszLogDir) && pszLogDir && *pszLogDir)
-            {
-                __copystr(&pszBuf, &cchBuf, (char *)pszLogDir);
-                __copystr(&pszBuf, &cchBuf, "\\var");
-                DosCreateDir((PCSZ)szBuf, NULL);
-                __copystr(&pszBuf, &cchBuf, "\\log");
-                DosCreateDir((PCSZ)szBuf, NULL);
-                __copystr(&pszBuf, &cchBuf, "\\app");
-                DosCreateDir((PCSZ)szBuf, NULL);
-            }
-            else
-            {
-              ULONG drv;
-              DosQuerySysInfo(QSV_BOOT_DRIVE, QSV_BOOT_DRIVE, &drv, sizeof(drv));
-              pszBuf[0] = '@' + drv;
-              pszBuf[1] = ':';
-              cchBuf -= 2;
-
-            }
-
-            __copystr(&pszBuf, &cchBuf, "\\");
+            __copystr(&pszBuf, &cchBuf, __libc_LogGetDefaultLogDir());
+            if (pszBuf[-1] != '\\')
+                __copystr(&pszBuf, &cchBuf, "\\");
         }
 
         if (pszFilename)

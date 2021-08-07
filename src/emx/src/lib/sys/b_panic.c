@@ -49,6 +49,8 @@
 /** OS/2 default standard error handle. */
 #define HFILE_STDERR    ((HFILE)2)
 
+#define CHLOWER(ch)     ((ch) < 'A' || (ch) > 'Z' ? (ch) : (ch) + ('a' - 'A'))
+
 
 /**
  * Calculates the length of a string.
@@ -94,21 +96,24 @@ static int panicStrICmp(const char **ppsz, const char *pszLower, const char *psz
  * @param   pszBuf  Where to store the formatted number.
  * @param   u       Number to format.
  * @param   cDigits Minimum number of digits in the output. Use 0 for whatever fits.
+ * @param   fPutNul 1 to terminate the string with '\0'.
  */
-static int panicHex(char *pszBuf, unsigned u, unsigned cDigits)
+static int panicHex2(char *pszBuf, unsigned u, unsigned cDigits, int fPutNul)
 {
     static const char szHex[17] = "0123456789abcdef";
     if (u <= 0xf && cDigits <= 1)
     {
         pszBuf[0] = szHex[u & 0xf];
-        pszBuf[1] = '\0';
+        if (fPutNul)
+            pszBuf[1] = '\0';
         return 1;
     }
     if (u <= 0xff && cDigits <= 2)
     {
         pszBuf[0] = szHex[u >> 4];
         pszBuf[1] = szHex[u & 0xf];
-        pszBuf[2] = '\0';
+        if (fPutNul)
+            pszBuf[2] = '\0';
         return 2;
     }
     else if (u <= 0xffff && cDigits <= 4)
@@ -117,7 +122,8 @@ static int panicHex(char *pszBuf, unsigned u, unsigned cDigits)
         pszBuf[1] = szHex[(u >> 8) & 0xf];
         pszBuf[2] = szHex[(u >> 4) & 0xf];
         pszBuf[3] = szHex[u & 0xf];
-        pszBuf[4] = '\0';
+        if (fPutNul)
+            pszBuf[4] = '\0';
         return 4;
     }
     else
@@ -130,9 +136,21 @@ static int panicHex(char *pszBuf, unsigned u, unsigned cDigits)
         pszBuf[5] = szHex[(u >>  8) & 0xf];
         pszBuf[6] = szHex[(u >>  4) & 0xf];
         pszBuf[7] = szHex[u & 0xf];
-        pszBuf[8] = '\0';
+        if (fPutNul)
+            pszBuf[8] = '\0';
         return 8;
     }
+}
+
+
+/**
+ * Termination time hex formatter.
+ *
+ * Equivalent to panicHex2(pszBuf, u, cDigits, 1).
+ */
+static inline int panicHex(char *pszBuf, unsigned u, unsigned cDigits)
+{
+    return panicHex2(pszBuf, u, cDigits, 1);
 }
 
 
@@ -240,6 +258,8 @@ void __libc_Back_panicV(unsigned fFlags, void *pvCtx, const char *pszFormat, va_
     char    szHexNum[12];
     char    szMsg[80]; /* 80 chars - current EXCEPTQ limitation... */
     size_t  cbMsg = 0;
+    char    szPathBuf[CCHMAXPATH];
+
     if (!fQuiet || fHaveExceptq)
     {
         /*
@@ -362,12 +382,11 @@ void __libc_Back_panicV(unsigned fFlags, void *pvCtx, const char *pszFormat, va_
             PRINT_C(" ps=0x");   PRINT_H16(pPib->pib_flstatus);
 
             /* executable name. */
-            static char szExeName[CCHMAXPATH];
-            if (!DosQueryModuleName(pPib->pib_hmte, sizeof(szExeName), &szExeName[0]))
+            if (!DosQueryModuleName(pPib->pib_hmte, sizeof(szPathBuf), &szPathBuf[0]))
             {
-                szExeName[CCHMAXPATH - 1] = '\0';
+                szPathBuf[CCHMAXPATH - 1] = '\0';
                 PRINT_C("\r\n");
-                PRINT_P(szExeName);
+                PRINT_P(szPathBuf);
             }
 
             /*
@@ -383,15 +402,14 @@ void __libc_Back_panicV(unsigned fFlags, void *pvCtx, const char *pszFormat, va_
                     HMODULE hmod;
                     ULONG iObj = 0;
                     ULONG offObj = 0;
-                    if (!DosQueryModFromEIP(&hmod, &iObj, sizeof(szExeName), szExeName, &offObj, pCtx->ctx_RegEip))
+                    if (!DosQueryModFromEIP(&hmod, &iObj, sizeof(szPathBuf), szPathBuf, &offObj, pCtx->ctx_RegEip))
                     {
                         PRINT_C("\r\n");
-                        PRINT_P(szExeName);
+                        PRINT_P(szPathBuf);
                         PRINT_C(" ");
                         PRINT_H(iObj);
                         PRINT_C(":");
                         PRINT_H32(offObj);
-
                     }
                 }
 
@@ -546,6 +564,104 @@ void __libc_Back_panicV(unsigned fFlags, void *pvCtx, const char *pszFormat, va_
         }
 
         ExceptqHandler(pXcptRepRec, pXcptRegRec, pCtx, pvWhatEver);
+
+        /*
+         * Attempt to move the .TRP file to the system log directory unless it
+         * LIBC logging is redirected to the current directory or stdout/stderr
+         * (note: the env. var name should be the same as in __libc_logDefault,
+         * also check __libc_logInit where this var is handled!).
+         *
+         * TODO: This is a temporary solution, a proper way is to teach EXCEPTQ
+         * to take the filename argument, see https://github.com/bitwiseworks/libc/issues/99.
+         */
+        PSZ pszEnv = NULL;
+        if (DosScanEnv((PCSZ)"LIBC_LOGGING_OUTPUT", &pszEnv) || !pszEnv || !*pszEnv)
+        {
+            /*
+             * The original .TRP name is PPPP_TT.TRP where PPPP is PID in hex
+             * and TT is TID in hex, compose it from the trap data.
+             */
+            char szTrpFile[] = "PPPP_TT.TRP";
+            panicHex2(szTrpFile, pPib->pib_ulpid, 4, 0);
+            panicHex2(szTrpFile + 5, pTib->tib_ptib2->tib2_ultid, 2, 0);
+
+            /*
+             * The new .TRP name should be in sync with what __libc_logInit does
+             * for default log filenames!
+             */
+            char szNewTrpFileBegin[] = "\\TTTTTTTT-PPPP_TT";
+            char szNewTrpFileEnd[] = "-exceptq.txt";
+
+            /* Query the EXE name and strip off the path and .EXE extension. */
+            char *pszExeName = NULL;
+            if (!DosQueryModuleName(pPib->pib_hmte, sizeof(szPathBuf), &szPathBuf[0]))
+            {
+                szPathBuf[CCHMAXPATH - 1] = '\0';
+                pszExeName = szPathBuf;
+                /* Copied from __libc_logInit (except __stricmp_ascii) */
+                char *pszEnd = pszExeName;
+                while (*pszEnd)
+                    ++pszEnd;
+                if (   pszEnd - pszExeName >= 4
+                    && pszEnd[-4] == '.'
+                    && CHLOWER(pszEnd[-3]) == 'e'
+                    && CHLOWER(pszEnd[-2]) == 'x'
+                    && CHLOWER(pszEnd[-1]) == 'e')
+                {
+                    pszEnd -= 4;
+                    *pszEnd = '\0';
+                }
+                while (   pszEnd > pszExeName
+                       && (*pszEnd != '/' && *pszEnd != '\\')
+                       && *pszEnd != ':')
+                    --pszEnd;
+                if (pszEnd > pszExeName)
+                    pszExeName = pszEnd + 1;
+            }
+
+            /* Account for a leading dash if we have the EXE name. */
+            size_t cchExeName = pszExeName ? strlen(pszExeName) + 1 : 0;
+
+            const char *pszLogDir = __libc_LogGetDefaultLogDir();
+            size_t cchLogDir = strlen(pszLogDir);
+            if (pszLogDir[cchLogDir - 1] == '\\')
+                cchLogDir--;
+
+            /* Now check that we fit into the path buffer. */
+            if (cchLogDir + sizeof(szNewTrpFileBegin) - 1 + cchExeName + sizeof(szNewTrpFileEnd) <= CCHMAXPATH)
+            {
+                /*
+                 * We don't query QSV_TIME_HIGH as it will remain 0 until 19-Jan-2038 and for
+                 * our purposes (generate a unique log name sorted by date) it's fine.
+                 */
+                ULONG ulTime;
+                DosQuerySysInfo(QSV_TIME_LOW, QSV_TIME_LOW, &ulTime, sizeof(ulTime));
+
+                panicHex2(szNewTrpFileBegin + 1, ulTime, 8, 0);
+                panicHex2(szNewTrpFileBegin + 10, pPib->pib_ulpid, 4, 0);
+                panicHex2(szNewTrpFileBegin + 15, pTib->tib_ptib2->tib2_ultid, 2, 0);
+
+                if (cchExeName)
+                {
+                    /* pszExeName is in szPathBuf now, move it to the right position first! */
+                    memmove(szPathBuf + cchLogDir + sizeof(szNewTrpFileBegin), pszExeName, cchExeName - 1);
+                    szPathBuf[cchLogDir + sizeof(szNewTrpFileBegin) - 1] = '-';
+                }
+
+                memcpy(szPathBuf, pszLogDir, cchLogDir);
+                memcpy(szPathBuf + cchLogDir, szNewTrpFileBegin, sizeof(szNewTrpFileBegin) - 1);
+                memcpy(szPathBuf + cchLogDir + sizeof(szNewTrpFileBegin) - 1 + cchExeName, szNewTrpFileEnd, sizeof(szNewTrpFileEnd));
+
+                /* First, try to move. */
+                if (DosMove((PCSZ)szTrpFile, (PCSZ)szPathBuf))
+                {
+                    /* Then, try to copy (overwrite old file) + delete. */
+                    if (!DosCopy((PCSZ)szTrpFile, (PCSZ)szPathBuf, DCPY_EXISTING))
+                        DosDelete((PCSZ)szTrpFile);
+                }
+            }
+        }
+
     }
 
     /*

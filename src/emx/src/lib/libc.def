@@ -2030,3 +2030,4 @@ EXPORTS
     "___libc_LogGetOrigin" @2019
     "___libc_LogVSNPrintf" @2020
     "___libc_LogSNPrintf" @2021
+    "___libc_LogGetDefaultLogDir" @2022
