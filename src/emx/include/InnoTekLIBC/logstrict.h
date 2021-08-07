@@ -19,6 +19,7 @@
 /*******************************************************************************
 *   Header Files                                                               *
 *******************************************************************************/
+#include <stdarg.h>
 #include <sys/cdefs.h>
 #include <sys/types.h>                  /* size_t */
 #include <sys/param.h>                  /* NULL */
@@ -548,7 +549,11 @@ extern void *__libc_LogInit(unsigned fFlags, __LIBC_PLOGGROUPS pGroups, const ch
  * Setting the destination to STDOUT or STDERR will have the following impact on
  * the way how the logger works:
  *
- * - The standard log file header will not be written.
+ * - The log file header will not be written.
+ * - The TID field of each log entry will be prefixed with a PID value in hex
+ *   and the GROUP field will be prefixed with an ORIGIN value if it's not NULL.
+ *   This is to distinguish between different processes writing to the same
+ *   stream.
  *
  * It's best to name the environment variable similarly to the environment
  * variable passed to __libc_LogGroupInit. E.g., if you pass "MYAPP_LOGGING" to
@@ -747,6 +752,39 @@ extern void     __libc_LogDumpHex(unsigned uEnterTS, void *pvInstance, unsigned 
 extern void     __libc_LogAssert(void *pvInstance, unsigned fGroupAndFlags,
                                  const char *pszFunction, const char *pszFile, unsigned uLine, const char *pszExpression,
                                  const char *pszFormat, ...) __printflike(7, 8);
+
+/**
+ * Special vsprintf implementation that supports extended format specifiers for logging purposes.
+ *
+ * Extended format specifiers are:
+ * - %YT - prints current TID or PID:TID if pInst is forced to log to console (argument should be 0)
+ * - %YG - prints log GROUP or ORIGIN:GROUP if pInst is forced to log to console (argument is a group number).
+ * - %Zd - dumps memory in hex (argument is a pointer to memory block whose length is given in precision or width specs, by default 4 bytes).
+ *
+ * Note that it does not support the full set of standard format specifiers.
+ *
+ * @returns number of bytes formatted.
+ * @param   pInst       Log instance (for %Y format extensions, may be NULL).
+ * @param   pszBuffer   Where to put the the formatted string.
+ * @param   cchBuffer   Size of the buffer.
+ * @param   pszFormat   Format string.
+ * @param   args        Argument list.
+ */
+extern int      __libc_LogVSNPrintf(void *pvInstance, char *pszBuffer, size_t cchBuffer, const char *pszFormat, va_list args);
+
+/**
+ * Special sprintf implementation that supports extended format specifiers for logging purposes.
+ *
+ * See __libc_LogVSNPrintf for more info.
+ *
+ * @returns number of bytes formatted.
+ * @param   pInst       Log instance (for %Y format extensions, may be NULL).
+ * @param   pszBuffer   Where to put the the formatted string.
+ * @param   cchBuffer   Size of the buffer.
+ * @param   pszFormat   Format string.
+ * @param   ...         Format arguments.
+ */
+extern int      __libc_LogSNPrintf(void *pvInstance, char *pszBuffer, size_t cchBuffer, const char *pszFormat, ...);
 
 /**
  * Validate a memory area for read access.
