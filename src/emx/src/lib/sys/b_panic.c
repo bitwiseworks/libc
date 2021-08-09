@@ -568,6 +568,7 @@ void __libc_Back_panicV(unsigned fFlags, void *pvCtx, const char *pszFormat, va_
         /*
          * Attempt to move the .TRP file to the system log directory unless it
          * LIBC logging is redirected to the current directory or stdout/stderr
+         * in which case just rename it to to follow LIBC log filename scheme
          * (note: the env. var name should be the same as in __libc_logDefault,
          * also check __libc_logInit where this var is handled!).
          *
@@ -575,93 +576,121 @@ void __libc_Back_panicV(unsigned fFlags, void *pvCtx, const char *pszFormat, va_
          * to take the filename argument, see https://github.com/bitwiseworks/libc/issues/99.
          */
         PSZ pszEnv = NULL;
-        if (DosScanEnv((PCSZ)"LIBC_LOGGING_OUTPUT", &pszEnv) || !pszEnv || !*pszEnv)
+        int fCurDir = 0;
+        if (!DosScanEnv((PCSZ)"LIBC_LOGGING_OUTPUT", &pszEnv) && pszEnv && *pszEnv)
+            fCurDir = 1;
+
+        /*
+         * The original .TRP name is PPPP_TT.TRP where PPPP is PID in hex
+         * and TT is TID in hex, compose it from the trap data.
+         */
+        char szTrpFile[] = "PPPP_TT.TRP";
+        panicHex2(szTrpFile, pPib->pib_ulpid, 4, 0);
+        panicHex2(szTrpFile + 5, pTib->tib_ptib2->tib2_ultid, 2, 0);
+
+        /*
+         * The new .TRP name should be in sync with what __libc_logInit does
+         * for default log filenames!
+         */
+        char szNewTrpFileBegin[] = "TTTTTTTT-PPPP_TT";
+        char szNewTrpFileEnd[] = "-exceptq.txt";
+
+        /* Query the EXE name and strip off the path and .EXE extension. */
+        char *pszExeName = NULL;
+        if (!DosQueryModuleName(pPib->pib_hmte, sizeof(szPathBuf), &szPathBuf[0]))
         {
-            /*
-             * The original .TRP name is PPPP_TT.TRP where PPPP is PID in hex
-             * and TT is TID in hex, compose it from the trap data.
-             */
-            char szTrpFile[] = "PPPP_TT.TRP";
-            panicHex2(szTrpFile, pPib->pib_ulpid, 4, 0);
-            panicHex2(szTrpFile + 5, pTib->tib_ptib2->tib2_ultid, 2, 0);
-
-            /*
-             * The new .TRP name should be in sync with what __libc_logInit does
-             * for default log filenames!
-             */
-            char szNewTrpFileBegin[] = "\\TTTTTTTT-PPPP_TT";
-            char szNewTrpFileEnd[] = "-exceptq.txt";
-
-            /* Query the EXE name and strip off the path and .EXE extension. */
-            char *pszExeName = NULL;
-            if (!DosQueryModuleName(pPib->pib_hmte, sizeof(szPathBuf), &szPathBuf[0]))
+            szPathBuf[CCHMAXPATH - 1] = '\0';
+            pszExeName = szPathBuf;
+            /* Copied from __libc_logInit (except __stricmp_ascii) */
+            char *pszEnd = pszExeName;
+            while (*pszEnd)
+                ++pszEnd;
+            if (   pszEnd - pszExeName >= 4
+                && pszEnd[-4] == '.'
+                && CHLOWER(pszEnd[-3]) == 'e'
+                && CHLOWER(pszEnd[-2]) == 'x'
+                && CHLOWER(pszEnd[-1]) == 'e')
             {
-                szPathBuf[CCHMAXPATH - 1] = '\0';
-                pszExeName = szPathBuf;
-                /* Copied from __libc_logInit (except __stricmp_ascii) */
-                char *pszEnd = pszExeName;
-                while (*pszEnd)
-                    ++pszEnd;
-                if (   pszEnd - pszExeName >= 4
-                    && pszEnd[-4] == '.'
-                    && CHLOWER(pszEnd[-3]) == 'e'
-                    && CHLOWER(pszEnd[-2]) == 'x'
-                    && CHLOWER(pszEnd[-1]) == 'e')
-                {
-                    pszEnd -= 4;
-                    *pszEnd = '\0';
-                }
-                while (   pszEnd > pszExeName
-                       && (*pszEnd != '/' && *pszEnd != '\\')
-                       && *pszEnd != ':')
-                    --pszEnd;
-                if (pszEnd > pszExeName)
-                    pszExeName = pszEnd + 1;
+                pszEnd -= 4;
+                *pszEnd = '\0';
             }
-
-            /* Account for a leading dash if we have the EXE name. */
-            size_t cchExeName = pszExeName ? strlen(pszExeName) + 1 : 0;
-
-            const char *pszLogDir = __libc_LogGetDefaultLogDir();
-            size_t cchLogDir = strlen(pszLogDir);
-            if (pszLogDir[cchLogDir - 1] == '\\')
-                cchLogDir--;
-
-            /* Now check that we fit into the path buffer. */
-            if (cchLogDir + sizeof(szNewTrpFileBegin) - 1 + cchExeName + sizeof(szNewTrpFileEnd) <= CCHMAXPATH)
-            {
-                /*
-                 * We don't query QSV_TIME_HIGH as it will remain 0 until 19-Jan-2038 and for
-                 * our purposes (generate a unique log name sorted by date) it's fine.
-                 */
-                ULONG ulTime;
-                DosQuerySysInfo(QSV_TIME_LOW, QSV_TIME_LOW, &ulTime, sizeof(ulTime));
-
-                panicHex2(szNewTrpFileBegin + 1, ulTime, 8, 0);
-                panicHex2(szNewTrpFileBegin + 10, pPib->pib_ulpid, 4, 0);
-                panicHex2(szNewTrpFileBegin + 15, pTib->tib_ptib2->tib2_ultid, 2, 0);
-
-                if (cchExeName)
-                {
-                    /* pszExeName is in szPathBuf now, move it to the right position first! */
-                    memmove(szPathBuf + cchLogDir + sizeof(szNewTrpFileBegin), pszExeName, cchExeName - 1);
-                    szPathBuf[cchLogDir + sizeof(szNewTrpFileBegin) - 1] = '-';
-                }
-
-                memcpy(szPathBuf, pszLogDir, cchLogDir);
-                memcpy(szPathBuf + cchLogDir, szNewTrpFileBegin, sizeof(szNewTrpFileBegin) - 1);
-                memcpy(szPathBuf + cchLogDir + sizeof(szNewTrpFileBegin) - 1 + cchExeName, szNewTrpFileEnd, sizeof(szNewTrpFileEnd));
-
-                /* First, try to move. */
-                if (DosMove((PCSZ)szTrpFile, (PCSZ)szPathBuf))
-                {
-                    /* Then, try to copy (overwrite old file) + delete. */
-                    if (!DosCopy((PCSZ)szTrpFile, (PCSZ)szPathBuf, DCPY_EXISTING))
-                        DosDelete((PCSZ)szTrpFile);
-                }
-            }
+            while (   pszEnd > pszExeName
+                   && (*pszEnd != '/' && *pszEnd != '\\')
+                   && *pszEnd != ':')
+                --pszEnd;
+            if (pszEnd > pszExeName)
+                pszExeName = pszEnd + 1;
         }
 
+        /* Account for a leading dash if we have the EXE name. */
+        size_t cchExeName = pszExeName ? panicStrLen(pszExeName) + 1 : 0;
+
+        const char *pszLogDir = NULL;
+        size_t cchLogDir = 0;
+        if (!fCurDir)
+        {
+            pszLogDir = __libc_LogGetDefaultLogDir();
+            cchLogDir = panicStrLen(pszLogDir);
+            if (pszLogDir[cchLogDir - 1] != '\\')
+                cchLogDir++; /* account for a future backslash */
+        }
+
+        /* Now check that we fit into the path buffer. */
+        if (cchLogDir + sizeof(szNewTrpFileBegin) - 1 + cchExeName + sizeof(szNewTrpFileEnd) <= CCHMAXPATH)
+        {
+            /*
+             * We don't query QSV_TIME_HIGH as it will remain 0 until 19-Jan-2038 and for
+             * our purposes (generate a unique log name sorted by date) it's fine.
+             */
+            ULONG ulTime;
+            DosQuerySysInfo(QSV_TIME_LOW, QSV_TIME_LOW, &ulTime, sizeof(ulTime));
+
+            panicHex2(szNewTrpFileBegin + 0, ulTime, 8, 0);
+            panicHex2(szNewTrpFileBegin + 9, pPib->pib_ulpid, 4, 0);
+            panicHex2(szNewTrpFileBegin + 14, pTib->tib_ptib2->tib2_ultid, 2, 0);
+
+            if (cchExeName)
+            {
+                /* pszExeName is in szPathBuf now, move it to the right position first! */
+                memmove(szPathBuf + cchLogDir + sizeof(szNewTrpFileBegin), pszExeName, cchExeName - 1);
+                szPathBuf[cchLogDir + sizeof(szNewTrpFileBegin) - 1] = '-';
+            }
+
+            if (pszLogDir)
+            {
+                memcpy(szPathBuf, pszLogDir, cchLogDir);
+                if (!szPathBuf[cchLogDir - 1])
+                    szPathBuf[cchLogDir - 1] = '\\'; /* add the missing backslash */
+            }
+            memcpy(szPathBuf + cchLogDir, szNewTrpFileBegin, sizeof(szNewTrpFileBegin) - 1);
+            memcpy(szPathBuf + cchLogDir + sizeof(szNewTrpFileBegin) - 1 + cchExeName, szNewTrpFileEnd, sizeof(szNewTrpFileEnd));
+
+            int fOp = 0;
+
+            /* First, try to move. */
+            if (!DosMove((PCSZ)szTrpFile, (PCSZ)szPathBuf))
+                fOp = 1 /* move ok */;
+            else
+            {
+                /* Then, try to copy (no overwrite!) + delete. */
+                if (!DosCopy((PCSZ)szTrpFile, (PCSZ)szPathBuf, 0))
+                {
+                    fOp = 2; /* copy ok */
+                    if (!DosDelete((PCSZ)szTrpFile))
+                        fOp = 1; /* move ok */
+                }
+            }
+            if (!fOp)
+                PRINT_C("Failed to move ");
+            else if (fOp == 1)
+                PRINT_C("Moved ");
+            else
+                PRINT_C("Copied ");
+            PRINT_C(szTrpFile);
+            PRINT_C(" to ");
+            PRINT_P(szPathBuf);
+            PRINT_C("\r\n");
+        }
     }
 
     /*
