@@ -282,37 +282,31 @@ const char *__libc_LogGetDefaultLogDir(void)
     int fDone = 0;
 
     /*
-     * Get the system log directory and create the "app" subdirectory.
+     * Get the system log directory and create the "[var\log\]app" subdirectory.
      */
     if (!DosScanEnv((PCSZ)"LOGFILES", &pszEnv) && pszEnv && *pszEnv)
     {
         __copystr(&psz, &cch, (char *)pszEnv);
+        __copystr(&psz, &cch, "\\app");
+        DosCreateDir((PCSZ)pszLogDir, NULL);
         if (!DosQueryPathInfo((PSZ)pszLogDir, FIL_STANDARD, &status, sizeof(status)))
-        {
-            __copystr(&psz, &cch, "\\app");
-            DosCreateDir((PCSZ)pszLogDir, NULL);
-            if (!DosQueryPathInfo((PSZ)pszLogDir, FIL_STANDARD, &status, sizeof(status)))
-                fDone = 1;
-        }
+            fDone = 1;
     }
     else if (!DosScanEnv((PCSZ)"UNIXROOT", &pszEnv) && pszEnv && *pszEnv)
     {
         __copystr(&psz, &cch, (char *)pszEnv);
+        __copystr(&psz, &cch, "\\var");
+        DosCreateDir((PCSZ)pszLogDir, NULL);
         if (!DosQueryPathInfo((PSZ)pszLogDir, FIL_STANDARD, &status, sizeof(status)))
         {
-            __copystr(&psz, &cch, "\\var");
+            __copystr(&psz, &cch, "\\log");
             DosCreateDir((PCSZ)pszLogDir, NULL);
             if (!DosQueryPathInfo((PSZ)pszLogDir, FIL_STANDARD, &status, sizeof(status)))
             {
-                __copystr(&psz, &cch, "\\log");
+                __copystr(&psz, &cch, "\\app");
                 DosCreateDir((PCSZ)pszLogDir, NULL);
                 if (!DosQueryPathInfo((PSZ)pszLogDir, FIL_STANDARD, &status, sizeof(status)))
-                {
-                    __copystr(&psz, &cch, "\\app");
-                    DosCreateDir((PCSZ)pszLogDir, NULL);
-                    if (!DosQueryPathInfo((PSZ)pszLogDir, FIL_STANDARD, &status, sizeof(status)))
-                        fDone = 1;
-                }
+                    fDone = 1;
             }
         }
     }
