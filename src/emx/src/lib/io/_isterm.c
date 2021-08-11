@@ -3,32 +3,19 @@
 #include "libc-alias.h"
 #include <io.h>
 #include <errno.h>
+#include <sys/ioctl.h>
 #include <emx/io.h>
 #include <emx/syscalls.h>
 
 int _isterm(int handle)
 {
-    PLIBCFH pFH;
-
     /*
-     * Get filehandle.
+     * Use __ioctl2 that knows how to query non-standard handles rathar than
+     * call isatty and osQueryHType.
      */
-    pFH = __libc_FH(handle);
-    if (!pFH)
-    {
-        errno = EBADF;
+
+    int type;
+    if (__ioctl2(handle, FGETHTYPE, (int)&type) == -1)
         return 0;
-    }
-
-    /*
-     * Is it a atty?
-     */
-    if (!isatty(handle))
-        return 0;
-
-    /*
-     * If it's a device we assume is a terminal...
-     * (Hope that's correct interpretation of the __ioctl1() call...)
-     */
-    return (pFH->fFlags & __LIBC_FH_TYPEMASK) == F_DEV;
+    return type == HT_DEV_CON;
 }
