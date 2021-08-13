@@ -73,7 +73,7 @@ int _ungetc_nolock (int c, FILE *stream)
 
   stream->_flags |= _IOREAD;
   stream->_wcount = 0;
-  if (nbuf (stream))
+  if (_nbuf (stream))
     _fbuf (stream);
 
   /* Check `_ungetc_count' for overflow. */

@@ -16,7 +16,7 @@ int _STD(printf) (const char *format, ...)
 
   va_start (arg_ptr, format);
   STREAM_LOCK (stdout);
-  if (nbuf (stdout))
+  if (_nbuf (stdout))
     _fbuf (stdout);
   _tmpbuf (stdout, tb);
   result = _output (stdout, format, arg_ptr);

@@ -16,7 +16,7 @@ int _STD(fprintf) (FILE *stream, const char *format, ...)
 
   va_start (arg_ptr, format);
   STREAM_LOCK (stream);
-  if (nbuf (stream))
+  if (_nbuf (stream))
     _fbuf (stream);
   _tmpbuf (stream, tb);
   result = _output (stream, format, arg_ptr);

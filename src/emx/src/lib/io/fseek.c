@@ -32,7 +32,7 @@ int _fseek_unlocked (FILE *stream, off_t offset, int origin)
      - the new position is within buffer */
 
   if ((stream->_flags & (_IORW|_IOREAD|_IOWRT|_IOUNGETC)) == _IOREAD
-      && bbuf (stream) && stream->_ungetc_count == 0)
+      && _bbuf (stream) && stream->_ungetc_count == 0)
     {
       off_t file_pos, end_pos, buf_pos;
       int text_mode, n;

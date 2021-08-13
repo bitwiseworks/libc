@@ -43,13 +43,13 @@ size_t _STD(fread_unlocked)(void *buffer, size_t size, size_t count, FILE *strea
       return 0;
     }
 
-  if (nbuf (stream))
+  if (_nbuf (stream))
     _fbuf (stream);
   left = total;
   dst = buffer;
   fh = stream->_handle;
   stream->_flags |= _IOREAD;
-  if (bbuf (stream))
+  if (_bbuf (stream))
     while (left != 0)
       {
         if (stream->_rcount > 0)

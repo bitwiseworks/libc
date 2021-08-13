@@ -13,7 +13,7 @@ int _STD(vprintf) (const char *format, va_list arg_ptr)
   void *tb;
 
   STREAM_LOCK (stdout);
-  if (nbuf (stdout))
+  if (_nbuf (stdout))
     _fbuf (stdout);
   _tmpbuf (stdout, tb);
   result = _output (stdout, format, arg_ptr);

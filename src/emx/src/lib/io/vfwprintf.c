@@ -17,7 +17,7 @@ int _STD(vfwprintf) (FILE *stream, const wchar_t *format, va_list arg_ptr)
   void *tb;
 
   STREAM_LOCK (stream);
-  if (nbuf (stream))
+  if (_nbuf (stream))
     _fbuf (stream);
   _tmpbuf (stream, tb);
   result = _woutput (stream, format, arg_ptr);

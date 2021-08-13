@@ -26,7 +26,7 @@ off_t _ftello_unlocked (FILE *stream)
     }
   if (stream->_flags & _IOWRT)
     {
-      if (bbuf (stream))
+      if (_bbuf (stream))
         {
           pos += stream->_ptr - stream->_buffer;
           if (!(stream->_flags & _IOSPECIAL)

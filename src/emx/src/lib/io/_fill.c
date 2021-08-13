@@ -79,7 +79,7 @@ int _fill (FILE *stream)
 
   stream->_flags |= _IOREAD;
   stream->_wcount = 0;
-  if (nbuf (stream))
+  if (_nbuf (stream))
     _fbuf (stream);
   else
     stream->_ptr = stream->_buffer;

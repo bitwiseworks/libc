@@ -42,7 +42,7 @@ static size_t fwrite_internal (const char *src, size_t left, FILE *stream)
             }
         }
     }
-  else if (bbuf (stream))
+  else if (_bbuf (stream))
     {
       if (stream->_wcount == 0 && stream->_ptr == stream->_buffer)
         stream->_wcount = stream->_buf_size;
@@ -131,7 +131,7 @@ size_t _STD(fwrite_unlocked) (const void *buffer, size_t size, size_t count, FIL
       return 0;
     }
 
-  if (nbuf (stream))
+  if (_nbuf (stream))
     _fbuf (stream);
   src = buffer;
   stream->_flags |= _IOWRT;

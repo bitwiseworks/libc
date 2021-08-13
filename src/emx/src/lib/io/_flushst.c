@@ -26,9 +26,9 @@ int _flushstream (FILE *stream, int c)
       stream->_rcount = 0;
       stream->_flags &= ~_IOEOF;      /* Clear EOF flag, writing! */
       stream->_wcount = 0;            /* Maybe negative at this point */
-      if (nbuf (stream))
+      if (_nbuf (stream))
         _fbuf (stream);
-      if (bbuf (stream))
+      if (_bbuf (stream))
         {
           n = stream->_ptr - stream->_buffer;
           if (n > 0)            /* n should never be < 0 */

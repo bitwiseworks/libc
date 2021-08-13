@@ -24,7 +24,7 @@ int _STD(fflush_unlocked) (FILE *stream)
       stream->_flags &= ~_IOUNGETC;
       return result;
     }
-  if ((stream->_flags & _IOWRT) && bbuf (stream))
+  if ((stream->_flags & _IOWRT) && _bbuf (stream))
     {
       n = stream->_ptr - stream->_buffer;
       if (n > 0 && _stream_write (stream->_handle, stream->_buffer, n) <= 0)
@@ -44,7 +44,7 @@ int _STD(fflush_unlocked) (FILE *stream)
   stream->_flags &= ~_IOUNGETC;
 
   saved_errno = errno;
-  if ((stream->_flags & _IOREAD) && bbuf (stream) &&
+  if ((stream->_flags & _IOREAD) && _bbuf (stream) &&
       ioctl (stream->_handle, FGETHTYPE, &ft) >= 0 && ft == HT_FILE)
     {
       /* ISO 9899-1990, 7.9.5.2: "The fflush function returns EOF if a

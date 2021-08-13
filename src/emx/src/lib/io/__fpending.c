@@ -39,7 +39,7 @@
  */
 size_t __fpending(FILE *pStream)
 {
-    return (pStream->_flags & _IOWRT) && bbuf(pStream)
+    return (pStream->_flags & _IOWRT) && _bbuf(pStream)
         ? pStream->_ptr - pStream->_buffer
         : 0;
 }

@@ -20,7 +20,7 @@ int _STD(fwprintf) (FILE *stream, const wchar_t *format, ...)
 
   va_start (arg_ptr, format);
   STREAM_LOCK (stream);
-  if (nbuf (stream))
+  if (_nbuf (stream))
     _fbuf (stream);
   _tmpbuf (stream, tb);
   result = _woutput (stream, format, arg_ptr);

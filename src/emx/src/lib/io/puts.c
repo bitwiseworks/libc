@@ -22,7 +22,7 @@ int _STD(puts_unlocked) (const char *string)
     int result;
 
     int len = strlen(string);
-    if (nbuf(stdout))
+    if (_nbuf(stdout))
         _fbuf (stdout);
     void *tb;
     _tmpbuf(stdout, tb);
