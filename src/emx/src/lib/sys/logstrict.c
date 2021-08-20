@@ -736,23 +736,26 @@ static void *   __libc_logInit(__LIBC_PLOGINST pInst, const char *pszEnvVar, con
             DosWrite(pInst->hFile, "<not set>", 9, &cb);
         DosWrite(pInst->hFile, "\n", 1, &cb);
 
-        /* enabled groups */
-        int cGroups = 0;
-        DosWrite(pInst->hFile, "Enabled groups: ", 16, &cb);
-        for (i = 0; i < pInst->pGroups->cGroups; i++)
+        /* enabled groups (only if there are groups at all) */
+        if (pInst->pGroups)
         {
-            if (pInst->pGroups->paGroups[i].fEnabled)
+            int cGroups = 0;
+            DosWrite(pInst->hFile, "Enabled groups: ", 16, &cb);
+            for (i = 0; i < pInst->pGroups->cGroups; i++)
             {
-                cGroups++;
-                cch = __libc_LogSNPrintf(pInst, pszMsg, CCHTMPMSGBUFFER,
-                                         "%s (%x) ",
-                                         pInst->pGroups->paGroups[i].pszGroupName, i);
-                DosWrite(pInst->hFile, pszMsg, cch, &cb);
+                if (pInst->pGroups->paGroups[i].fEnabled)
+                {
+                    cGroups++;
+                    cch = __libc_LogSNPrintf(pInst, pszMsg, CCHTMPMSGBUFFER,
+                                             "%s (%x) ",
+                                             pInst->pGroups->paGroups[i].pszGroupName, i);
+                    DosWrite(pInst->hFile, pszMsg, cch, &cb);
+                }
             }
+            if (!cGroups)
+                DosWrite(pInst->hFile, "<none>", 6, &cb);
+            DosWrite(pInst->hFile, "\n", 1, &cb);
         }
-        if (!cGroups)
-            DosWrite(pInst->hFile, "<none>", 6, &cb);
-        DosWrite(pInst->hFile, "\n", 1, &cb);
 
         /* column headers */
         if (!(pInst->fFlags & __LIBC_LOG_INIT_NOLEGEND))
