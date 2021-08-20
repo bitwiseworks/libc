@@ -764,7 +764,7 @@ static void *   __libc_logInit(__LIBC_PLOGINST pInst, const char *pszEnvVar, con
                                      "   Millsecond Timestamp.\n"
                                      "   |     Thread ID.\n"
                                      "   |     |  Call Nesting Level.\n"
-                                     "   |     |  |   Log Group.\n"
+                                     "   |     |  |   Log Group (Asrt for assertions).\n"
                                      "   |     |  |   |    Message Type.\n"
                                      "   |     |  |   |    |    errno in hex (0xface if not available).\n"
                                      "   |     |  |   |    |    |      Function Name.\n"
@@ -1192,7 +1192,7 @@ unsigned __libc_LogEnter(void *pvInstance, unsigned fGroupAndFlags, const char *
     /*
      * Check if this group is enabled.
      */
-    if (pInst->pGroups)
+    if (!(fGroupAndFlags & __LIBC_LOG_MSGF_ALWAYS) && pInst->pGroups)
     {
         int iGroup = __LIBC_LOG_GETGROUP(fGroupAndFlags);
         if (    iGroup >= 0
@@ -1270,7 +1270,7 @@ void     __libc_LogLeave(unsigned uEnterTS, void *pvInstance, unsigned fGroupAnd
     /*
      * Check if this group is enabled.
      */
-    if (pInst->pGroups)
+    if (!(fGroupAndFlags & __LIBC_LOG_MSGF_ALWAYS) && pInst->pGroups)
     {
         int iGroup = __LIBC_LOG_GETGROUP(fGroupAndFlags);
         if (    iGroup >= 0
@@ -1358,7 +1358,7 @@ void     __libc_LogErrorLeave(unsigned uEnterTS, void *pvInstance, unsigned fGro
     /*
      * Check if this group is enabled.
      */
-    if (pInst->pGroups)
+    if (!(fGroupAndFlags & __LIBC_LOG_MSGF_ALWAYS) && pInst->pGroups)
     {
         int iGroup = __LIBC_LOG_GETGROUP(fGroupAndFlags);
         if (    iGroup >= 0
@@ -1450,7 +1450,7 @@ void     __libc_LogMsg(unsigned uEnterTS, void *pvInstance, unsigned fGroupAndFl
     /*
      * Check if this group is enabled.
      */
-    if (pInst->pGroups)
+    if (!(fGroupAndFlags & __LIBC_LOG_MSGF_ALWAYS) && pInst->pGroups)
     {
         int iGroup = __LIBC_LOG_GETGROUP(fGroupAndFlags);
         if (    iGroup >= 0
@@ -1526,7 +1526,7 @@ void     __libc_LogError(unsigned uEnterTS, void *pvInstance, unsigned fGroupAnd
     /*
      * Check if this group is enabled.
      */
-    if (pInst->pGroups)
+    if (!(fGroupAndFlags & __LIBC_LOG_MSGF_ALWAYS) && pInst->pGroups)
     {
         int iGroup = __LIBC_LOG_GETGROUP(fGroupAndFlags);
         if (    iGroup >= 0
@@ -1600,7 +1600,7 @@ void     __libc_LogRaw(void *pvInstance, unsigned fGroupAndFlags, const char *ps
     /*
      * Check if this group is enabled.
      */
-    if (pInst->pGroups)
+    if (!(fGroupAndFlags & __LIBC_LOG_MSGF_ALWAYS) && pInst->pGroups)
     {
         int iGroup = __LIBC_LOG_GETGROUP(fGroupAndFlags);
         if (    iGroup >= 0
@@ -1663,7 +1663,7 @@ void     __libc_LogDumpHex(unsigned uEnterTS, void *pvInstance, unsigned fGroupA
     /*
      * Check if this group is enabled.
      */
-    if (pInst->pGroups)
+    if (!(fGroupAndFlags & __LIBC_LOG_MSGF_ALWAYS) && pInst->pGroups)
     {
         int iGroup = __LIBC_LOG_GETGROUP(fGroupAndFlags);
         if (    iGroup >= 0
@@ -1801,7 +1801,7 @@ void     __libc_LogAssert(void *pvInstance, unsigned fGroupAndFlags,
     /*
      * Check if this group is enabled.
      */
-    if (pInst && pInst->pGroups)
+    if (!(fGroupAndFlags & __LIBC_LOG_MSGF_ALWAYS) && pInst && pInst->pGroups)
     {
         int iGroup = __LIBC_LOG_GETGROUP(fGroupAndFlags);
         if (    iGroup >= 0

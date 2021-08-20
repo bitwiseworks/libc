@@ -216,6 +216,8 @@
  */
 /** Forces a flush of the output file after the message have been written. */
 #define __LIBC_LOG_MSGF_FLUSH       0x00010000
+/** Forces writing the message even if the respective log group is disabled. */
+#define __LIBC_LOG_MSGF_ALWAYS      0x00020000
 /** @} */
 
 
