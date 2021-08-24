@@ -35,11 +35,13 @@
 
 __BEGIN_DECLS
 
-/** The name of the shared semaphore protecting the memory. */
-#define SPM_MUTEX_NAME          "\\SEM32\\BWWLIBC-V1.3"
+/** The name of the shared semaphore protecting the memory
+ * (xxxx must match LIBC HMOD in hex). */
+#define SPM_MUTEX_NAME          "\\SEM32\\BWWLIBC-V1.3_xxxx"
 
-/** The name of the shared memory. */
-#define SPM_MEMORY_NAME         "\\SHAREMEM\\BWWLIBC-V1.3"
+/** The name of the shared memory
+ * (xxxx must match LIBC HMOD in hex). */
+#define SPM_MEMORY_NAME         "\\SHAREMEM\\BWWLIBC-V1.3_xxxx"
 
 /** The timeout for accessing the shared mem semaphore. */
 #define SPM_MUTEX_TIMEOUT       (30*1000)

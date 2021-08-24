@@ -2349,6 +2349,10 @@ static int spmIsMutexOwner(void)
  */
 static int spmInit(void)
 {
+    static const char       gszHexDigits[17] = "0123456789abcdef";
+    static char             gszMutexName[] = SPM_MUTEX_NAME;
+    static char             gszMemoryName[] = SPM_MEMORY_NAME;
+
     LIBCLOG_ENTER("\n");
     int                     rc;
     PPIB                    pPib;
@@ -2384,17 +2388,41 @@ static int spmInit(void)
     DosGetInfoBlocks(&pTib, &pPib);
 
     /*
+     * Get our own DLL module handle to use it as a mutex and shared memory name
+     * suffix in order to avoid collisions with other copies of the same DLL but
+     * loaded from a different directory due to LIBPATHSTRICT=T.
+     *
+     * Note that DosQueryModFromEIP accepts NULL for not needed parameters and
+     * that we ignore errors because we will just use ffffffff as a suffix then.
+     */
+    {
+        HMODULE hmod = ~0;
+        DosQueryModFromEIP(&hmod, NULL, 0, NULL, NULL, (uintptr_t)spmInit);
+
+        char   *psz1 = gszMutexName + sizeof(gszMutexName) - 1;
+        char   *psz2 = gszMemoryName + sizeof(gszMemoryName) - 1;
+        int    i = 4;
+        while (i--)
+        {
+            *--psz1 = *--psz2 = gszHexDigits[(unsigned)hmod & 0xf];
+            hmod >>= 4;
+        }
+        LIBCLOG_MSG("Mutex name %s\n", gszMutexName);
+        LIBCLOG_MSG("Memory name %s\n", gszMemoryName);
+    }
+
+    /*
      * Open or create mutex.
      */
     FS_SAVE_LOAD();
-    rc = DosOpenMutexSem((PCSZ)SPM_MUTEX_NAME, &ghmtxSPM);
+    rc = DosOpenMutexSem((PCSZ)gszMutexName, &ghmtxSPM);
     if (rc)
     {
-        rc = DosCreateMutexSem((PCSZ)SPM_MUTEX_NAME, &ghmtxSPM, DC_SEM_SHARED, 0L);
+        rc = DosCreateMutexSem((PCSZ)gszMutexName, &ghmtxSPM, DC_SEM_SHARED, 0L);
         if (rc)
         {
             /* retry opening it, someone might have beaten us creating it. */
-            int rc2 = DosOpenMutexSem((PCSZ)SPM_MUTEX_NAME, &ghmtxSPM);
+            int rc2 = DosOpenMutexSem((PCSZ)gszMutexName, &ghmtxSPM);
             if (rc2)
             {
                 FS_RESTORE();
@@ -2421,7 +2449,7 @@ static int spmInit(void)
         /*
          * Get or create the shared memory.
          */
-        rc = DosGetNamedSharedMem(&pv, (PCSZ)SPM_MEMORY_NAME, PAG_READ | PAG_WRITE);
+        rc = DosGetNamedSharedMem(&pv, (PCSZ)gszMemoryName, PAG_READ | PAG_WRITE);
         if (!rc)
         {
             gpSPMHdr = (__LIBC_PSPMHEADER)pv;
@@ -2439,7 +2467,7 @@ static int spmInit(void)
              */
             /* first we'll try with 4times the amount and OBJ_ANY. */
             size_t  cb = SPM_MEMORY_SIZE * 4;
-            rc = DosAllocSharedMem(&pv, (PCSZ)SPM_MEMORY_NAME, cb, PAG_READ | PAG_WRITE | PAG_COMMIT | OBJ_ANY);
+            rc = DosAllocSharedMem(&pv, (PCSZ)gszMemoryName, cb, PAG_READ | PAG_WRITE | PAG_COMMIT | OBJ_ANY);
             /* if we got a low address we must free and use minimum size. */
             if (!rc && (uintptr_t)pv < 0x20000000/*512MB*/)
             {
@@ -2450,7 +2478,7 @@ static int spmInit(void)
             if (rc)
             {
                 cb = SPM_MEMORY_SIZE;
-                rc = DosAllocSharedMem(&pv, (PCSZ)SPM_MEMORY_NAME, cb, PAG_READ | PAG_WRITE | PAG_COMMIT);
+                rc = DosAllocSharedMem(&pv, (PCSZ)gszMemoryName, cb, PAG_READ | PAG_WRITE | PAG_COMMIT);
             }
             if (!rc)
             {
