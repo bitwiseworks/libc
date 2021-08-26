@@ -1,5 +1,11 @@
 # History of changes for LIBC Next
 
+#### Version 0.1.9 (2021-08-26)
+
+* logstrict: Fix crash when logging with no groups provided [#112].
+* logstrict: Add `__LIBC_LOG_MSGF_ALWAYS` to ignore log groups when writing message [#113].
+* Append LIBC DLL module handle to its shared mutex/memory names [#114].
+
 #### Version 0.1.8 (2021-08-16)
 
 * Make environ properly reflect empty environment on startup [#100].
