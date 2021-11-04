@@ -909,7 +909,15 @@ static int fhAllocate(int fh, unsigned fFlags, int cb, __LIBC_PCFHOPS pOps, __LI
                      * and insert the new one.
                      */
                     if (gpapFHs[fh])
+                    {
+                        /*
+                         * Send the close call to any non-OS/2 handle.
+                         */
+                        if (    gpapFHs[fh]->pOps
+                            &&  gpapFHs[fh]->pOps->pfnClose)
+                            gpapFHs[fh]->pOps->pfnClose(gpapFHs[fh], fh);
                         fhFreeHandle(gpapFHs[fh]);
+                    }
                     gpapFHs[fh] = pFH;
                 }
                 else
