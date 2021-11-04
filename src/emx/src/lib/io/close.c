@@ -4,13 +4,16 @@
 #include "libc-alias.h"
 #include <io.h>
 #include <emx/io.h>
+#define __LIBC_LOG_GROUP __LIBC_LOG_GRP_IO
+#include <InnoTekLIBC/logstrict.h>
 
 int _STD(close)(int fh)
 {
+    LIBCLOG_ENTER("fh=%d\n", fh);
     int rc;
     rc = __libc_FHClose(fh);
     if (!rc)
-        return 0;
+        LIBCLOG_RETURN_INT(0);
     /* (it sets errno) */
-    return -1;
+    LIBCLOG_ERROR_RETURN_INT(-1);
 }

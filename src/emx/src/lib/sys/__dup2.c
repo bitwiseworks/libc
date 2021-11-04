@@ -17,6 +17,7 @@
 
 int __dup2(int fh, int fhNew)
 {
+    LIBCLOG_ENTER("fh=%d fhNew=%d\n", fh, fhNew);
     PLIBCFH     pFH;
     PLIBCFH     pFHNew;
     int         rc;
@@ -29,7 +30,7 @@ int __dup2(int fh, int fhNew)
         ||  !(pFH = __libc_FH(fh)))
     {
         errno = EBADF;
-        return -1;
+        LIBCLOG_ERROR_RETURN_INT(-1);
     }
 
     /*
@@ -48,9 +49,9 @@ int __dup2(int fh, int fhNew)
         if (rc)
         {
             _sys_set_errno(rc);
-            return -1;
+            LIBCLOG_ERROR_RETURN_INT(-1);
         }
-        return fhNew;
+        LIBCLOG_RETURN_INT(fhNew);
     }
 
     /*
@@ -62,7 +63,7 @@ int __dup2(int fh, int fhNew)
     if (rc)
     {
         _sys_set_errno(rc);
-        return -1;
+        LIBCLOG_ERROR_RETURN_INT(-1);
     }
 
     /*
@@ -74,7 +75,7 @@ int __dup2(int fh, int fhNew)
     {
         rc = __libc_FHClose(fhNew);
         if (rc)
-            return -1; /* it sets errno */
+            LIBCLOG_ERROR_RETURN_INT(-1); /* it sets errno */
     }
 
     /*
@@ -125,8 +126,8 @@ int __dup2(int fh, int fhNew)
             _sys_set_errno(rc);
         else
             errno = -rc;
-        return -1;
+        LIBCLOG_ERROR_RETURN_INT(-1);
     }
-    return fhNew;
+    LIBCLOG_RETURN_INT(fhNew);
 }
 

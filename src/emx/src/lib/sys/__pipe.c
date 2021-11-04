@@ -11,9 +11,12 @@
 #include <emx/syscalls.h>
 #include <emx/io.h>
 #include "syscalls.h"
+#define __LIBC_LOG_GROUP __LIBC_LOG_GRP_IO
+#include <InnoTekLIBC/logstrict.h>
 
 int __pipe(int *two_handles, int pipe_size, PLIBCFH *ppFHRead, PLIBCFH *ppFHWrite)
 {
+    LIBCLOG_ENTER("two_handles=%p pipe_size=%d ppFHRead=%p ppFHWrite=%p\n", two_handles, pipe_size, ppFHRead, ppFHWrite);
     ULONG   rc;
     int     cExpandRetries;
     FS_VAR();
@@ -55,7 +58,7 @@ int __pipe(int *two_handles, int pipe_size, PLIBCFH *ppFHRead, PLIBCFH *ppFHWrit
     if (rc)
     {
         _sys_set_errno(rc);
-        return -1;
+        LIBCLOG_ERROR_RETURN_INT(-1);
     }
-    return 0;
+    LIBCLOG_RETURN_INT(0);
 }

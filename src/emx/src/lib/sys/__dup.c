@@ -17,6 +17,7 @@
 
 int __dup(int fh)
 {
+    LIBCLOG_ENTER("fh=%d\n", fh);
     PLIBCFH     pFH;
     int         fhNew;
     int         rc;
@@ -28,7 +29,7 @@ int __dup(int fh)
     if (!pFH)
     {
         errno = EBADF;
-        return -1;
+        LIBCLOG_ERROR_RETURN_INT(-1);
     }
 
     /*
@@ -93,7 +94,7 @@ int __dup(int fh)
             _sys_set_errno(rc);
         else
             errno = -rc;
-        return -1;
+        LIBCLOG_ERROR_RETURN_INT(-1);
     }
-    return fhNew;
+    LIBCLOG_RETURN_INT(fhNew);
 }
