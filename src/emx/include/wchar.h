@@ -175,6 +175,7 @@ wchar_t	*wmemmove(wchar_t *, const wchar_t *, size_t);
 wchar_t	*wmemset(wchar_t *, wchar_t, size_t);
 int	wprintf(const wchar_t * __restrict, ...);
 int	wscanf(const wchar_t * __restrict, ...);
+wchar_t *wcsdup (const wchar_t *s);
 
 /** @todo #ifndef _STDSTREAM_DECLARED */
 /** @todo extern struct __sFILE *__stdinp; */
