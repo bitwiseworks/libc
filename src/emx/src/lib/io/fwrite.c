@@ -113,13 +113,13 @@ size_t _STD(fwrite_unlocked) (const void *buffer, size_t size, size_t count, FIL
         {
           int rc = _fseek_unlocked (stream, 0, SEEK_CUR);
           if (rc)
-            return EOF;
+            return 0;
         }
       if (stream->_flags & _IOREAD)
         {
           stream->_flags |= _IOERR;
           errno = EACCES;
-          return EOF;
+          return 0;
         }
     }
   if (size == 0 || count == 0)
