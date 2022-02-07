@@ -443,9 +443,9 @@ int	 symlink(const char * __restrict, const char * __restrict);
 
 /* X/Open System Interfaces */
 #if __XSI_VISIBLE
-char	*crypt(const char *, const char *);
+//char	*crypt(const char *, const char *);
 /** @todo char	*ctermid(char *); */		/* XXX ??? */
-void	 encrypt(char *, int);                  /* bird: SuS say it returns void, and so does our implementation */
+//void	 encrypt(char *, int);                  /* bird: SuS say it returns void, and so does our implementation */
 int	 fchdir(int);
 /* tcpip: long	 gethostid(void); */
 pid_t	 getpgid(pid_t _pid);       /* bird: SuS say pid_r return. */
