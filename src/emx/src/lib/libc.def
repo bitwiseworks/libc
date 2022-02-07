@@ -2031,3 +2031,7 @@ EXPORTS
     "___libc_LogVSNPrintf" @2020
     "___libc_LogSNPrintf" @2021
     "___libc_LogGetDefaultLogDir" @2022
+
+    ; LIBC Next 0.1.10
+    "__std_scandir" @2023
+    "__std_alphasort" @2024
