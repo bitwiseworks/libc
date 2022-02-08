@@ -26,6 +26,7 @@
  * SUCH DAMAGE.
  */
 
+#include "namespace.h"
 #include <sys/cdefs.h>
 __FBSDID("$FreeBSD$");
 
@@ -33,7 +34,7 @@ __FBSDID("$FreeBSD$");
 #include <wchar.h>
 
 wchar_t *
-wcsdup(const wchar_t *s)
+_STD(wcsdup)(const wchar_t *s)
 {
 	wchar_t *copy;
 	size_t len;

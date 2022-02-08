@@ -2035,3 +2035,4 @@ EXPORTS
     ; LIBC Next 0.1.10
     "__std_scandir" @2023
     "__std_alphasort" @2024
+    "__std_wcsdup" @2025
