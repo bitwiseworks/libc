@@ -55,6 +55,10 @@
 #include <sys/_null.h>
 #include <sys/_types.h>
 
+#ifndef __THROW
+# define __THROW
+#endif
+
 #if !defined(_GID_T_DECLARED) && !defined(_GID_T) /* bird: emx */
 typedef	__gid_t		gid_t;		/* group id */
 #define	_GID_T_DECLARED
@@ -443,9 +447,9 @@ int	 symlink(const char * __restrict, const char * __restrict);
 
 /* X/Open System Interfaces */
 #if __XSI_VISIBLE
-char	*crypt(const char *, const char *);
+char	*crypt(const char *, const char *) __THROW;
 /** @todo char	*ctermid(char *); */		/* XXX ??? */
-void	 encrypt(char *, int);                  /* bird: SuS say it returns void, and so does our implementation */
+void	 encrypt(char *, int) __THROW;                  /* bird: SuS say it returns void, and so does our implementation */
 int	 fchdir(int);
 /* tcpip: long	 gethostid(void); */
 pid_t	 getpgid(pid_t _pid);       /* bird: SuS say pid_r return. */
@@ -550,7 +554,7 @@ int	 setgroups(int, const gid_t *);
 /** @todo int	 sethostname(const char *, int); */
 #ifndef _SETKEY_DECLARED
 /*int	 setkey(const char *); bird: SUS say void return and so does glibc! */
-void	 setkey(const char *);
+void	 setkey(const char *) __THROW;
 #define	_SETKEY_DECLARED
 #endif
 /** @todo int	 setlogin(const char *); */
