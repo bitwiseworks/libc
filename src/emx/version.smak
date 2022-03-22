@@ -5,7 +5,7 @@ VH = 0
 # Middle part of version number
 VM = 1
 # Low part of version number
-VL = 9
+VL = 10
 
 # NOTE: Our versioning rules:
 #
@@ -35,6 +35,6 @@ endif
 CFLAGS.DEF.VERSION += '-DVERSION_DETAILS=" $(VERSION_DETAILS)"'
 
 # Copyright
-COPYRIGHT = Copyright (c) 2020 bww bitwise works GmbH
+COPYRIGHT = Copyright (c) 2022 bww bitwise works GmbH
 CFLAGS.DEF.VERSION += '-DVERSION_COPYRIGHT="$(COPYRIGHT)"'
 

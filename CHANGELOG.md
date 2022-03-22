@@ -1,5 +1,14 @@
 # History of changes for LIBC Next
 
+#### Version 0.1.10 (2022-03-22)
+
+* Call non-OS/2 handle close callback upon unexpected handle loss [#117].
+* Add usual enter/exit logging to more I/O APIs [#117].
+* fwrite: Don't return EOL [#120].
+* Add missing scandir and alphasort definitions [#52].
+* Import wcsdup.c from FreeBSD and align to EMX [#118, #119].
+* unistd.h: Align crypt and friends to crypt.h [#121].
+
 #### Version 0.1.9 (2021-08-26)
 
 * logstrict: Fix crash when logging with no groups provided [#112].
