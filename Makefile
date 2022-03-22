@@ -16,7 +16,10 @@ MAKE_DEFS := \
   "ASM=$(LIBC_ASM_EXE) -c" \
   "SHELL=/@unixroot/usr/bin/sh.exe"
 
-LIBC_OPTIMIZE_FLAGS ?= -O3 -g -march=pentium4
+LIBC_OPTIMIZE_FLAGS ?= -O3 -g -march=pentium4 \
+  -ffile-prefix-map=$(MAKEFILE_DIR)=libc \
+  -ffile-prefix-map=$(patsubst %/,%,$(LIBC_OUTPUT_DIR))=libc \
+  -ffile-prefix-map=$(TEMP)=libc
 
 ifdef LIBC_OPTIMIZE_FLAGS
   MAKE_DEFS += "OPTIMIZE_FLAGS=$(LIBC_OPTIMIZE_FLAGS)"
