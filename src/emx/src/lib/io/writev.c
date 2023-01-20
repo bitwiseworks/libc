@@ -9,6 +9,7 @@
 #include <errno.h>
 #include <sys/types.h>
 #include <sys/uio.h>
+#include <sys/syslimits.h>
 
 int _STD(writev) (int handle, const struct iovec *iov, int iovcnt)
 {
@@ -17,7 +18,7 @@ int _STD(writev) (int handle, const struct iovec *iov, int iovcnt)
   size_t total, len;
   char *buf, *mp, *p;
 
-  if (iovcnt <= 0 || iovcnt > 16)
+  if (iovcnt <= 0 || iovcnt > IOV_MAX)
     {
       errno = EINVAL;
       return -1;
