@@ -250,10 +250,11 @@ static inline void MyDosWrite(HFILE hFile, const char *pcszMsg, size_t cch, int 
  *
  * 1. %LOGFILES%\app
  * 2. %UNIXROOT%\var\log\app
+ * 4. \var\log\app on boot drive
  * 3. Root of boot drive
  *
  * If a path pointed to by the environment variable does not actually exist, or
- * if a specified subdirectory in it cannot be created, path 3 (which always
+ * if a specified subdirectory in it cannot be created, path 4 (which always
  * exists) will be used as a fallback. For logger instances using the default
  * log directory this means that log files will be created (in the root
  * directory) even if there is a failure or misconfiguration of the system
@@ -313,11 +314,27 @@ const char *__libc_LogGetDefaultLogDir(void)
 
     if (!fDone)
     {
-      ULONG drv;
-      DosQuerySysInfo(QSV_BOOT_DRIVE, QSV_BOOT_DRIVE, &drv, sizeof(drv));
-      pszLogDir[0] = '@' + drv;
-      pszLogDir[1] = ':';
-      pszLogDir[2] = '\0';
+        ULONG drv;
+        DosQuerySysInfo(QSV_BOOT_DRIVE, QSV_BOOT_DRIVE, &drv, sizeof(drv));
+        pszLogDir[0] = '@' + drv;
+        pszLogDir[1] = ':';
+
+        psz = &pszLogDir[2];
+        cch -= 2;
+        __copystr(&psz, &cch, "\\var\\log");
+        if (!DosQueryPathInfo((PSZ)pszLogDir, FIL_STANDARD, &status, sizeof(status)))
+        {
+            __copystr(&psz, &cch, "\\app");
+            DosCreateDir((PCSZ)pszLogDir, NULL);
+            if (!DosQueryPathInfo((PSZ)pszLogDir, FIL_STANDARD, &status, sizeof(status)))
+                fDone = 1;
+        }
+
+        if (!fDone)
+        {
+            pszLogDir[2] = '\\';
+            pszLogDir[3] = '\0';
+        }
     }
 
     _smutex_release(&lock);
