@@ -41,6 +41,7 @@
 #include <InnotekLIBC/backend.h>
 #include <InnotekLIBC/sharedpm.h>
 #include <InnotekLIBC/logstrict.h>
+#include "backend.h"
 
 
 /*******************************************************************************
@@ -225,7 +226,7 @@ void __libc_Back_panicV(unsigned fFlags, void *pvCtx, const char *pszFormat, va_
     BOOL fDumpProcess = FALSE;
 
     const char *pszPanicCfg = NULL;
-    int rc = DosScanEnv((PCSZ)"LIBC_PANIC", (PSZ *)(void *)&pszPanicCfg);
+    int rc = __libc_scanenv("LIBC_PANIC", &pszPanicCfg);
     if (!rc && pszPanicCfg && strnlen(pszPanicCfg, 512) < 512)
     {
         int c = 512;
@@ -575,9 +576,9 @@ void __libc_Back_panicV(unsigned fFlags, void *pvCtx, const char *pszFormat, va_
          * TODO: This is a temporary solution, a proper way is to teach EXCEPTQ
          * to take the filename argument, see https://github.com/bitwiseworks/libc/issues/99.
          */
-        PSZ pszEnv = NULL;
+        const char *pszEnv = NULL;
         int fCurDir = 0;
-        if (!DosScanEnv((PCSZ)"LIBC_LOGGING_OUTPUT", &pszEnv) && pszEnv && *pszEnv)
+        if (!__libc_scanenv("LIBC_LOGGING_OUTPUT", &pszEnv) && pszEnv && *pszEnv)
             fCurDir = 1;
 
         /*

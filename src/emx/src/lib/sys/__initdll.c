@@ -42,6 +42,7 @@
 #include <InnoTekLIBC/FastInfoBlocks.h>
 #define __LIBC_LOG_GROUP    __LIBC_LOG_GRP_INITTERM
 #include <InnoTekLIBC/logstrict.h>
+#include <klibc/startup.h>
 
 /* Make this function an weak external. */
 #pragma weak __init_largefileio
@@ -71,6 +72,16 @@ __LIBC_PPTHREAD     __libc_gpTLS;
 extern unsigned char _osminor;
 extern unsigned char _osmajor;
 
+int     __libc_gfkLIBCArgs;
+void   *__libc_gpTmpEnvArgs;
+char   *__libc_gpBigEnv;
+
+#define __LIBC_KLIBCARGS_ERROR_SHMEMHEX 0x01
+#define __LIBC_KLIBCARGS_ERROR_SHMEMGET 0x02
+
+static int __libc_scanenv_fErr;
+static void *__libc_scanenv_pErr;
+
 
 /*******************************************************************************
 *   Internal Functions                                                         *
@@ -97,6 +108,7 @@ int __init_dll(int fFlags, unsigned long hmod)
     ULONG               aul[2];
     int                 rc;
     __LIBC_PSPMPROCESS  pSelf;
+    const char         *psz;
 
     static int fInitialized = 0;
 
@@ -168,9 +180,50 @@ int __init_dll(int fFlags, unsigned long hmod)
     }
 
     /*
+     * Force big environment and command line processing if not yet done.
+     */
+    __libc_scanenv(NULL, NULL);
+    if (__libc_gfkLIBCArgs)
+    {
+        LIBCLOG_MSG2("Got kLIBC-style command line arguments\n");
+        if (__libc_scanenv_fErr)
+        {
+            if (__libc_scanenv_fErr & __LIBC_KLIBCARGS_ERROR_SHMEMHEX)
+                LIBC_ASSERTM_FAILED("__libc_scanenv: Shared memory addr string is not hex: \"%s\"\n", (char*)__libc_scanenv_pErr);
+            if (__libc_scanenv_fErr & __LIBC_KLIBCARGS_ERROR_SHMEMGET)
+                LIBC_ASSERTM_FAILED("__libc_scanenv: DosGetSharedMem(%p) returned %d\n", __libc_gpTmpEnvArgs, (int)__libc_scanenv_pErr);
+            else
+                LIBC_ASSERTM_FAILED("__libc_scanenv: Unknown error %x\n", __libc_scanenv_fErr);
+        }
+        else if (__libc_gpTmpEnvArgs)
+        {
+            size_t szEnv = *(size_t*)__libc_gpTmpEnvArgs;
+            LIBCLOG_MSG2("Got shared mem for big env & args %p (env size %d, args size %d)\n",
+                         __libc_gpTmpEnvArgs, szEnv, *(size_t*)(__libc_gpTmpEnvArgs + sizeof(size_t) + szEnv));
+            if (szEnv)
+            {
+                /* __spawnve passes "\0" as pszEnv to DosExecPgm in this case */
+                LIBC_ASSERTM(!*fibGetEnv(), "native OS/2 env doesn't point to '\\0'");
+
+                /*
+                * _sys_init_environ does not make copies of environment variables,
+                * allocate a private storage for all of them.
+                */
+                __libc_gpBigEnv = _hmalloc(szEnv);
+                if (!__libc_gpBigEnv)
+                {
+                    LIBC_ASSERTM_FAILED("_hmalloc(%d) failed\n", szEnv);
+                    return -1;
+                }
+                memcpy(__libc_gpBigEnv, __libc_gpTmpEnvArgs + sizeof(size_t), szEnv);
+            }
+        }
+    }
+
+    /*
      * Setup environment (org_environ and _STD(environ))
      */
-    rc = _sys_init_environ(fibGetEnv());
+    rc = _sys_init_environ(__libc_gpBigEnv ? __libc_gpBigEnv : fibGetEnv());
     if (rc)
     {
         LIBC_ASSERTM_FAILED("_sys_init_environ() failed\n");
@@ -219,7 +272,7 @@ int __init_dll(int fFlags, unsigned long hmod)
     /*
      * Load and call hook DLLs.
      */
-    const char *psz = getenv("LIBC_HOOK_DLLS");
+    psz = getenv("LIBC_HOOK_DLLS");
     if (psz)
         __libc_back_hooksInit(psz, hmod);
 
@@ -238,6 +291,177 @@ int __init_dll(int fFlags, unsigned long hmod)
 void _sys_get_clock(unsigned long *pms)
 {
     *pms = fibGetMsCount();
+}
+
+
+/**
+ * Internal DosScanEnv version that supports scanning a "big" environment string
+ * passed by __spawnve via shared memory in kLIBC-style command line arguments
+ * or a "normal" OS/2-maintained environment string otherwise. It doesn't use
+ * any other LIBC functions so is reentrant.
+ */
+int __libc_scanenv(const char *pszName, const char **ppszValue)
+{
+    static int fInitialized = 0;
+
+    const char *pszEnv = __libc_gpBigEnv;
+    do
+    {
+        /* Short route (already got a big env) */
+        if (pszEnv)
+            break;
+
+        /*
+         * We may be called very early when __libc_GpFIBLIS is not yet
+         * initialized by __libc_back_fibInit (e.g. from
+         * __libc_ForkRegisterModule which is the first LIBC call after the DLL
+         * has been loaded and it already wants logging which scans the
+         * environment for LIBC_LOGGING). This will make fibGetEnv() and
+         * fibGetCmdLine() immediately trap. To work around this, we use
+         * DosGetInfoBlocks() directly instead.
+         */
+
+        if (fInitialized)
+        {
+            if (__libc_gpTmpEnvArgs && *(size_t*)__libc_gpTmpEnvArgs)
+            {
+                /* Short route 2 (got a big env but not copied it yet) */
+                pszEnv = __libc_gpTmpEnvArgs + sizeof(size_t);
+                break;
+            }
+            if (__libc_GpFIBPIB)
+            {
+                /* Short route 3 (no big en but already got fib data) */
+                pszEnv = fibGetEnv();
+                break;
+            }
+        }
+
+        PPIB pPib = NULL;
+        FS_VAR();
+        FS_SAVE_LOAD();
+        DosGetInfoBlocks(NULL, &pPib);
+        FS_RESTORE();
+
+        if (fInitialized)
+        {
+            /* Short route 4 (no big env) */
+            pszEnv = pPib->pib_pchenv;
+            break;
+        }
+
+        /*
+         * Long route: check if we are given kLIBC-style command line arguments
+         * and set up shared memory access to see if there is a big env in it.
+         */
+
+        fInitialized = 1;
+
+        const char *pszArgs = pPib->pib_pchcmd;
+        if (!*pszArgs)
+            break;
+
+        /* Skip argv[0] */
+        while (*pszArgs++);
+
+        if (    pszArgs[0] == __KLIBC_ARG_SIGNATURE[0]
+            &&  pszArgs[1] == __KLIBC_ARG_SIGNATURE[1]
+            &&  pszArgs[2] == __KLIBC_ARG_SIGNATURE[2]
+            &&  pszArgs[3] == __KLIBC_ARG_SIGNATURE[3]
+            &&  pszArgs[4] == __KLIBC_ARG_SIGNATURE[4]
+            &&  pszArgs[5] == __KLIBC_ARG_SIGNATURE[5]
+            &&  pszArgs[6] == __KLIBC_ARG_SIGNATURE[6]
+            &&  pszArgs[7] == __KLIBC_ARG_SIGNATURE[7])
+        {
+            /* Got kLIBC-style command line arguments */
+            __libc_gfkLIBCArgs = 1;
+
+            pszArgs += sizeof(__KLIBC_ARG_SIGNATURE);
+            if ((unsigned)*pszArgs & __KLIBC_ARG_SHMEM)
+            {
+                /*
+                 * Got a shared memory block with env & args from __spawnve.
+                 * Note that __libc_gpTmpEnvArgs will be freed in __init.c.
+                 */
+
+                /* Skip the flag byte */
+                const char *psz = ++pszArgs;
+                unsigned n = 0;
+
+                /* Convert from hex (no prefixes) */
+                while (*psz)
+                {
+                    char ch = *psz;
+                    unsigned d;
+                    if (ch >= '0' && ch <= '9')
+                        d = ch - '0';
+                    else if (ch >= 'A' && ch <= 'F')
+                        d = ch - 'A' + 10;
+                    else if (ch >= 'a' && ch <= 'f')
+                        d = ch - 'a' + 10;
+                    else
+                    {
+                        __libc_scanenv_fErr |= __LIBC_KLIBCARGS_ERROR_SHMEMHEX;
+                        __libc_scanenv_pErr = (void*)pszArgs;
+                        return -EFAULT;
+                    }
+                    n <<= 4;
+                    n |= d;
+                    ++psz;
+                }
+
+                __libc_gpTmpEnvArgs = (void*)n;
+                int rc = DosGetSharedMem(__libc_gpTmpEnvArgs, PAG_READ);
+                if (rc)
+                {
+                    __libc_scanenv_fErr |= __LIBC_KLIBCARGS_ERROR_SHMEMGET;
+                    __libc_scanenv_pErr = (void*)rc;
+                    return -EFAULT;
+                }
+
+                size_t szEnv = *(size_t*)__libc_gpTmpEnvArgs;
+                if (szEnv)
+                    pszEnv = __libc_gpTmpEnvArgs + sizeof(size_t);
+            }
+        }
+
+        if (!pszEnv)
+        {
+            /* either no shared memory block or no big env in it */
+            pszEnv = pPib->pib_pchenv;
+        }
+    }
+    while (0);
+
+    if (!pszName || !ppszValue)
+        return -EINVAL;
+
+    while (*pszEnv)
+    {
+        const char *psz = pszName;
+        while (*psz != '=' && *pszEnv == *psz)
+        {
+            ++pszEnv;
+            ++psz;
+        }
+
+        if (*psz == '=')
+            return -EINVAL;
+        if (*psz == '\0' && *pszEnv == '=')
+        {
+            ++pszEnv;
+            if (!*pszEnv)
+                break;
+            *ppszValue = pszEnv;
+            return 0;
+        }
+
+        while (*pszEnv)
+            ++pszEnv;
+        ++pszEnv;
+    }
+
+    return -ENOENT;
 }
 
 

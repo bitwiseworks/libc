@@ -169,6 +169,8 @@ static void doInheritDone(void)
       if (__predict_false(pszArgsBuf == NULL)) \
         { \
           _tfree (pszOld); \
+          if (pShMem) \
+            DosFreeMem(pShMem); \
           errno = ENOMEM; \
           LIBCLOG_RETURN_INT(-1); \
         } \
@@ -186,7 +188,8 @@ int __spawnve(struct _new_proc *np)
     /*
      * Validate mode.
      */
-    ULONG ulMode = np->mode;
+    int fHave32BitSize = np->mode & 0x80000000;
+    ULONG ulMode = np->mode & 0x7FFFFFFF;
     switch (ulMode & 0xff)
     {
         case P_WAIT:
@@ -256,7 +259,7 @@ int __spawnve(struct _new_proc *np)
             {
                 char const *pchVer = &szLineBuf[__KLIBC_STUB_SIGNATURE_OFF + sizeof(__KLIBC_STUB_SIGNATURE_BASE) - 1];
                 if (*pchVer >= '0' && *pchVer <= '9')
-                    enmMethod = !(np->mode & P_NOUNIXARGV) ? args_unix : args_standard;
+                    enmMethod = !(ulMode & P_NOUNIXARGV) ? args_unix : args_standard;
             }
             /** @todo move the hash bang handling up here. */
             /*else if (!rc && szLineBuf[0] == '#')
@@ -283,36 +286,139 @@ int __spawnve(struct _new_proc *np)
     char       *pszArg = NULL;
     size_t      cbArgs = 0;
     int         i;
+    size_t      szArgSize = np->arg_size;
+    size_t      szEnvSize = np->env_size;
+    PCSZ        pszEnv = (PCSZ)np->env_off;
+    PVOID       pShMem = NULL;
+    size_t      szArgMax = ARG_MAX;
+
+    if (fHave32BitSize)
+    {
+        szArgSize |= (size_t)np->arg_size2 << 16;
+        szEnvSize |= (size_t)np->env_size2 << 16;
+    }
 
     if (np->arg_count > 0)
     {
+        /* argv[0] */
         ++pszSrc;                    /* skip flags byte */
         cch = strlen(pszSrc) + 1;
         ADD(cch);
         memcpy(pszArg, pszSrc, cch);
         pszArg += cch; pszSrc += cch;
+        szArgSize -= cch;
+        szArgMax -= cch;
     }
     if (enmMethod == args_unix)
     {
-        /* first arg is the signature. */
+        /*
+         * Use shared memory to pass environment and arguments if we hit their
+         * limits. ARG_MAX is set to 32K - 32 on OS/2 because this is how much
+         * DosExecPgm can take for either of them (64K in total). Note that
+         * Posix defines ARG_MAX to be the sum of the arguments and environment,
+         * but since DosExecPgm doesn't let spend more than 32K for one half
+         * even if the other one is smaller, we have to keep it like that.
+         */
+        char* pShDst = NULL;
+        int fEnvExceedsArgMax = szEnvSize > ARG_MAX;
+        int fArgsExceedsArgMax = szArgSize > szArgMax;
+        int fUseShMem = fEnvExceedsArgMax || fArgsExceedsArgMax;
+        if (fUseShMem)
+        {
+            ULONG fFlags = PAG_READ | PAG_WRITE | PAG_COMMIT | OBJ_GETTABLE;
+            ULONG cb = sizeof(size_t) * 2;
+            if (fEnvExceedsArgMax)
+                cb += szEnvSize;
+            if (fArgsExceedsArgMax)
+                cb += szArgSize;
+            rc = DosAllocSharedMem((PVOID)&pShMem, NULL, cb, fFlags | OBJ_ANY);
+            if (rc)
+            {
+                rc = DosAllocSharedMem((PVOID)&pShMem, NULL, cb, fFlags);
+                if (rc)
+                {
+                    LIBCLOG_ERROR("DosAllocSharedMem - rc=%d (cb=%lu)\n", rc, cb);
+                    _tfree(pszArgsBuf);
+                    errno = ENOMEM;
+                    LIBCLOG_RETURN_INT(-1);
+                }
+            }
+            LIBCLOG_MSG("Using shared mem for env & args %p (env size %d (max %d), args size %d (max %d) -> cb=%lu)\n",
+                        pShMem, szEnvSize, ARG_MAX, szArgSize, szArgMax, cb);
+            pShDst = pShMem;
+
+            if (fEnvExceedsArgMax)
+            {
+                /*
+                 * Copy environment first (see __init.c where it's processed).
+                 * Note that in order to pass environment this way, we need to
+                 * pass "\0" to DosExecPgm (when pShMem is not NULL) and then
+                 * reconstruct it from scratch in the child using the data from
+                 * shared memory.
+                 */
+                *(size_t*)pShDst = szEnvSize;
+                pShDst += sizeof(size_t);
+                memcpy(pShDst, pszEnv, szEnvSize);
+                pShDst += szEnvSize;
+                pszEnv = (PCSZ)"\0";
+            }
+            else
+            {
+                /* Use the regular way */
+                *(size_t*)pShDst = 0;
+                pShDst += sizeof(size_t);
+            }
+        }
+
+        /*
+         * The first arg is the signature (note that we assume that this fits
+         * into 32 bytes off the 32K limit in ARG_MAX including what OS/2 also
+         * needs for rounding).
+         */
         ADD(sizeof(__KLIBC_ARG_SIGNATURE));
         memcpy(pszArg, __KLIBC_ARG_SIGNATURE, sizeof(__KLIBC_ARG_SIGNATURE));
         pszArg += sizeof(__KLIBC_ARG_SIGNATURE);
 
         /* then comes the argument vector. */
-        for (i = 1; i < np->arg_count; ++i)
+        if (fUseShMem)
         {
-            unsigned char chFlags = *pszSrc++;
-            chFlags &= ~__KLIBC_ARG_MASK;
-            chFlags |= __KLIBC_ARG_ARGV;
-            cch = strlen(pszSrc) + 1;
-            ADD(cch + 1);
-            *pszArg++ = chFlags;
-            memcpy(pszArg, pszSrc, cch);
-            pszArg += cch;
-            pszSrc += cch;
+            if (fArgsExceedsArgMax)
+            {
+                *(size_t*)pShDst = szArgSize;
+                pShDst += sizeof(size_t);
+                memcpy(pShDst, pszSrc, szArgSize);
+            }
+            else
+            {
+                /* Use the regular way */
+                *(size_t*)pShDst = 0;
+            }
+
+            /*
+             * The second arg is the address of shared memory in hex (XXXXXXXX +
+             * \0). Note that we fit that into the 32 bytes off 32K as well.
+             */
+            ADD(9 + 1);
+            *pszArg++ = __KLIBC_ARG_SHMEM;
+            _ultoa((ULONG)pShMem, pszArg, 16);
+            pszArg += strlen(pszArg) + 1;
         }
 
+        if (!fUseShMem || !fArgsExceedsArgMax)
+        {
+            for (i = 1; i < np->arg_count; ++i)
+            {
+                unsigned char chFlags = *pszSrc++;
+                chFlags &= ~__KLIBC_ARG_MASK;
+                chFlags |= __KLIBC_ARG_ARGV;
+                cch = strlen(pszSrc) + 1;
+                ADD(cch + 1);
+                *pszArg++ = chFlags;
+                memcpy(pszArg, pszSrc, cch);
+                pszArg += cch;
+                pszSrc += cch;
+            }
+        }
         /* the double termination. */
         ADD(1);
         *pszArg = '\0';
@@ -411,7 +517,9 @@ int __spawnve(struct _new_proc *np)
              */
             FS_SAVE_LOAD();
             LIBCLOG_MSG("Calling DosExecPgm pgm: %s args: %s\\0%s\\0\\0\n", pszPgmName, pszArgsBuf, pszArgsBuf + strlen(pszArgsBuf) + 1);
-            rc = DosExecPgm(szObj, sizeof(szObj), EXEC_ASYNCRESULT, (PCSZ)pszArgsBuf, (PCSZ)np->env_off, &resc, (PCSZ)pszPgmName);
+            rc = DosExecPgm(szObj, sizeof(szObj), EXEC_ASYNCRESULT, (PCSZ)pszArgsBuf, pszEnv, &resc, (PCSZ)pszPgmName);
+            LIBCLOG_MSG("DosExecPgm returned %d\n", rc);
+
             int cTries = 3;
             while (     (   rc == ERROR_INVALID_EXE_SIGNATURE
                          || rc == ERROR_BAD_EXE_FORMAT)
@@ -577,6 +685,7 @@ int __spawnve(struct _new_proc *np)
                  */
                 LIBCLOG_MSG("Calling DosExecPgm pgm: %s args: %s\\0%s\\0\\0\n", pszPgmName, pszArgsBuf, pszArgsBuf + strlen(pszArgsBuf) + 1);
                 rc = DosExecPgm(szObj, sizeof(szObj), EXEC_ASYNCRESULT, (PCSZ)pszArgsBuf, (PCSZ)np->env_off, &resc, (PCSZ)pszPgmName);
+                LIBCLOG_MSG("DosExecPgm returned %d\n", rc);
             } /* while */
             FS_RESTORE();
             if (!rc)
@@ -613,6 +722,8 @@ int __spawnve(struct _new_proc *np)
                 }
                 if (pszArgsBuf != NULL)
                     _tfree(pszArgsBuf);
+                if (pShMem != NULL)
+                    DosFreeMem(pShMem);
 
                 /*
                  * Exit depends on the mode.
@@ -776,6 +887,8 @@ int __spawnve(struct _new_proc *np)
 
     if (pszArgsBuf != NULL)
         _tfree(pszArgsBuf);
+    if (pShMem != NULL)
+        DosFreeMem(pShMem);
     _fmutex_release(&__libc_gmtxExec);
     LIBCLOG_ERROR_RETURN_INT(-1);
 }

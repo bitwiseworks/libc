@@ -70,6 +70,10 @@ struct _new_proc
   unsigned short env_count;
   unsigned short env_size;
   unsigned       mode;
+  /** higher 16 bits of arg_size (used only if bit 31 of mode is set) */
+  unsigned short arg_size2;
+  /** higher 16 bits of env_size (used only if bit 31 of mode is set) */
+  unsigned short env_size2;
 };
 
 struct _profil

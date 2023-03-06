@@ -1,7 +1,7 @@
 /* $Id: startup.h 3645 2008-05-18 23:42:37Z bird $ */
 /** @file
  * kLIBC startup stuff.
- * 
+ *
  *
  * Copyright (c) 2008 knut st. osmundsen <bird-src-spam@anduin.net>
  *
@@ -31,9 +31,9 @@
  * @{ */
 #define __KLIBC_ARG_SIGNATURE   "\177kLIBC\177"
 /** This a filler to make sure the flag char isn't zero. */
-#define __KLIBC_ARG_NONZERO     0x80    
+#define __KLIBC_ARG_NONZERO     0x80
 /** Mask out the actual flags. */
-#define __KLIBC_ARG_MASK        0x3f
+#define __KLIBC_ARG_MASK        0x7f
 /** Argument was double quoted. */
 #define __KLIBC_ARG_DQUOTE      0x01
 /** Argument was read from response file. */
@@ -46,6 +46,8 @@
 #define __KLIBC_ARG_SHELL       0x10
 /** Argument was passed via a unix argv. */
 #define __KLIBC_ARG_ARGV        0x20
+/** Argument was passed via a shared memory block. */
+#define __KLIBC_ARG_SHMEM       0x40
 /** @} */
 
 /** @name OS/2 Stub info.

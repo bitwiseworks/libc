@@ -25,7 +25,7 @@ int _STD(spawnve)(int mode, const char *name, char * const argv[], char * const 
      * Init the syscall struct np.
      */
     /* mode */
-    np.mode = mode;
+    np.mode = mode & 0x7FFFFFFF;
     /* exe name */
     if (strlen(name) >= sizeof(exe) - 4)
     {
@@ -46,16 +46,6 @@ int _STD(spawnve)(int mode, const char *name, char * const argv[], char * const 
     for (p = (const char * const *)envp; *p != NULL; ++p)
     {
         ++n;
-        size += 1 + strlen(*p);
-    }
-    d = alloca(size);
-    LIBCLOG_MSG("environment: %d bytes %d entries block=%p\n", size, n, d);
-    np.env_count = n; np.env_size = size;
-    np.env_off = (unsigned long)d;
-
-    /* copy environment */
-    for (p = (const char * const *)envp; *p != NULL; ++p)
-    {
         i = strlen(*p);
         /*
          * Skip empty strings to prevent DosExecPgm from interpreting them
@@ -69,13 +59,33 @@ int _STD(spawnve)(int mode, const char *name, char * const argv[], char * const 
          */
         if (memchr(*p, '=', i) == NULL)
             continue;
+        size += 1 + i;
+    }
+    d = alloca(size);
+    LIBCLOG_MSG("environment: %d bytes %d entries block=%p\n", size, n, d);
+    np.env_count = n; np.env_size = size;
+    np.env_off = (unsigned long)d;
+    np.env_size2 = size >> 16;
+    if (np.env_size2)
+        np.mode |= 0x80000000;
+
+    /* copy environment */
+    for (p = (const char * const *)envp; *p != NULL; ++p)
+    {
+        i = strlen(*p);
+        /* see above */
+        if (!i)
+            continue;
+        /* see above */
+        if (memchr(*p, '=', i) == NULL)
+            continue;
         memcpy(d, *p, i + 1);
         d += i + 1;
     }
     *d = 0;
 
     /* calc argument size */
-    size = 0; n = 0;
+    size = 1; n = 0;
     for (p = (const char * const *)argv; *p != NULL; ++p)
     {
         ++n;
@@ -85,6 +95,9 @@ int _STD(spawnve)(int mode, const char *name, char * const argv[], char * const 
     LIBCLOG_MSG("arguments: %d bytes %d entries block=%p\n", size, n, d);
     np.arg_count = n; np.arg_size = size;
     np.arg_off = (unsigned long)d;
+    np.arg_size2 = size >> 16;
+    if (np.arg_size2)
+        np.mode |= 0x80000000;
 
     /* copy arguments */
     for (p = (const char * const *)argv; *p != NULL; ++p)
@@ -94,6 +107,7 @@ int _STD(spawnve)(int mode, const char *name, char * const argv[], char * const 
         memcpy(d, *p, i + 1);
         d += i + 1;
     }
+    *d = 0;
 
     /*
      * Call syscall.

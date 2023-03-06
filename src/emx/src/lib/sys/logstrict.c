@@ -65,6 +65,7 @@
 #include <InnoTekLIBC/thread.h>
 #include <InnoTekLIBC/fork.h>
 #include <InnoTekLIBC/errno.h>
+#include "backend.h"
 
 #define INCL_BASE
 #define INCL_FSMACROS
@@ -276,7 +277,7 @@ const char *__libc_LogGetDefaultLogDir(void)
         return pszLogDir;
     }
 
-    PSZ pszEnv = NULL;
+    const char *pszEnv = NULL;
     char *psz = pszLogDir;
     unsigned cch = sizeof(pszLogDir);
     FILESTATUS3 status;
@@ -285,7 +286,7 @@ const char *__libc_LogGetDefaultLogDir(void)
     /*
      * Get the system log directory and create the "[var\log\]app" subdirectory.
      */
-    if (!DosScanEnv((PCSZ)"LOGFILES", &pszEnv) && pszEnv && *pszEnv)
+    if (!__libc_scanenv("LOGFILES", &pszEnv) && pszEnv && *pszEnv)
     {
         __copystr(&psz, &cch, (char *)pszEnv);
         __copystr(&psz, &cch, "\\app");
@@ -293,7 +294,7 @@ const char *__libc_LogGetDefaultLogDir(void)
         if (!DosQueryPathInfo((PSZ)pszLogDir, FIL_STANDARD, &status, sizeof(status)))
             fDone = 1;
     }
-    else if (!DosScanEnv((PCSZ)"UNIXROOT", &pszEnv) && pszEnv && *pszEnv)
+    else if (!__libc_scanenv("UNIXROOT", &pszEnv) && pszEnv && *pszEnv)
     {
         __copystr(&psz, &cch, (char *)pszEnv);
         __copystr(&psz, &cch, "\\var");
@@ -481,7 +482,7 @@ static void *   __libc_logInit(__LIBC_PLOGINST pInst, const char *pszEnvVar, con
     ULONG       ulAction;
     int         rc;
     char       *pszMsg;
-    PSZ         pszEnv = NULL;
+    const char *pszEnv = NULL;
     int         fCurDir = 0;
     FS_VAR();
     FS_SAVE_LOAD();
@@ -491,7 +492,7 @@ static void *   __libc_logInit(__LIBC_PLOGINST pInst, const char *pszEnvVar, con
      */
     if (pszEnvVar)
     {
-        if (!DosScanEnv((PCSZ)pszEnvVar, &pszEnv) && pszEnv && *pszEnv)
+        if (!__libc_scanenv(pszEnvVar, &pszEnv) && pszEnv && *pszEnv)
         {
             if (!__stricmp_ascii((char *)pszEnv, "curdir"))
                 fCurDir = 1;
@@ -815,12 +816,12 @@ static void *   __libc_logInit(__LIBC_PLOGINST pInst, const char *pszEnvVar, con
  */
 void __libc_LogGroupInit(__LIBC_PLOGGROUPS pGroups, const char *pszEnvVar)
 {
-    PSZ pszEnv = NULL;
+    const char *pszEnv = NULL;
 
     /*
      * Get and process the env.var. containing the logging settings.
      */
-    if (DosScanEnv((PCSZ)pszEnvVar, &pszEnv) || !pszEnv)
+    if (__libc_scanenv(pszEnvVar, &pszEnv) || !pszEnv)
         return;
 
     /*
@@ -830,7 +831,7 @@ void __libc_LogGroupInit(__LIBC_PLOGGROUPS pGroups, const char *pszEnvVar)
     {
         char    ch;
         int     fEnabled = 1;
-        PCSZ    pszStart;
+        const char *pszStart;
         int     i;
         int     cch;
 
@@ -1799,8 +1800,8 @@ void     __libc_LogAssert(void *pvInstance, unsigned fGroupAndFlags,
      */
     if (fEnabled == -1)
     {
-        PSZ pszValue;
-        fEnabled = DosScanEnv((PCSZ)"LIBC_STRICT_DISABLED", &pszValue) != NO_ERROR;
+        const char *pszValue;
+        fEnabled = __libc_scanenv("LIBC_STRICT_DISABLED", &pszValue) != 0;
     }
 
     /*

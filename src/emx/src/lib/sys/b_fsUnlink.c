@@ -41,7 +41,7 @@
 #include <InnoTekLIBC/backend.h>
 #define __LIBC_LOG_GROUP __LIBC_LOG_GRP_BACK_FS
 #include <InnoTekLIBC/logstrict.h>
-
+#include "backend.h"
 
 /**
  * Unlinks a file, symlink, dev, pipe or socket, but not a directory.
@@ -82,8 +82,8 @@ int __libc_Back_fsUnlink(const char *pszPath)
     static int s_fUseForce = 0; /* state: 0 - uninit, 1 - DosForceDelete, -1 - DosDelete */
     if (s_fUseForce == 0)
     {
-        PSZ psz = NULL;
-        if (DosScanEnv((PCSZ)"DELDIR", &psz) || !psz)
+        const char *psz = NULL;
+        if (__libc_scanenv("DELDIR", &psz) || !psz)
             s_fUseForce = 1;
         else
             s_fUseForce = -1;

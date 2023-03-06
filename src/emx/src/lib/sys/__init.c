@@ -51,9 +51,11 @@ static int parse_args(const char *src, char **argv, char *pool);
 /*******************************************************************************
 *   Global Variables                                                           *
 *******************************************************************************/
+extern int      __libc_gfkLIBCArgs;
+extern void    *__libc_gpTmpEnvArgs;
+
 /** argument count found by parse_args(). */
 static int argc;
-
 
 /*******************************************************************************
 *   Defined Constants And Macros                                               *
@@ -70,7 +72,7 @@ static int argc;
  * Parses the argument string passed in as src.
  *
  * @returns size of the processed arguments.
- * @param   src     Pointer two sequent zero terminated string containing
+ * @param   src     Pointer to sequent zero terminated string containing
  *                  the arguments to be parsed.
  * @param   pool    Pointer to memory pool to put the arguments into.
  *                  NULL allowed.
@@ -82,7 +84,7 @@ static int parse_args(const char *src, char **argv, char *pool)
 {
     int   quote;
     char  ch;
-    char  flags; 
+    char  flags;
     char *flag_ptr;
     int   arg_size, arg_pos;
 
@@ -100,14 +102,7 @@ static int parse_args(const char *src, char **argv, char *pool)
     ++src;
 
     /* Check for the kLIBC signature used for unix arguments. */
-    if (    src[0] != '\177'
-        ||  src[1] != 'k'
-        ||  src[2] != 'L'
-        ||  src[3] != 'I'
-        ||  src[4] != 'B'
-        ||  src[5] != 'C'
-        ||  src[6] != '\177'
-        ||  src[7] != '\0')
+    if (!__libc_gfkLIBCArgs)
     {
         /* Convert from OS/2 command line convention to C/Unix. */
         for (;;)
@@ -141,23 +136,23 @@ static int parse_args(const char *src, char **argv, char *pool)
                     quote = '"';
                     *flag_ptr |= _ARG_DQUOTE;
                 }
-                /* 
+                /*
                  * Only permit the single quote to be used at the start of an argument or
                  * within an already quoted one. This restriction is necessary to support
-                 * unquoted filenames containing the single quote char. 
+                 * unquoted filenames containing the single quote char.
                  */
-                else if (   !quote && *src == '\'' 
-                         && (   arg_pos == arg_size 
+                else if (   !quote && *src == '\''
+                         && (   arg_pos == arg_size
                              || (*flag_ptr & _ARG_DQUOTE)))
                 {
                     quote = '\'';
                     *flag_ptr |= _ARG_DQUOTE;
                 }
-                /* 
-                 * The escape character. This is truly magic/weird. 
-                 * It doesn't escape anything unless it's in front of a 
+                /*
+                 * The escape character. This is truly magic/weird.
+                 * It doesn't escape anything unless it's in front of a
                  * double quote character. EMX weirdness...
-                 * (Ok, not escaping more than necessary is ok when using \ as path 
+                 * (Ok, not escaping more than necessary is ok when using \ as path
                  * separator, but why weird interpretation of \\\\"asdf"?
                  */
                 else if (*src == '\\' && quote != '\'')
@@ -168,7 +163,7 @@ static int parse_args(const char *src, char **argv, char *pool)
                         cSlashes++;
                         src++;
                     } while (*src == '\\');
-    
+
                     if (*src == '"')
                     {
                         /* Treat it is as escapes. */
@@ -208,6 +203,24 @@ static int parse_args(const char *src, char **argv, char *pool)
         if (pool)
         {
             /* copying */
+            if (__libc_gpTmpEnvArgs)
+            {
+                /*
+                 * Got a shared memory block with env & args. Skip the
+                 * environment (and both size fields).
+                 */
+                size_t szEnv = *(size_t*)__libc_gpTmpEnvArgs;
+                size_t szArgs = *(size_t*)(__libc_gpTmpEnvArgs + sizeof(size_t) + szEnv);
+                if (szArgs)
+                    src = __libc_gpTmpEnvArgs + szEnv + sizeof(size_t) * 2;
+                else
+                {
+                     /* skip __KLIBC_ARG_SHMEM arg */
+                    LIBC_ASSERTM((unsigned)*src & __KLIBC_ARG_SHMEM, "flags=%x", (unsigned)*src);
+                    if (*src)
+                        while (*src++);
+                }
+            }
             while (*src)
             {
                 LIBC_ASSERTM((unsigned)*src & __KLIBC_ARG_NONZERO, "flags=%x", (unsigned)*src);
@@ -222,6 +235,24 @@ static int parse_args(const char *src, char **argv, char *pool)
         else
         {
             /* counting */
+            if (__libc_gpTmpEnvArgs)
+            {
+                /*
+                 * Got a shared memory block with env & args. Skip the
+                 * environment (and both size fields).
+                 */
+                size_t szEnv = *(size_t*)__libc_gpTmpEnvArgs;
+                size_t szArgs = *(size_t*)(__libc_gpTmpEnvArgs + sizeof(size_t) + szEnv);
+                if (szArgs)
+                    src = __libc_gpTmpEnvArgs + szEnv + sizeof(size_t) * 2;
+                else
+                {
+                     /* skip __KLIBC_ARG_SHMEM arg */
+                    LIBC_ASSERTM((unsigned)*src & __KLIBC_ARG_SHMEM, "flags=%x", (unsigned)*src);
+                    if (*src)
+                        while (*src++);
+                }
+            }
             while (*src)
             {
                 LIBC_ASSERTM((unsigned)*src & __KLIBC_ARG_NONZERO, "flags=%x", (unsigned)*src);
@@ -240,15 +271,15 @@ static int parse_args(const char *src, char **argv, char *pool)
 
 #if 0
 /**
- * This is a hack to prevent us from messing up filenames that 
- * include a \' character. 
- *  
+ * This is a hack to prevent us from messing up filenames that
+ * include a \' character.
+ *
  * @param src
- * 
+ *
  * @return int
  */
 static int verify_end_of_single_quote(const char *src);
-#endif 
+#endif
 
 
 /**
@@ -268,7 +299,7 @@ static int verify_end_of_single_quote(const char *src);
  */
 void __init(int fFlags)
 {
-    /** top of stack unpon 'return' from this function. */
+    /** top of stack upon 'return' from this function. */
     struct stackframe
     {
         /** Argument count. */
@@ -306,13 +337,25 @@ void __init(int fFlags)
     cb = (cb + 15) & ~15;
     pStackFrame = alloca(cb);
     if (!pStackFrame)
+    {
+        LIBC_ASSERTM_FAILED("alloca(%d) failed\n", cb);
         goto failure;
+    }
 
     pStackFrame->envp = _org_environ;
     pStackFrame->argc = argc;
     pStackFrame->argv = &pStackFrame->apszArg[0];
     parse_args(fibGetCmdLine(), pStackFrame->argv, (char*)&pStackFrame->argv[argc + 1]);
     pStackFrame->argv[argc] = NULL;
+
+    /*
+     * Free env & args shared memory block if any.
+     */
+    if (__libc_gpTmpEnvArgs)
+    {
+        DosFreeMem(__libc_gpTmpEnvArgs);
+        __libc_gpTmpEnvArgs = NULL;
+    }
 
     /*
      * Free the SPM inherit data.

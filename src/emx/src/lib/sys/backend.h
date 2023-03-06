@@ -57,6 +57,12 @@ void __libc_back_hooksInit(const char *pszSpec, unsigned long hmod);
  */
 int __libc_abspath(char *pszDst, const char *pszSrc, int cbDst, int fLock);
 
+/**
+ * Internal DosScanEnv version that supports scanning of __libc_gpBigEnv
+ * and doesn't use any other LIBC functions so is reentrant.
+ */
+int __libc_scanenv(const char *pszName, const char **ppszValue);
+
 __END_DECLS
 
 #endif
