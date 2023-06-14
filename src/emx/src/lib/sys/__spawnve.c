@@ -157,6 +157,33 @@ static void doInheritDone(void)
     __libc_fhInheritDone();
 }
 
+
+/*
+ * Resolve the interpreter name.
+ * Try the unchanged name first, then the name with .exe suffix,
+ * then the PATH.  In the latter case we skip the directory path
+ * if given, since we're frequently faced with path differences
+ * between OS/2 and the UNIX where the script originated.
+ */
+static int resolveInterpreter(const char* pszInterpreter, char* szPathBuf)
+{
+    char *psz;
+    int rc = __libc_back_fsResolve(pszInterpreter, BACKFS_FLAGS_RESOLVE_FULL, szPathBuf, NULL);
+    if (rc)
+    {
+        char szPath[PATH_MAX];
+        if (   _path2(pszInterpreter, ".exe", szPath, sizeof(szPath)) == 0
+            || (   (psz = _getname(pszInterpreter)) != pszInterpreter
+                && _path2(psz, ".exe", szPath, sizeof(szPath)) == 0) )
+            rc = __libc_back_fsResolve(szPath, BACKFS_FLAGS_RESOLVE_FULL, szPathBuf, NULL);
+        if (rc)
+            LIBCLOG_MSG2("Failed to find interpreter '%s'! szPath='%s'\n", pszInterpreter, szPath);
+    }
+
+    return rc;
+}
+
+
 /* Note: We are allowed to call _trealloc() as this module is not used
    in an .a library. */
 
@@ -202,19 +229,19 @@ int __spawnve(struct _new_proc *np)
     }
 
     /*
-     * Resolve the program name - prefere .exe over stubs.
+     * Resolve the program name - prefer .exe over stubs.
      * The caller have left enough space for adding an .exe extension.
      */
     char *pszPgmName = (char *)np->fname_off;
-    size_t cch = strlen((char *)np->fname_off);
+    size_t cchFname = strlen((char *)np->fname_off);
     _defext(pszPgmName, "exe");
     char szNativePath[PATH_MAX];
     int rc = __libc_back_fsResolve(pszPgmName, BACKFS_FLAGS_RESOLVE_FULL, &szNativePath[0], NULL);
     if (rc)
     {
-        if (pszPgmName[cch])
+        if (pszPgmName[cchFname])
         {
-            pszPgmName[cch] = '\0'; /* Drop the .exe bit added by _defext(). */
+            pszPgmName[cchFname] = '\0'; /* Drop the .exe bit added by _defext(). */
             rc = __libc_back_fsResolve(pszPgmName, BACKFS_FLAGS_RESOLVE_FULL, &szNativePath[0], NULL);
         }
         if (rc)
@@ -232,50 +259,138 @@ int __spawnve(struct _new_proc *np)
      * (1 == cmd or 4os2 shell, 0 == anything else)
      */
     enum { args_standard, args_cmd, args_unix } enmMethod = args_standard;
-    char *psz = _getname(pszPgmName);
-    if (   stricmp(psz, "cmd.exe") == 0
-        || stricmp(psz, "4os2.exe") == 0)
-        enmMethod = args_cmd;
-    else
+    char *psz;
+    size_t cch;
+
+    const char *pszInterpreter = NULL;
+    const char *pszInterpreterArgs = NULL;
+    size_t      cchInterpreterArgs = 0;
+
+    int cTries = 2;
+    while (cTries-- > 0)
     {
-        HFILE hFile = NULLHANDLE;
-        ULONG ulAction = 0;
-        rc = DosOpen((PCSZ)pszPgmName, &hFile, &ulAction, 0, FILE_NORMAL,
-                     OPEN_ACTION_FAIL_IF_NEW | OPEN_ACTION_OPEN_IF_EXISTS,
-                     OPEN_FLAGS_SEQUENTIAL | OPEN_FLAGS_NOINHERIT | OPEN_SHARE_DENYNONE | OPEN_ACCESS_READONLY,
-                     NULL);
-        if (!rc)
+        char *psz = _getname(pszPgmName);
+        if (   stricmp(psz, "cmd.exe") == 0
+            || stricmp(psz, "4os2.exe") == 0)
         {
-            ULONG cbRead = 0;
-            rc = DosRead(hFile, szLineBuf, sizeof(szLineBuf), &cbRead);
-            DosClose(hFile);
-            if (rc)
-                LIBCLOG_ERROR("DosRead - rc=%d (%s)\n", rc, pszPgmName);
-            else if (   cbRead >= __KLIBC_STUB_MIN_SIZE
-                     && szLineBuf[0] == 'M'
-                     && szLineBuf[1] == 'Z'
-                     && !memcmp(&szLineBuf[__KLIBC_STUB_SIGNATURE_OFF], __KLIBC_STUB_SIGNATURE_BASE, sizeof(__KLIBC_STUB_SIGNATURE_BASE) - 1)
-                    )
-            {
-                char const *pchVer = &szLineBuf[__KLIBC_STUB_SIGNATURE_OFF + sizeof(__KLIBC_STUB_SIGNATURE_BASE) - 1];
-                if (*pchVer >= '0' && *pchVer <= '9')
-                    enmMethod = !(ulMode & P_NOUNIXARGV) ? args_unix : args_standard;
-            }
-            /** @todo move the hash bang handling up here. */
-            /*else if (!rc && szLineBuf[0] == '#')
-            {
-            } */
-        }
-        /* Catch some plain failures here, leave the rest for later. */
-        else if (   rc == ERROR_FILE_NOT_FOUND
-                 || rc == ERROR_PATH_NOT_FOUND)
-        {
-            _sys_set_errno(rc);
-            LIBCLOG_RETURN_INT(-1);
+            enmMethod = args_cmd;
+            break;
         }
         else
-            LIBCLOG_ERROR("rc=%d (%s)\n", rc, pszPgmName);
-    }
+        {
+            HFILE hFile = NULLHANDLE;
+            ULONG ulAction = 0;
+            rc = DosOpen((PCSZ)pszPgmName, &hFile, &ulAction, 0, FILE_NORMAL,
+                        OPEN_ACTION_FAIL_IF_NEW | OPEN_ACTION_OPEN_IF_EXISTS,
+                        OPEN_FLAGS_SEQUENTIAL | OPEN_FLAGS_NOINHERIT | OPEN_SHARE_DENYNONE | OPEN_ACCESS_READONLY,
+                        NULL);
+            if (!rc)
+            {
+                ULONG cbRead = 0;
+                rc = DosRead(hFile, szLineBuf, sizeof(szLineBuf) - 1, &cbRead);
+                DosClose(hFile);
+                if (rc)
+                    LIBCLOG_ERROR("DosRead - rc=%d (%s)\n", rc, pszPgmName);
+                else
+                {
+                    if (   cbRead >= __KLIBC_STUB_MIN_SIZE
+                        && szLineBuf[0] == 'M'
+                        && szLineBuf[1] == 'Z'
+                        && !memcmp(&szLineBuf[__KLIBC_STUB_SIGNATURE_OFF], __KLIBC_STUB_SIGNATURE_BASE, sizeof(__KLIBC_STUB_SIGNATURE_BASE) - 1)
+                    )
+                    {
+                        char const *pchVer = &szLineBuf[__KLIBC_STUB_SIGNATURE_OFF + sizeof(__KLIBC_STUB_SIGNATURE_BASE) - 1];
+                        if (*pchVer >= '0' && *pchVer <= '9')
+                            enmMethod = !(ulMode & P_NOUNIXARGV) ? args_unix : args_standard;
+                        break;
+                    }
+                    else if (cTries > 0 && __libc_Back_gfProcessHandleHashBangScripts)
+                    {
+                        /* Note: this is tried only once thanks to cTries to avoid hash bang recursion */
+                        szLineBuf[cbRead < sizeof(szLineBuf) ? cbRead : sizeof(szLineBuf) - 1] = '\0';
+                        psz = strpbrk(szLineBuf, "\r\n");
+                        if (psz)
+                        {
+                            register char ch;
+                            while ((ch = *--psz) == ' ' || ch == '\t')
+                                /* nothing */;
+                            psz[1] = '\0';
+
+                            /*
+                            * Check for '#[ \t]*!'
+                            */
+                            psz = &szLineBuf[0];
+                            if (*psz++ == '#')
+                            {
+                                while ((ch = *psz) == ' ' || ch == '\t')
+                                    psz++;
+                                if (*psz++ == '!')
+                                {
+                                    while ((ch = *psz) == ' ' || ch == '\t')
+                                        psz++;
+                                    pszInterpreter = psz;
+
+                                    /*
+                                    * Find end of interpreter and start of potential arguments.
+                                    * I've never seen quoted interpreter names, so we won't bother with that yet.
+                                    */
+                                    while ((ch = *psz) != ' ' && ch != '\t' && ch != '\0')
+                                        psz++;
+                                    if (ch)
+                                    {
+                                        *psz++ = '\0';
+                                        while ((ch = *psz) == ' ' || ch == '\t')
+                                            psz++;
+                                        if (ch)
+                                            pszInterpreterArgs = psz;
+                                    }
+                                } /* if bang */
+                            } /* if hash */
+                        } /* if full line */
+
+                        if (!pszInterpreter)
+                            break;
+                        rc = resolveInterpreter(pszInterpreter, &szNativePath[0]);
+                        if (rc)
+                        {
+                            errno = -rc;
+                            LIBCLOG_RETURN_INT(-1);
+                        }
+
+                        /* Repeat with the interpreter as the program name. */
+                        pszPgmName = &szNativePath[0];
+                        LIBCLOG_MSG("Trying with hash bang interpreter '%s' (-> '%s'), args '%s'\n", pszInterpreter, pszPgmName, pszInterpreterArgs);
+
+                        /* Copy the strings as the buffer gets reused */
+                        cch = strlen(pszInterpreter) + 1;
+                        psz = alloca(cch);
+                        memcpy(psz, pszInterpreter, cch);
+                        pszInterpreter = psz;
+
+                        if (pszInterpreterArgs)
+                        {
+                            cchInterpreterArgs = strlen(pszInterpreterArgs);
+                            cch = cchInterpreterArgs + 1;
+                            psz = alloca(cch);
+                            memcpy(psz, pszInterpreterArgs, cch);
+                            pszInterpreterArgs = psz;
+                        }
+                    }
+                }
+            }
+            /* Catch some plain failures here, leave the rest for later. */
+            else if (   rc == ERROR_FILE_NOT_FOUND
+                    || rc == ERROR_PATH_NOT_FOUND)
+            {
+                _sys_set_errno(rc);
+                LIBCLOG_RETURN_INT(-1);
+            }
+            else
+                LIBCLOG_ERROR("rc=%d (%s)\n", rc, pszPgmName);
+        }
+    } /* if cTries > 0 (a hash bang retry) */
+
+    LIBCLOG_MSG("enmMethod (std=0,cmd=1,unix=2) %d\n", enmMethod);
 
     /*
      * Construct the commandline.
@@ -291,6 +406,7 @@ int __spawnve(struct _new_proc *np)
     PCSZ        pszEnv = (PCSZ)np->env_off;
     PVOID       pShMem = NULL;
     size_t      szArgMax = ARG_MAX;
+    size_t      cchArg0;
 
     if (fHave32BitSize)
     {
@@ -298,16 +414,53 @@ int __spawnve(struct _new_proc *np)
         szEnvSize |= (size_t)np->env_size2 << 16;
     }
 
-    if (np->arg_count > 0)
+    /* Get the length of argv[0] (note: skip flags byte) */
+    cchArg0 = np->arg_count > 0 ? strlen(++pszSrc) + 1 : 0;
+
+    if (pszInterpreter)
     {
-        /* argv[0] */
-        ++pszSrc;                    /* skip flags byte */
-        cch = strlen(pszSrc) + 1;
+        cch = strlen(pszInterpreter) + 1;
+
+        /* Sanity. */
+        if (cch > szArgMax)
+        {
+            LIBCLOG_ERROR("hash bang interpreter '%s' > ARG_MAX (%d > %d)\n", pszInterpreter, cch, szArgMax);
+            errno = E2BIG;
+            LIBCLOG_RETURN_INT(-1);
+        }
+
+        /*
+         * In hash bang mode, ignore the original argv[0] but account for the
+         * interpreter args and the script name (unresolved).
+         */
+        pszSrc += cchArg0;
+        szArgSize -= cchArg0;
+        if (pszInterpreterArgs)
+            szArgSize += cchInterpreterArgs + 2 /* term + flags byte */;
+        szArgSize += cchFname + 2 /* term + flags byte */;
+
+        /* Make the interpreter a new argv[0]. */
         ADD(cch);
-        memcpy(pszArg, pszSrc, cch);
-        pszArg += cch; pszSrc += cch;
-        szArgSize -= cch;
-        szArgMax -= cch;
+        memcpy(pszArg, pszInterpreter, cch);
+        pszArg += cch;
+
+    }
+    else if (cchArg0)
+    {
+        /* Sanity. */
+        if (cchArg0 > szArgMax)
+        {
+            LIBCLOG_ERROR("arg[0] > ARG_MAX (%d > %d)\n", cchArg0, szArgMax);
+            errno = E2BIG;
+            LIBCLOG_RETURN_INT(-1);
+        }
+
+        /* argv[0] */
+        ADD(cchArg0);
+        memcpy(pszArg, pszSrc, cchArg0);
+        pszArg += cchArg0; pszSrc += cchArg0;
+        szArgSize -= cchArg0;
+        szArgMax -= cchArg0;
     }
     if (enmMethod == args_unix)
     {
@@ -386,7 +539,22 @@ int __spawnve(struct _new_proc *np)
             {
                 *(size_t*)pShDst = szArgSize;
                 pShDst += sizeof(size_t);
-                memcpy(pShDst, pszSrc, szArgSize);
+                if (pszInterpreter)
+                {
+                    /* Inject interpreter args + script name */
+                    if (pszInterpreterArgs)
+                    {
+                        cch = cchInterpreterArgs + 1;
+                        *pShDst++ = __KLIBC_ARG_NONZERO;
+                        memcpy(pShDst, pszInterpreterArgs, cch);
+                        pShDst += cch;
+                    }
+                    cch = cchFname + 1;
+                    *pShDst++ = __KLIBC_ARG_NONZERO;
+                    memcpy(pShDst, (const char*)np->fname_off, cch);
+                    pShDst += cch;
+                }
+                memcpy(pShDst, pszSrc, szArgSize - cchInterpreterArgs - cchFname - 4);
             }
             else
             {
@@ -406,6 +574,23 @@ int __spawnve(struct _new_proc *np)
 
         if (!fUseShMem || !fArgsExceedsArgMax)
         {
+            if (pszInterpreter)
+            {
+                /* Inject interpreter args + script name */
+                if (pszInterpreterArgs)
+                {
+                    cch = cchInterpreterArgs + 1;
+                    ADD(cch + 1);
+                    *pszArg++ = __KLIBC_ARG_NONZERO;
+                    memcpy(pszArg, pszInterpreterArgs, cch);
+                    pszArg += cch;
+                }
+                cch = cchFname + 1;
+                ADD(cch + 1);
+                *pszArg++ = __KLIBC_ARG_NONZERO;
+                memcpy(pszArg, (const char*)np->fname_off, cch);
+                pszArg += cch;
+            }
             for (i = 1; i < np->arg_count; ++i)
             {
                 unsigned char chFlags = *pszSrc++;
@@ -426,14 +611,31 @@ int __spawnve(struct _new_proc *np)
     else
     {
         /* quote the arguments in emx / cmd.exe fashion. */
-        for (i = 1; i < np->arg_count; ++i)
+        for (i = pszInterpreter ? -1 : 1; i < np->arg_count; ++i)
         {
-            if (i > 1)
+            /* Inject interpreter args + script name */
+            const char *pszSrcSave = NULL;
+            if (i == -1)
+            {
+                if (!pszInterpreterArgs)
+                    continue;
+                pszSrcSave = pszSrc;
+                pszSrc = pszInterpreterArgs;
+            }
+            else if (i == 0)
+            {
+                pszSrcSave = pszSrc;
+                pszSrc = (const char*)np->fname_off;
+            }
+            else
+                ++pszSrc;                    /* skip flags byte */
+
+            if (i > 1 || ((pszInterpreterArgs && i > -1) || i > 0))
             {
                 ADD(1);
                 *pszArg++ = ' ';
             }
-            ++pszSrc;                    /* skip flags byte */
+
             BOOL fQuote = FALSE;
             if (*pszSrc == 0)
                 fQuote = TRUE;
@@ -487,7 +689,11 @@ int __spawnve(struct _new_proc *np)
                 memset(pszArg, '\\', bs); pszArg += bs;
                 *pszArg++ = '"';
             }
-            ++pszSrc;
+
+            if (pszSrcSave)
+                pszSrc = pszSrcSave;
+            else
+                ++pszSrc;
         }
         /* The arguments are an array of zero terminated strings, ending with an empty string. */
         ADD(2);
@@ -520,18 +726,16 @@ int __spawnve(struct _new_proc *np)
             rc = DosExecPgm(szObj, sizeof(szObj), EXEC_ASYNCRESULT, (PCSZ)pszArgsBuf, pszEnv, &resc, (PCSZ)pszPgmName);
             LIBCLOG_MSG("DosExecPgm returned %d\n", rc);
 
-            int cTries = 3;
-            while (     (   rc == ERROR_INVALID_EXE_SIGNATURE
-                         || rc == ERROR_BAD_EXE_FORMAT)
-                   &&   --cTries > 0)
+            if (     (   rc == ERROR_INVALID_EXE_SIGNATURE
+                      || rc == ERROR_BAD_EXE_FORMAT)
+                &&   !pszInterpreter)
+            do
             {
                 /*
                  * This could be a batch, rexx or hash bang script.
                  * The first two is recognized by the filename extension, the latter
                  * requires inspection of the first line of the file.
                  */
-                const char *pszInterpreter = NULL;
-                const char *pszInterpreterArgs = NULL;
                 if (    __libc_Back_gfProcessHandlePCBatchScripts
                     &&  (psz = _getext(pszPgmName))
                     &&  (!stricmp(psz, ".cmd") || !stricmp(psz, ".bat") || !stricmp(psz, ".btm")))
@@ -550,68 +754,6 @@ int __spawnve(struct _new_proc *np)
                     while ((psz = strchr(szNativePath, '/')) != NULL)
                         *psz++ = '\\';
                 }
-                else if (__libc_Back_gfProcessHandleHashBangScripts)
-                {
-                    /*
-                     * Read the first line of the file into szLineBuf and terminate
-                     * it stripping trailing blanks.
-                     */
-                    HFILE hFile = NULLHANDLE;
-                    ULONG ulAction = 0;
-                    int rc2 = DosOpen((PCSZ)pszPgmName, &hFile, &ulAction, 0, FILE_NORMAL,
-                                      OPEN_ACTION_FAIL_IF_NEW | OPEN_ACTION_OPEN_IF_EXISTS,
-                                      OPEN_FLAGS_SEQUENTIAL | OPEN_FLAGS_NOINHERIT | OPEN_SHARE_DENYNONE | OPEN_ACCESS_READONLY,
-                                      NULL);
-                    if (!rc2)
-                    {
-                        ULONG cbRead = 0;
-                        rc2 = DosRead(hFile, szLineBuf, sizeof(szLineBuf) - 1, &cbRead);
-                        DosClose(hFile);
-                        if (!rc2)
-                        {
-                            szLineBuf[cbRead < sizeof(szLineBuf) ? cbRead : sizeof(szLineBuf) - 1] = '\0';
-                            psz = strpbrk(szLineBuf, "\r\n");
-                            if (psz)
-                            {
-                                register char ch;
-                                while ((ch = *--psz) == ' ' || ch == '\t')
-                                    /* nothing */;
-                                psz[1] = '\0';
-
-                                /*
-                                 * Check for '#[ \t]*!'
-                                 */
-                                psz = &szLineBuf[0];
-                                if (*psz++ == '#')
-                                {
-                                    while ((ch = *psz) == ' ' || ch == '\t')
-                                        psz++;
-                                    if (*psz++ == '!')
-                                    {
-                                        while ((ch = *psz) == ' ' || ch == '\t')
-                                            psz++;
-                                        pszInterpreter = psz;
-
-                                        /*
-                                         * Find end of interpreter and start of potential arguments.
-                                         * I've never seen quoted interpreter names, so we won't bother with that yet.
-                                         */
-                                        while ((ch = *psz) != ' ' && ch != '\t' && ch != '\0')
-                                            psz++;
-                                        if (ch)
-                                        {
-                                            *psz++ = '\0';
-                                            while ((ch = *psz) == ' ' || ch == '\t')
-                                                psz++;
-                                            if (ch)
-                                                pszInterpreterArgs = psz;
-                                        }
-                                    } /* if bang */
-                                } /* if hash */
-                            } /* if full line */
-                        } /* if read */
-                    } /* if open */
-                }
                 if (!pszInterpreter)
                     break;
 
@@ -626,7 +768,7 @@ int __spawnve(struct _new_proc *np)
                 size_t cchPgmName         = strlen(pszPgmName);
                 size_t cchInterpreter     = strlen(pszInterpreter);
                 BOOL   fQuote             = strpbrk(pszPgmName, " \t") != NULL;
-                int    cchInterpreterArgs = pszInterpreterArgs ? strlen(pszInterpreterArgs) : -1;
+                cchInterpreterArgs = pszInterpreterArgs ? strlen(pszInterpreterArgs) : -1;
                 cch = cchInterpreter + 1 + cchInterpreterArgs + 1 + cchPgmName + 2*fQuote + 1 - offOldArg1;
 
                 /* Grow and shift the argument buffer. */
@@ -657,36 +799,20 @@ int __spawnve(struct _new_proc *np)
                     *psz++ = '"';
                 *psz++ = ' ';
 
-                /*
-                 * Resolve the interpreter name.
-                 * Try the unchanged name first, then the name with .exe suffix,
-                 * then the PATH.  In the latter case we skip the directory path
-                 * if given, since we're frequently faced with path differences
-                 * between OS/2 and the UNIX where the script originated.
-                 */
-                rc = __libc_back_fsResolve(pszInterpreter, BACKFS_FLAGS_RESOLVE_FULL, &szNativePath[0], NULL);
+                /* Resolve the interpreter name. */
+                rc = resolveInterpreter(pszInterpreter, &szNativePath[0]);
                 if (rc)
-                {
-                    char szPath[PATH_MAX];
-                    if (   _path2(pszInterpreter, ".exe", szPath, sizeof(szPath)) == 0
-                        || (   (psz = _getname(pszInterpreter)) != pszInterpreter
-                            && _path2(psz, ".exe", szPath, sizeof(szPath)) == 0) )
-                        rc = __libc_back_fsResolve(szPath, BACKFS_FLAGS_RESOLVE_FULL, &szNativePath[0], NULL);
-                    if (rc)
-                    {
-                        LIBCLOG_MSG("Failed to find interpreter '%s'! szPath='%s'\n", pszInterpreter, szPath);
-                        break;
-                    }
-                }
+                    break;
 
                 /*
                  * Try execute it.
-                 * Note! pszPgmName = &szNativePath[0], so we're good here and if this loops.
+                 * Note! pszPgmName = &szNativePath[0], so we're good here.
                  */
                 LIBCLOG_MSG("Calling DosExecPgm pgm: %s args: %s\\0%s\\0\\0\n", pszPgmName, pszArgsBuf, pszArgsBuf + strlen(pszArgsBuf) + 1);
                 rc = DosExecPgm(szObj, sizeof(szObj), EXEC_ASYNCRESULT, (PCSZ)pszArgsBuf, (PCSZ)np->env_off, &resc, (PCSZ)pszPgmName);
                 LIBCLOG_MSG("DosExecPgm returned %d\n", rc);
-            } /* while */
+            }
+            while (0);
             FS_RESTORE();
             if (!rc)
             {
