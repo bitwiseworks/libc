@@ -160,18 +160,12 @@
 #ifdef _GNU_SOURCE
 # undef  _ISOC99_SOURCE
 # define _ISOC99_SOURCE	1
-/* bird: sorry, but this isn't causing huge exclusions for BSD or EMX headers. */
-#if 0 /*ndef __EMX__*/                  /* bird */
 # undef  _POSIX_SOURCE
 # define _POSIX_SOURCE	1
 # undef  _POSIX_C_SOURCE
-# define _POSIX_C_SOURCE	199506L
-#else                                   /* bird */
-# define __USE_POSIX199309	1       /* bird */
-# define __USE_POSIX199506	1       /* bird */
-#endif                                  /* bird */
+# define _POSIX_C_SOURCE	200809L
 # undef  _XOPEN_SOURCE
-# define _XOPEN_SOURCE	600
+# define _XOPEN_SOURCE	700
 # undef  _XOPEN_SOURCE_EXTENDED
 # define _XOPEN_SOURCE_EXTENDED	1
 # undef	 _LARGEFILE64_SOURCE
@@ -221,7 +215,7 @@
 #endif
 #endif /* bird */
 
-#if defined _POSIX_SOURCE || (defined _POSIX_C_SOURCE && _POSIX_C_SOURCE >= 1) || defined _XOPEN_SOURCE /* bird: check if defined, -Wundef. */
+#if defined _POSIX_SOURCE || (defined _POSIX_C_SOURCE && _POSIX_C_SOURCE >= 1) || defined _XOPEN_SOURCE
 # define __USE_POSIX	1
 #endif
 
@@ -229,11 +223,11 @@
 # define __USE_POSIX2	1
 #endif
 
-#if defined _POSIX_C_SOURCE && (_POSIX_C_SOURCE - 0) >= 199309L /* bird: check if defined, -Wundef. */
+#if defined _POSIX_C_SOURCE && (_POSIX_C_SOURCE - 0) >= 199309L
 # define __USE_POSIX199309	1
 #endif
 
-#if defined _POSIX_C_SOURCE && (_POSIX_C_SOURCE - 0) >= 199506L /* bird: check if defined, -Wundef. */
+#if defined _POSIX_C_SOURCE && (_POSIX_C_SOURCE - 0) >= 199506L
 # define __USE_POSIX199506	1
 #endif
 
