@@ -38,3 +38,9 @@ CFLAGS.DEF.VERSION += '-DVERSION_DETAILS=" $(VERSION_DETAILS)"'
 COPYRIGHT = Copyright (c) 2022 bww bitwise works GmbH
 CFLAGS.DEF.VERSION += '-DVERSION_COPYRIGHT="$(COPYRIGHT)"'
 
+# Grab build properties suitable for BLDLEVEL
+BUILD_DATE := $(shell LANG=C printf ' %-24.24s ' "`date -u +'%Y-%m-%d %T'`")
+BUILD_HOST := $(shell printf '%-.11s' `echo $$HOSTNAME`)
+
+# Format BLDLEVEL string (excluding the description, may be used as a prefix for it)
+BUILD_BLDLEVEL := @\#bww bitwise works GmbH:$(VH).$(VM)\#@\#\#1\#\#$(BUILD_DATE)$(BUILD_HOST)::::$(VL)::@@
