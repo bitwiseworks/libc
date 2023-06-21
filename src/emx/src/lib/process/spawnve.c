@@ -19,7 +19,7 @@ int _STD(spawnve)(int mode, const char *name, char * const argv[], char * const 
     int i, size, n, rc;
     const char * const *p;
     char *d;
-    char exe[PATH_MAX];
+    char exe[PATH_MAX + 4 /* room for .exe extension probed by __spawnve */];
 
     /*
      * Init the syscall struct np.

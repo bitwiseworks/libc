@@ -211,6 +211,26 @@ int __spawnve(struct _new_proc *np)
     LIBCLOG_ENTER("np=%p:{mode=%#x}\n", (void *)np, np->mode);
     FS_VAR();
     char szLineBuf[512];
+    int  i;
+    char *psz;
+    size_t cch;
+
+#ifdef DEBUG_LOGGING
+    LIBCLOG_MSG("fname=\"%s\",arg_off=0x%lx,env_off=0x%lx\n", (char *)np->fname_off, np->arg_off, np->env_off);
+    psz = (char *)np->arg_off;
+    for (i = 0; i < np->arg_count; ++i)
+    {
+        /* skip flag byte */
+        LIBCLOG_MSG("arg[%d]=\"%s\"\n", i, ++psz);
+        psz += strlen(psz) + 1;
+    }
+    psz = (char *)np->env_off;
+    for (i = 0; i < np->env_count; ++i)
+    {
+        LIBCLOG_MSG("env[%d]=\"%s\"\n", i, psz);
+        psz += strlen(psz) + 1;
+    }
+#endif
 
     /*
      * Validate mode.
@@ -250,6 +270,8 @@ int __spawnve(struct _new_proc *np)
             LIBCLOG_ERROR_RETURN(-1, "ret -1 - Failed to resolve program name: '%s' rc=%d.\n", pszPgmName, rc);
         }
     }
+    if (pszPgmName[cchFname]) /* update the length if .exe was added */
+        cchFname = strlen(pszPgmName);
     pszPgmName = &szNativePath[0];
 
     /*
@@ -259,8 +281,6 @@ int __spawnve(struct _new_proc *np)
      * (1 == cmd or 4os2 shell, 0 == anything else)
      */
     enum { args_standard, args_cmd, args_unix } enmMethod = args_standard;
-    char *psz;
-    size_t cch;
 
     const char *pszInterpreter = NULL;
     const char *pszInterpreterArgs = NULL;
@@ -400,7 +420,6 @@ int __spawnve(struct _new_proc *np)
     size_t      cbArgsBuf = 0;
     char       *pszArg = NULL;
     size_t      cbArgs = 0;
-    int         i;
     size_t      szArgSize = np->arg_size;
     size_t      szEnvSize = np->env_size;
     PCSZ        pszEnv = (PCSZ)np->env_off;
