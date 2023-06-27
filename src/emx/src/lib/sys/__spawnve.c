@@ -216,19 +216,28 @@ int __spawnve(struct _new_proc *np)
     size_t cch;
 
 #ifdef DEBUG_LOGGING
-    LIBCLOG_MSG("fname=\"%s\",arg_off=0x%lx,env_off=0x%lx\n", (char *)np->fname_off, np->arg_off, np->env_off);
+    LIBCLOG_MSG("fname=%s,arg_off=0x%lx,env_off=0x%lx\n", (char *)np->fname_off, np->arg_off, np->env_off);
+    LIBCLOG_MSG("arg_off:\n");
     psz = (char *)np->arg_off;
     for (i = 0; i < np->arg_count; ++i)
     {
-        /* skip flag byte */
-        LIBCLOG_MSG("arg[%d]=\"%s\"\n", i, ++psz);
-        psz += strlen(psz) + 1;
+        cch = __libc_LogSNPrintf(__LIBC_LOG_INSTANCE, szLineBuf, sizeof(szLineBuf), "arg[%d]=", i);
+        LIBCLOG_RAW(szLineBuf, cch);
+        cch = strlen(psz);
+        LIBCLOG_RAW(psz, cch);
+        LIBCLOG_RAW("\n", 1);
+        psz += cch + 1;
     }
+    LIBCLOG_MSG("env_off:\n");
     psz = (char *)np->env_off;
     for (i = 0; i < np->env_count; ++i)
     {
-        LIBCLOG_MSG("env[%d]=\"%s\"\n", i, psz);
-        psz += strlen(psz) + 1;
+        cch = __libc_LogSNPrintf(__LIBC_LOG_INSTANCE, szLineBuf, sizeof(szLineBuf), "env[%d]=", i);
+        LIBCLOG_RAW(szLineBuf, cch);
+        cch = strlen(psz);
+        LIBCLOG_RAW(psz, cch);
+        LIBCLOG_RAW("\n", 1);
+        psz += cch + 1;
     }
 #endif
 
@@ -425,7 +434,7 @@ int __spawnve(struct _new_proc *np)
     PCSZ        pszEnv = (PCSZ)np->env_off;
     PVOID       pShMem = NULL;
     size_t      szArgMax = ARG_MAX;
-    size_t      cchArg0;
+    size_t      cchArg0 = 0;
 
     if (fHave32BitSize)
     {
@@ -433,8 +442,14 @@ int __spawnve(struct _new_proc *np)
         szEnvSize |= (size_t)np->env_size2 << 16;
     }
 
-    /* Get the length of argv[0] (note: skip flags byte) */
-    cchArg0 = np->arg_count > 0 ? strlen(++pszSrc) + 1 : 0;
+    /* Get the length of argv[0] + term */
+    if (np->arg_count > 0)
+    {
+        /* skip flags byte */
+        ++pszSrc;
+        --szArgSize;
+        cchArg0 = strlen(pszSrc) + 1;
+    }
 
     if (pszInterpreter)
     {
@@ -462,7 +477,7 @@ int __spawnve(struct _new_proc *np)
         ADD(cch);
         memcpy(pszArg, pszInterpreter, cch);
         pszArg += cch;
-
+        szArgMax -= cch;
     }
     else if (cchArg0)
     {
@@ -567,13 +582,15 @@ int __spawnve(struct _new_proc *np)
                         *pShDst++ = __KLIBC_ARG_NONZERO;
                         memcpy(pShDst, pszInterpreterArgs, cch);
                         pShDst += cch;
+                        szArgSize -= (cch + 1); /* flags byte */
                     }
                     cch = cchFname + 1;
                     *pShDst++ = __KLIBC_ARG_NONZERO;
                     memcpy(pShDst, (const char*)np->fname_off, cch);
                     pShDst += cch;
+                    szArgSize -= (cch + 1); /* flags byte */
                 }
-                memcpy(pShDst, pszSrc, szArgSize - cchInterpreterArgs - cchFname - 4);
+                memcpy(pShDst, pszSrc, szArgSize);
             }
             else
             {

@@ -252,6 +252,22 @@ static int parse_args(const char *src, char **argv, char *pool)
                     if (*src)
                         while (*src++);
                 }
+#ifdef DEBUG_LOGGING
+                LIBCLOG_MSG2("big args (%u bytes):\n", szArgs);
+                char tmp[16];
+                const char *p = src;
+                int n = 1, l;
+                while (*p)
+                {
+                    l = __libc_LogSNPrintf(__LIBC_LOG_INSTANCE, tmp, sizeof(tmp), "arg[%d]=", n);
+                    LIBCLOG_RAW(tmp, l);
+                    l = strlen(p);
+                    LIBCLOG_RAW(p, l);
+                    LIBCLOG_RAW("\n", 1);
+                    p += l + 1;
+                    ++n;
+                }
+#endif
             }
             while (*src)
             {
