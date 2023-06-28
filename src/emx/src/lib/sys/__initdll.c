@@ -294,6 +294,19 @@ void _sys_get_clock(unsigned long *pms)
 }
 
 
+static int is_klibc_arg_signature(const char *psz)
+{
+    return (    psz[0] == __KLIBC_ARG_SIGNATURE[0]
+            &&  psz[1] == __KLIBC_ARG_SIGNATURE[1]
+            &&  psz[2] == __KLIBC_ARG_SIGNATURE[2]
+            &&  psz[3] == __KLIBC_ARG_SIGNATURE[3]
+            &&  psz[4] == __KLIBC_ARG_SIGNATURE[4]
+            &&  psz[5] == __KLIBC_ARG_SIGNATURE[5]
+            &&  psz[6] == __KLIBC_ARG_SIGNATURE[6]
+            &&  psz[7] == __KLIBC_ARG_SIGNATURE[7]);
+}
+
+
 /**
  * Internal DosScanEnv version that supports scanning a "big" environment string
  * passed by __spawnve via shared memory in kLIBC-style command line arguments
@@ -361,21 +374,22 @@ int __libc_scanenv(const char *pszName, const char **ppszValue)
         if (!*pszArgs)
             break;
 
-        /* Skip argv[0] */
-        while (*pszArgs++);
+        if (is_klibc_arg_signature(pszArgs))
+        {
+            __libc_gfkLIBCArgs = 2; /* argv[0] is the signature */
+        }
+        else
+        {
+            /* Skip argv[0] */
+            while (*pszArgs++);
 
-        if (    pszArgs[0] == __KLIBC_ARG_SIGNATURE[0]
-            &&  pszArgs[1] == __KLIBC_ARG_SIGNATURE[1]
-            &&  pszArgs[2] == __KLIBC_ARG_SIGNATURE[2]
-            &&  pszArgs[3] == __KLIBC_ARG_SIGNATURE[3]
-            &&  pszArgs[4] == __KLIBC_ARG_SIGNATURE[4]
-            &&  pszArgs[5] == __KLIBC_ARG_SIGNATURE[5]
-            &&  pszArgs[6] == __KLIBC_ARG_SIGNATURE[6]
-            &&  pszArgs[7] == __KLIBC_ARG_SIGNATURE[7])
+            if (is_klibc_arg_signature(pszArgs))
+                __libc_gfkLIBCArgs = 1; /* argv[1] is the signature */
+        }
+
+        if (__libc_gfkLIBCArgs)
         {
             /* Got kLIBC-style command line arguments */
-            __libc_gfkLIBCArgs = 1;
-
             pszArgs += sizeof(__KLIBC_ARG_SIGNATURE);
             if ((unsigned)*pszArgs & __KLIBC_ARG_SHMEM)
             {

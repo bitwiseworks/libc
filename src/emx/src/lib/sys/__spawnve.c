@@ -647,7 +647,7 @@ int __spawnve(struct _new_proc *np)
     else
     {
         /* quote the arguments in emx / cmd.exe fashion. */
-        for (i = pszInterpreter ? -1 : 1; i < np->arg_count; ++i)
+        for (i = pszInterpreter ? -1 : 1; i == 0 || i < np->arg_count; ++i)
         {
             /* Inject interpreter args + script name */
             const char *pszSrcSave = NULL;

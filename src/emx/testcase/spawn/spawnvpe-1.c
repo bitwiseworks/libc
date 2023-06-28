@@ -60,9 +60,9 @@ int main (void)
     free (argv [i]);
 
   printf ("Total length of environment passed to the child = %d\n",
-          strlen (envv [0]) + 1 + ENVC * (6 + ENVLEN + 1) + 1);
+          ENVC >= 0 ? (strlen (envv [0]) + 1 + ENVC * (6 + ENVLEN + 1) + 1) : 1);
   printf ("Total length of arguments passed to the child   = %d\n",
-          strlen (argv [0]) + 1 + ARGC * (ARGLEN + 1) + 1);
+          ARGC >= 0 ? (strlen (argv [0]) + 1 + ARGC * (ARGLEN + 1) + 1) : 1);
   printf ("spawnvpe() = %d (%d %s)\n", rc, errno, strerror (errno));
 
   return rc;

@@ -89,17 +89,21 @@ static int parse_args(const char *src, char **argv, char *pool)
     int   arg_size, arg_pos;
 
     argc = 0; arg_size = 0;
-    /* argv[0] */
-    PUTC((char)_ARG_NONZERO);
-    PUTV;
-    for (;;)
+
+    if (__libc_gfkLIBCArgs != 2)
     {
-        PUTC(*src);
-        if (*src == 0)
-            break;
+        /* argv[0] */
+        PUTC((char)_ARG_NONZERO);
+        PUTV;
+        for (;;)
+        {
+            PUTC(*src);
+            if (*src == 0)
+                break;
+            ++src;
+        }
         ++src;
     }
-    ++src;
 
     /* Check for the kLIBC signature used for unix arguments. */
     if (!__libc_gfkLIBCArgs)
