@@ -37,6 +37,8 @@
 #include <InnoTekLIBC/logstrict.h>
 #include "socket.h"
 
+extern void touch(void *base, unsigned long count); /* from emxdll.h */
+
 ssize_t recvmsg(int socket, struct msghdr *msg, int flags)
 {
     LIBCLOG_ENTER("socket=%d msg=%p flags=%d\n", socket, msg, flags);
@@ -44,6 +46,22 @@ ssize_t recvmsg(int socket, struct msghdr *msg, int flags)
     if (pFHSocket)
     {
         int rc;
+        /*
+         * OS/2 TCP/IP stack installs its own exception handler and returns
+         * errno 14 (EFAULT) if the buffer is not committed, not letting other
+         * exception handlers run. This breaks e.g. LIBCx mmap implementation.
+         * Touch all pages to trigger those handlers, if any.
+         *
+         * NOTE: that this slightly breaks BSD compatibility (but not POSIX) as
+         * EFAULT won't be returned in cases where buf is an invalid pointer -
+         * the application will simply crash instead. See #123 for more details.
+         */
+        if (msg && msg->msg_iov)
+        {
+            for (int i = 0; i < msg->msg_iovlen; ++i)
+                if (msg->msg_iov[i].iov_base)
+                    touch(msg->msg_iov[i].iov_base, msg->msg_iov[i].iov_len);
+        }
         rc = __libsocket_recvmsg(pFHSocket->iSocket, msg, flags);
         if (rc >= 0)
         {
