@@ -570,7 +570,7 @@
  * mode only, so building with C11 is already undefined. Follow glibc's and
  * OpenBSD's lead for this non-standard configuration for maximum compatibility.
  */
-#if _ISOC11_SOURCE || (defined(__STDC_VERSION__) && __STDC_VERSION__ >= 201112L)
+#if (defined(_ISOC11_SOURCE) && _ISOC11_SOURCE) || (defined(__STDC_VERSION__) && __STDC_VERSION__ >= 201112L)
 #undef __ISO_C_VISIBLE
 #define __ISO_C_VISIBLE		2011
 #endif
