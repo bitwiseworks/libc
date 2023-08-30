@@ -1,5 +1,19 @@
 # History of changes for LIBC Next
 
+#### Version 0.1.11 (2023-08-30)
+
+* readv/writev: Use IOV_MAX instead of hard-coded value [#126].
+* logstrict: Create reports/logs in BOOTDRIVE\var\log\app if no LOGFILES or UNIXROOT set [#115].
+* Return E2BIG for OS/2 ERROR_BAD_ENVIRONMENT and ERROR_BAD_ARGUMENTS [#127].
+* spawn: Support large environment and command line for kLIBC apps [#127].
+* spawn: Support large command line & environment in hash bang scripts [#127].
+* Bump _XOPEN_SOURCE to 700 [#128].
+* errno: Make EWOULDBLOCK, ETXTBSY and others available in POSIX mode [#124].
+* Add BLDLEVEL info to LIBCn DLLs [#67].
+* ibsocket: recv: Touch buffer to mmake LIBCx mmap machinery work [#123].
+* sys/cdefs.h: Set __ISO_C_VISIBLE to 2011 by default to match current GCC [#131].
+* assert.h: Add static_assert macro (C11 standard) [#131].
+
 #### Version 0.1.10 (2022-03-22)
 
 * Call non-OS/2 handle close callback upon unexpected handle loss [#117].
