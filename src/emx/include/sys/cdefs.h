@@ -7,7 +7,7 @@
  *                from bitching.
  * @changed bird: __offsetof__ was apparently introduced in gcc 3.4.x.
  */
- 
+
 /*-
  * Copyright (c) 1991, 1993
  *	The Regents of the University of California.  All rights reserved.
@@ -563,6 +563,17 @@
 #define	__POSIX_VISIBLE		198808
 #define	__ISO_C_VISIBLE		0
 #endif /* _POSIX_C_SOURCE */
+/*
+ * Both glibc and OpenBSD enable c11 features when _ISOC11_SOURCE is defined, or
+ * when compiling with -stdc=c11. A strict reading of the standard would suggest
+ * doing it only for the former. However, a strict reading also requires C99
+ * mode only, so building with C11 is already undefined. Follow glibc's and
+ * OpenBSD's lead for this non-standard configuration for maximum compatibility.
+ */
+#if _ISOC11_SOURCE || (defined(__STDC_VERSION__) && __STDC_VERSION__ >= 201112L)
+#undef __ISO_C_VISIBLE
+#define __ISO_C_VISIBLE		2011
+#endif
 #else
 /*-
  * Deal with _ANSI_SOURCE:
@@ -586,11 +597,16 @@
 #define	__XSI_VISIBLE		0
 #define	__BSD_VISIBLE		0
 #define	__ISO_C_VISIBLE		1999
+#elif defined(_C11_SOURCE)	/* Localism to specify strict C11 env. */
+#define	__POSIX_VISIBLE		0
+#define	__XSI_VISIBLE		0
+#define	__BSD_VISIBLE		0
+#define	__ISO_C_VISIBLE		2011
 #else				/* Default environment: show everything. */
 #define	__POSIX_VISIBLE		200809
 #define	__XSI_VISIBLE		700
 #define	__BSD_VISIBLE		1
-#define	__ISO_C_VISIBLE		1999
+#define	__ISO_C_VISIBLE		2011
 #endif
 #endif
 
