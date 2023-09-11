@@ -1,5 +1,9 @@
 # History of changes for LIBC Next
 
+#### Version 0.1.12 (2023-09-11)
+
+* Export internal ___libc_touch call from LIBC DLL for libsocket [#133].
+
 #### Version 0.1.11 (2023-08-30)
 
 * readv/writev: Use IOV_MAX instead of hard-coded value [#126].
