@@ -35,9 +35,8 @@
 #include <emx/io.h>
 #define __LIBC_LOG_GROUP __LIBC_LOG_GRP_SOCKET
 #include <InnoTekLIBC/logstrict.h>
+#include <InnoTekLIBC/libc.h>
 #include "socket.h"
-
-extern void touch(void *base, unsigned long count); /* from emxdll.h */
 
 ssize_t recvmsg(int socket, struct msghdr *msg, int flags)
 {
@@ -60,7 +59,7 @@ ssize_t recvmsg(int socket, struct msghdr *msg, int flags)
         {
             for (int i = 0; i < msg->msg_iovlen; ++i)
                 if (msg->msg_iov[i].iov_base)
-                    touch(msg->msg_iov[i].iov_base, msg->msg_iov[i].iov_len);
+                    __libc_touch(msg->msg_iov[i].iov_base, msg->msg_iov[i].iov_len);
         }
         rc = __libsocket_recvmsg(pFHSocket->iSocket, msg, flags);
         if (rc >= 0)

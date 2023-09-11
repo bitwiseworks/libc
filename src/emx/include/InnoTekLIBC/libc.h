@@ -48,6 +48,19 @@ extern int __libc_gfNoUnix;
  */
 extern sigset_t __libc_gSignalRestartMask;
 
+/** Touch each page in a range of addresses.
+ *
+ * This is required because DosRead and other OS/2 APIs seem not to be reentrant
+ * enough -- if it's used to read data into a page to be loaded from the .EXE
+ * file (dumped heap), it's recursively called by the guard pageexception
+ * handler. This call seems to disturb the first call, which will return a
+ * strange `error code' (ESP plus some constant).
+ *
+ * @param base Start address.
+ * @param count Number of bytes.
+ */
+extern void __libc_touch(void *base, unsigned long count);
+
 __END_DECLS
 
 #endif

@@ -34,9 +34,8 @@
 #include <emx/io.h>
 #define __LIBC_LOG_GROUP __LIBC_LOG_GRP_SOCKET
 #include <InnoTekLIBC/logstrict.h>
+#include <InnoTekLIBC/libc.h>
 #include "socket.h"
-
-extern void touch(void *base, unsigned long count); /* from emxdll.h */
 
 ssize_t recv(int socket, void *buf, size_t len, int flags)
 {
@@ -56,7 +55,7 @@ ssize_t recv(int socket, void *buf, size_t len, int flags)
          * the application will simply crash instead. See #123 for more details.
          */
         if (buf)
-            touch(buf, len);
+            __libc_touch(buf, len);
         rc = __libsocket_recv(pFHSocket->iSocket, buf, len, flags);
         if (rc >= 0)
             LIBCLOG_RETURN_INT(rc);
