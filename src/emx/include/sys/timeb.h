@@ -3,14 +3,16 @@
 #ifndef _SYS_TIMEB_H
 #define _SYS_TIMEB_H
 
+#include <sys/_types.h>
+
 #if defined (__cplusplus)
 extern "C" {
 #endif
 
-/** @todo fixme, I'm signed now! */
-#if !defined (_TIME_T)
-#define _TIME_T
-typedef unsigned long time_t;
+#if !defined(_TIME_T_DECLARED) && !defined(_TIME_T)
+typedef	__time_t time_t;
+#define	_TIME_T_DECLARED
+#define	_TIME_T
 #endif
 
 struct timeb

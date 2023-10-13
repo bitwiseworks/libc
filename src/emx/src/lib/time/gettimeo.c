@@ -32,11 +32,11 @@ int _STD(gettimeofday)(struct timeval *tp, struct timezone *tzp)
 
 
     if (tp && tzp)
-        LIBCLOG_RETURN_MSG(0, "ret 0 - tp=%p:{.tv_sec=%ld, .tv_usec=%ld} tzp=%p:{.tz_minuteswest=%d, .tz_dsttime=%d}\n",
+        LIBCLOG_RETURN_MSG(0, "ret 0 - tp=%p:{.tv_sec=%d, .tv_usec=%ld} tzp=%p:{.tz_minuteswest=%d, .tz_dsttime=%d}\n",
                            (void *)tp, tp->tv_sec, tp->tv_usec,
                            (void *)tzp, tzp->tz_minuteswest, tzp->tz_dsttime);
     else if (tp)
-        LIBCLOG_RETURN_MSG(0, "ret 0 - tp=%p:{.tv_sec=%ld, .tv_usec=%ld}\n",
+        LIBCLOG_RETURN_MSG(0, "ret 0 - tp=%p:{.tv_sec=%d, .tv_usec=%ld}\n",
                            (void *)tp, tp->tv_sec, tp->tv_usec);
     else
         LIBCLOG_RETURN_MSG(0, "ret 0 - tzp=%p:{.tz_minuteswest=%d, .tz_dsttime=%d}\n",
