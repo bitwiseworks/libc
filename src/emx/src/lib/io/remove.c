@@ -49,6 +49,10 @@ int _STD(remove)(const char *pszPath)
     int rc = __libc_Back_fsUnlink(pszPath);
     if (!rc)
         LIBCLOG_RETURN_INT(0);
+    if (rc == -EISDIR)
+        rc = __libc_Back_fsDirRemove(pszPath);
+    if (!rc)
+        LIBCLOG_RETURN_INT(0);
     errno = -rc;
     LIBCLOG_ERROR_RETURN_INT(-1);
 }
