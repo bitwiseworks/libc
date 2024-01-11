@@ -77,7 +77,7 @@ __END_DECLS
 #define	EACCES		13		/* Permission denied */
 #define	EFAULT		14		/* Bad address */
 /* bird: old emx #define ENOLCK 15 */
-#ifndef _POSIX_SOURCE
+#if !defined(_POSIX_SOURCE) || defined(__USE_EMX)
 #define	ENOTBLK		15		/* Block device required */
 #endif
 #define	EBUSY		16		/* Device busy */
@@ -119,12 +119,12 @@ __END_DECLS
 #define	EPROTOTYPE	41		/* Protocol wrong type for socket */
 #define	ENOPROTOOPT	42		/* Protocol not available */
 #define	EPROTONOSUPPORT	43		/* Protocol not supported */
-#ifndef _POSIX_SOURCE
+#if !defined(_POSIX_SOURCE) || defined(__USE_EMX)
 #define	ESOCKTNOSUPPORT	44		/* Socket type not supported */
 #endif
 #define	EOPNOTSUPP	45		/* Operation not supported */
 #define	ENOTSUP		EOPNOTSUPP	/* Operation not supported */
-#ifndef _POSIX_SOURCE
+#if !defined(_POSIX_SOURCE) || defined(__USE_EMX)
 #define	EPFNOSUPPORT	46		/* Protocol family not supported */
 #endif
 #define	EAFNOSUPPORT	47		/* Address family not supported by protocol family */
@@ -140,7 +140,7 @@ __END_DECLS
 #define	ENOBUFS		55		/* No buffer space available */
 #define	EISCONN		56		/* Socket is already connected */
 #define	ENOTCONN	57		/* Socket is not connected */
-#ifndef _POSIX_SOURCE
+#if !defined(_POSIX_SOURCE) || defined(__USE_EMX)
 #define	ESHUTDOWN	58		/* Can't send after socket shutdown */
 #define	ETOOMANYREFS	59		/* Too many references: can't splice */
 #endif
@@ -152,7 +152,7 @@ __END_DECLS
 #define	ENAMETOOLONG	63		/* File name too long */
 
 /* should be rearranged */
-#ifndef _POSIX_SOURCE
+#if !defined(_POSIX_SOURCE) || defined(__USE_EMX)
 #define	EHOSTDOWN	64		/* Host is down */
 #endif
 #define	EHOSTUNREACH	65		/* No route to host */
@@ -160,7 +160,7 @@ __END_DECLS
 #define	ENOTEMPTY	66		/* Directory not empty */
 
 /* quotas & mush */
-#ifndef _POSIX_SOURCE
+#if !defined(_POSIX_SOURCE) || defined(__USE_EMX)
 #define	EPROCLIM	67		/* Too many processes */
 #define	EUSERS		68		/* Too many users */
 #endif
@@ -168,7 +168,7 @@ __END_DECLS
 
 /* Network File System */
 #define	ESTALE		70		/* Stale NFS file handle */
-#ifndef _POSIX_SOURCE
+#if !defined(_POSIX_SOURCE) || defined(__USE_EMX)
 #define	EREMOTE		71		/* Too many levels of remote in path */
 #define	EBADRPC		72		/* RPC struct is bad */
 #define	ERPCMISMATCH	73		/* RPC version wrong */
@@ -180,7 +180,7 @@ __END_DECLS
 #define	ENOLCK		77		/* No locks available */
 #define	ENOSYS		78		/* Function not implemented */
 
-#ifndef _POSIX_SOURCE
+#if !defined(_POSIX_SOURCE) || defined(__USE_EMX)
 #define	EFTYPE		79		/* Inappropriate file type or format */
 #define	EAUTH		80		/* Authentication error */
 #define	ENEEDAUTH	81		/* Need authenticator */
@@ -190,11 +190,11 @@ __END_DECLS
 #define	EOVERFLOW	84		/* Value too large to be stored in data type */
 #define	ECANCELED	85		/* Operation canceled */
 #define	EILSEQ		86		/* Illegal byte sequence */
-#ifndef _POSIX_SOURCE
+#if !defined(_POSIX_SOURCE) || defined(__USE_EMX)
 #define	ENOATTR		87		/* Attribute not found */
 #endif
 
-#ifndef _POSIX_SOURCE
+#if !defined(_POSIX_SOURCE) || defined(__USE_EMX)
 #define EDOOFUS		88		/* Programming error */
 #endif
 
