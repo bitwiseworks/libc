@@ -60,7 +60,7 @@
 #define ICRNL       0x0100
 #define IXON        0x0400
 #define IXOFF       0x1000
-#if !defined (_POSIX_SOURCE)
+#if !defined (_POSIX_SOURCE) || defined (__USE_EMX)
 #define IUCLC       0x0200      /* Extension */
 #define IXANY       0x0800      /* Extension */
 #define IDELETE     0x8000      /* Extension (emx) */
@@ -103,7 +103,7 @@
 #define PARODD      0x0200
 #define HUPCL       0x0400
 #define CLOCAL      0x0800
-#if !defined (_POSIX_SOURCE)
+#if !defined (_POSIX_SOURCE) || defined (__USE_EMX)
 #define LOBLK       0x1000      /* Extension */
 #endif
 #endif
@@ -118,7 +118,7 @@
 #define ECHOK       0x0020
 #define ECHONL      0x0040
 #define NOFLSH      0x0080
-#if !defined (_POSIX_SOURCE)
+#if !defined (_POSIX_SOURCE) || defined (__USE_EMX)
 #define XCASE       0x0004      /* Extension */
 #endif
 #endif
@@ -152,7 +152,7 @@ int tcgetattr (int, struct termios *);
 int tcsendbreak (int, int);
 int tcsetattr (int, int, const struct termios *);
 
-#ifndef _POSIX_SOURCE
+#if !defined (_POSIX_SOURCE) || defined (__USE_EMX)
 int	cfsetspeed (struct termios *, speed_t);
 #endif /* !_POSIX_SOURCE */
 __END_DECLS
