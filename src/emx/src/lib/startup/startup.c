@@ -31,6 +31,7 @@
 *   Header Files                                                               *
 *******************************************************************************/
 #include <errno.h>
+#include <stdio.h>
 #include <sys/builtin.h>
 #include <emx/startup.h>
 #define __LIBC_LOG_GROUP    __LIBC_LOG_GRP_INITTERM
@@ -93,6 +94,18 @@ void _CRT_term(void)
 {
     LIBCLOG_ENTER("\n");
     int32_t cRefs = __atomic_decrement_s32(&gcCRTReferences);
+
+    /*
+     * Flush streams here explicitly not by the __crtexit1__ set vector.
+     * Otherwise streams associated with a socket can lose their buffered data,
+     * because the below weak terminators including _exit_streams() are called
+     * when all the imported DLLs are terminated. That is, all the opened
+     * sockets are closed before being flushed. Therefore buffered data of
+     * streams are lost. And both exit() and abort() should flush streams, so
+     * here is the proper place to flush streams.
+     */
+    flushall();
+
     if (cRefs == 0)
     {
         /*
