@@ -1,5 +1,13 @@
 # History of changes for LIBC Next
 
+#### Version 0.1.13 (2024-08-03)
+
+* sys/timeb.h: Sync time_t typedef with the rest via __time_t [#137].
+* errno: Enable non-POSIX codes in BSD mode [#136].
+* remove: Add support for deleting directories [#138].
+* termios.h: Enable non-POSIX codes in BSD mode [#135].
+* startup: flush streams explicitly in _CRT_term() [#139].
+
 #### Version 0.1.12 (2023-09-11)
 
 * Export internal ___libc_touch call from LIBC DLL for libsocket [#133].
