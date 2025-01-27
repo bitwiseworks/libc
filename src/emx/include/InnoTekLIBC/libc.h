@@ -68,12 +68,20 @@ extern void __libc_touch(void *base, unsigned long count);
  * printf-like format specifiers followed by up to 3 format arguments (the rest of arguments is
  * ignored). If pszFormat is NULL and there are no additional arguments, `<no message>` is used. If
  * pszFormat is a pointer that equals to 1, 2 or 3 (should be casted to const char* to avoid
- * warnings), the specified number of arguments following it is printed as 32-bit hex integers .
- *
+ * warnings), the specified number of arguments following it is printed as 32-bit hex integers.
+ * Alternatively, the __libc_debug_report_n macro may be used in this case to avoid casting the
+ * number of arguments passed in pszFormat to const char*.
+ *  *
  * @param   pszFormat   User message which may contain %s and %x or NULL.
  * @param   ...         String pointers and unsigned intergers as specified by the %s and %x in pszFormat.
  */
 extern void __libc_debug_report(const char *pszFormat, ...);
+
+/**
+ * A convenience version of __libc_debug_report that casts nArgs to const char * and uses it as
+ * pszFormat (note that nArgs must be <= 3, nArgs = 0 is equivalent to pszFormat = NULL).
+ */
+#define __libc_debug_report_n(nArgs, ...) __libc_debug_report((const char *)nArgs, __VA_ARGS__)
 
 __END_DECLS
 
