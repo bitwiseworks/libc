@@ -1289,6 +1289,8 @@ int __libc_Back_safesemEvWakeup(__LIBC_PSAFESEMEV pev);
 #define __LIBC_PANIC_NO_SPM_TERM    2
 /** The pvCtx argument is a pointer to PXCPTPARAMS rather than to PCONTEXTRECORD. */
 #define __LIBC_PANIC_XCPTPARAMS     4
+/** Do not terminate the process. */
+#define __LIBC_PANIC_NO_TERMINATE   8
 
 /**
  * Exception handler argument list.
@@ -1311,16 +1313,20 @@ typedef struct XcptParams
 /**
  * Print a panic message and dump/kill the process.
  *
+ * NOTE: The process is not killed if __LIBC_PANIC_NO_TERMINATE is given in fFlags.
+ *
  * @param   fFlags      A combination of the __LIBC_PANIC_* defines.
  * @param   pvCtx       Pointer to a context record (or exception parameter list) if available.
  *                      This is a PCONTEXTRECORD (or PXCPTPARAMS if __LIBC_PANIC_XCPTPARAMS is set in fFlags).
  * @param   pszFormat   User message which may contain %s and %x.
  * @param   ...         String pointers and unsigned intergers as specified by the %s and %x in pszFormat.
  */
-void __libc_Back_panic(unsigned fFlags, void *pvCtx, const char *pszFormat, ...) __attribute__((__noreturn__));
+void __libc_Back_panic(unsigned fFlags, void *pvCtx, const char *pszFormat, ...);
 
 /**
  * Print a panic message and dump/kill the process.
+ *
+ * NOTE: The process is not killed if __LIBC_PANIC_NO_TERMINATE is given in fFlags.
  *
  * @param   fFlags      A combination of the __LIBC_PANIC_* defines.
  * @param   pvCtx       Pointer to a context record (or exception parameter list) if available.
@@ -1328,7 +1334,7 @@ void __libc_Back_panic(unsigned fFlags, void *pvCtx, const char *pszFormat, ...)
  * @param   pszFormat   User message which may contain %s and %x.
  * @param   args        String pointers and unsigned intergers as specified by the %s and %x in pszFormat.
  */
-void __libc_Back_panicV(unsigned fFlags, void *pvCtx, const char *pszFormat, va_list args) __attribute__((__noreturn__));
+void __libc_Back_panicV(unsigned fFlags, void *pvCtx, const char *pszFormat, va_list args);
 
 /* @} */
 

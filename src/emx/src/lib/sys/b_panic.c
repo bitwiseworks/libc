@@ -101,7 +101,7 @@ static int panicStrICmp(const char **ppsz, const char *pszLower, const char *psz
  */
 static int panicHex2(char *pszBuf, unsigned u, unsigned cDigits, int fPutNul)
 {
-    static const char szHex[17] = "0123456789abcdef";
+    static const char szHex[17] = "0123456789ABCDEF";
     if (u <= 0xf && cDigits <= 1)
     {
         pszBuf[0] = szHex[u & 0xf];
@@ -159,7 +159,8 @@ static inline int panicHex(char *pszBuf, unsigned u, unsigned cDigits)
  * Print a panic message and dump/kill the process.
  *
  * @param   fFlags      A combination of the __LIBC_PANIC_* defines.
- * @param   pvCtx       Pointer to a context record if available. This is a PCONTEXTRECORD.
+ * @param   pvCtx       Pointer to a context record (or exception parameter list) if available.
+ *                      This is a PCONTEXTRECORD (or PXCPTPARAMS if __LIBC_PANIC_XCPTPARAMS is set in fFlags).
  * @param   pszFormat   User message which may contain %s and %x.
  * @param   ...         String pointers and unsigned intergers as specified by the %s and %x in pszFormat.
  */
@@ -261,6 +262,16 @@ void __libc_Back_panicV(unsigned fFlags, void *pvCtx, const char *pszFormat, va_
     size_t  cbMsg = 0;
     char    szPathBuf[CCHMAXPATH];
 
+    PCONTEXTRECORD pCtx = NULL;
+
+    if (pvCtx)
+    {
+        if (fFlags & __LIBC_PANIC_XCPTPARAMS)
+            pCtx = ((PXCPTPARAMS)pvCtx)->pCtx;
+        else
+            pCtx = (PCONTEXTRECORD)pvCtx;
+    }
+
     if (!fQuiet || fHaveExceptq)
     {
         /*
@@ -278,30 +289,35 @@ void __libc_Back_panicV(unsigned fFlags, void *pvCtx, const char *pszFormat, va_
 #define PRINT_C(msg)    PRINT_BUF_(TO_CON, msg,      sizeof(msg) - 1)
 #define PRINT_P(msg)    PRINT_BUF_(TO_CON, msg,      panicStrLen(msg))
 #define PRINT_H(hex)    PRINT_BUF_(TO_CON, szHexNum, panicHex(szHexNum, hex, 0))
-#define PRINT_H16(hex)  PRINT_BUF_(TO_CON, szHexNum, panicHex(szHexNum, hex, 4))
+#define PRINT_H16(hex)  PRINT_BUF_(TO_CON, szHexNum, panicHex(szHexNum, hex & 0xFFFF, 4))
 #define PRINT_H32(hex)  PRINT_BUF_(TO_CON, szHexNum, panicHex(szHexNum, hex, 8))
 /* Flexible */
 #define PRINT_CHAR_(to, ch) PRINT_BUF_(to, &ch,      1)
 #define PRINT_C_(to, msg)   PRINT_BUF_(to, msg,      sizeof(msg) - 1)
 #define PRINT_P_(to, msg)   PRINT_BUF_(to, msg,      panicStrLen(msg))
 #define PRINT_H_(to, hex)   PRINT_BUF_(to, szHexNum, panicHex(szHexNum, hex, 0))
-#define PRINT_H16_(to, hex) PRINT_BUF_(to, szHexNum, panicHex(szHexNum, hex, 4))
+#define PRINT_H16_(to, hex) PRINT_BUF_(to, szHexNum, panicHex(szHexNum, hex & 0xFFFF, 4))
 #define PRINT_H32_(to, hex) PRINT_BUF_(to, szHexNum, panicHex(szHexNum, hex, 8))
-        if (!(fFlags & __LIBC_PANIC_SIGNAL) && fVerbose)
-            PRINT_C("\r\nLIBC PANIC!!\r\n");
-        else
-            PRINT_C("\r\n");
+        PRINT_C("\r\n");
         if (!(fFlags & __LIBC_PANIC_SIGNAL))
-            PRINT_C_(TO_BUF, "LIBC PANIC!! ");
+            PRINT_C_(TO_BOTH, "LIBC PANIC!! ");
+        else if (pvCtx && (fFlags & __LIBC_PANIC_XCPTPARAMS) &&
+                 ((PXCPTPARAMS)pvCtx)->pXcptRepRec->ExceptionNum == 0x71785158 /* EXCEPTQ_DEBUG_EXCEPTION */)
+            PRINT_C_(TO_BOTH, "LIBC: Exceptq Debug Request: ");
         else
-            PRINT_C_(TO_BUF, "LIBC: ");
+            PRINT_C_(TO_BOTH, "LIBC: ");
+        if (!pszFormat)
+            pszFormat = "<no message>";
         char ch;
+        int fEndsWithLF = 0;
         while ((ch = *pszFormat++) != '\0')
         {
+            fEndsWithLF = 0;
             switch (ch)
             {
                 case '\n':
                     PRINT_C_(TO_BOTH, "\r\n");
+                    fEndsWithLF = 1;
                     break;
                 case '\r':
                     break;
@@ -340,7 +356,8 @@ void __libc_Back_panicV(unsigned fFlags, void *pvCtx, const char *pszFormat, va_
                         case 'p':
                         {
                             uintptr_t u = va_arg(args, uintptr_t);
-                            PRINT_H_(TO_BOTH, u);
+                            PRINT_C_(TO_BOTH, "0x");
+                            PRINT_H32_(TO_BOTH, u);
                             break;
                         }
 
@@ -367,6 +384,9 @@ void __libc_Back_panicV(unsigned fFlags, void *pvCtx, const char *pszFormat, va_
             }
         } /* print loop */
 
+        if (!fEndsWithLF)
+            PRINT_C("\r\n");
+
         if (fVerbose)
         {
             /*
@@ -374,13 +394,13 @@ void __libc_Back_panicV(unsigned fFlags, void *pvCtx, const char *pszFormat, va_
              */
 
             /* pid, tid and stuff */
-            PRINT_C("pid=0x");   PRINT_H16(pPib->pib_ulpid);
-            PRINT_C(" ppid=0x"); PRINT_H16(pPib->pib_ulppid);
-            PRINT_C(" tid=0x");  PRINT_H16(pTib->tib_ptib2->tib2_ultid);
-            PRINT_C(" slot=0x"); PRINT_H16(pTib->tib_ordinal);
-            PRINT_C(" pri=0x");  PRINT_H16(pTib->tib_ptib2->tib2_ulpri);
-            PRINT_C(" mc=0x");   PRINT_H16(pTib->tib_ptib2->tib2_usMCCount);
-            PRINT_C(" ps=0x");   PRINT_H16(pPib->pib_flstatus);
+            PRINT_C("PID=0x");   PRINT_H16(pPib->pib_ulpid);
+            PRINT_C(" PPID=0x"); PRINT_H16(pPib->pib_ulppid);
+            PRINT_C(" TID=0x");  PRINT_H16(pTib->tib_ptib2->tib2_ultid);
+            PRINT_C(" SLOT=0x"); PRINT_H16(pTib->tib_ordinal);
+            PRINT_C(" PRI=0x");  PRINT_H16(pTib->tib_ptib2->tib2_ulpri);
+            PRINT_C(" MC=0x");   PRINT_H16(pTib->tib_ptib2->tib2_usMCCount);
+            PRINT_C(" PS=0x");   PRINT_H16(pPib->pib_flstatus);
 
             /* executable name. */
             if (!DosQueryModuleName(pPib->pib_hmte, sizeof(szPathBuf), &szPathBuf[0]))
@@ -393,10 +413,8 @@ void __libc_Back_panicV(unsigned fFlags, void *pvCtx, const char *pszFormat, va_
             /*
              * Context dump
              */
-            if (pvCtx)
+            if (pCtx)
             {
-                PCONTEXTRECORD pCtx = (PCONTEXTRECORD)pvCtx;
-
                 /* the module name */
                 if (pCtx->ctx_RegEip >= 0x10000)
                 {
@@ -415,41 +433,41 @@ void __libc_Back_panicV(unsigned fFlags, void *pvCtx, const char *pszFormat, va_
                 }
 
                 /* registers */
-                PRINT_C("\r\ncs:eip=");
+                PRINT_C("\r\nCS:EIP=");
                 PRINT_H16(pCtx->ctx_SegCs);
                 PRINT_C(":");
                 PRINT_H32(pCtx->ctx_RegEip);
 
-                PRINT_C("      ss:esp=");
+                PRINT_C(" SS:ESP=");
                 PRINT_H16(pCtx->ctx_SegSs);
                 PRINT_C(":");
                 PRINT_H32(pCtx->ctx_RegEsp);
 
-                PRINT_C("      ebp=");
+                PRINT_C(" EBP=");
                 PRINT_H32(pCtx->ctx_RegEbp);
 
-                PRINT_C("\r\n ds=");
+                PRINT_C("\r\n DS=");
                 PRINT_H16(pCtx->ctx_SegDs);
-                PRINT_C("      es=");
+                PRINT_C("      ES=");
                 PRINT_H16(pCtx->ctx_SegEs);
-                PRINT_C("      fs=");
+                PRINT_C("      FS=");
                 PRINT_H16(pCtx->ctx_SegFs);
-                PRINT_C("      gs=");
+                PRINT_C("      GS=");
                 PRINT_H16(pCtx->ctx_SegGs);
-                PRINT_C("     efl=");
+                PRINT_C("     EFL=");
                 PRINT_H32(pCtx->ctx_EFlags);
 
-                PRINT_C("\r\neax=");
+                PRINT_C("\r\nEAX=");
                 PRINT_H32(pCtx->ctx_RegEax);
-                PRINT_C(" ebx=");
+                PRINT_C(" EBX=");
                 PRINT_H32(pCtx->ctx_RegEbx);
-                PRINT_C(" ecx=");
+                PRINT_C(" ECX=");
                 PRINT_H32(pCtx->ctx_RegEcx);
-                PRINT_C(" edx=");
+                PRINT_C(" EDX=");
                 PRINT_H32(pCtx->ctx_RegEdx);
-                PRINT_C(" edi=");
+                PRINT_C(" EDI=");
                 PRINT_H32(pCtx->ctx_RegEdi);
-                PRINT_C(" esi=");
+                PRINT_C(" ESI=");
                 PRINT_H32(pCtx->ctx_RegEsi);
                 /** @todo fpu */
             }
@@ -493,7 +511,7 @@ void __libc_Back_panicV(unsigned fFlags, void *pvCtx, const char *pszFormat, va_
 
         EXCEPTIONREPORTRECORD XcptRepRec, *pXcptRepRec = NULL;
         EXCEPTIONREGISTRATIONRECORD *pXcptRegRec = NULL;
-        CONTEXTRECORD Ctx, *pCtx = NULL;
+        CONTEXTRECORD Ctx;
         PVOID pvWhatEver = NULL;
 
         if (pvCtx && (fFlags & __LIBC_PANIC_XCPTPARAMS))
@@ -501,7 +519,6 @@ void __libc_Back_panicV(unsigned fFlags, void *pvCtx, const char *pszFormat, va_
             /* Use the existing exception parameters */
             pXcptRepRec = ((PXCPTPARAMS)pvCtx)->pXcptRepRec;
             pXcptRegRec = ((PXCPTPARAMS)pvCtx)->pXcptRegRec;
-            pCtx = ((PXCPTPARAMS)pvCtx)->pCtx;
             pvWhatEver = ((PXCPTPARAMS)pvCtx)->pvWhatEver;
         }
         else
@@ -515,11 +532,9 @@ void __libc_Back_panicV(unsigned fFlags, void *pvCtx, const char *pszFormat, va_
 
             pXcptRepRec = &XcptRepRec;
 
-            if (pvCtx)
+            if (pCtx)
             {
-                pCtx = (PCONTEXTRECORD)pvCtx;
-
-                /* Set the exception address to EIP (otherwise EXCEPTQ won't generate disassembly */
+                /* Set the exception address to EIP, otherwise EXCEPTQ won't generate disassembly */
                 if (pCtx->ContextFlags & CONTEXT_CONTROL)
                     XcptRepRec.ExceptionAddress = (PVOID)pCtx->ctx_RegEip;
             }
@@ -528,7 +543,7 @@ void __libc_Back_panicV(unsigned fFlags, void *pvCtx, const char *pszFormat, va_
                 memset(&Ctx, 0, sizeof(Ctx));
 
                 /*
-                 * Grab the current thread's context. Note that this is a "syntethic" exception
+                 * Grab the current thread's context. Note that this is a "synthetic" exception
                  * where we are only interested in the stack trace for .TRP reports so we grab
                  * control registers (and segments - for information) and not integer registers
                  * which are useless.  We also leave ExceptionAddress NULL to suppress
@@ -694,39 +709,44 @@ void __libc_Back_panicV(unsigned fFlags, void *pvCtx, const char *pszFormat, va_
         }
     }
 
-    /*
-     * Terminate the exception handler chain to avoid recursive trouble.
-     */
-    pTib->tib_pexchain = END_OF_CHAIN;
-
-    /*
-     * Breakpoint
-     */
-    if (fBreakpoint)
+    if (!(fFlags & __LIBC_PANIC_NO_TERMINATE))
     {
-        LIBCLOG_MSG("Breakpoint\n");
-        __asm__ __volatile__ ("int3\n\t"
-                              "nop\n\t");
-    }
+        /*
+        * Terminate the exception handler chain to avoid recursive trouble.
+        */
+        pTib->tib_pexchain = END_OF_CHAIN;
 
-    /*
-     * Terminate the process.
-     */
+        /*
+        * Breakpoint
+        */
+        if (fBreakpoint)
+        {
+            LIBCLOG_MSG("Breakpoint\n");
+            __asm__ __volatile__ ("int3\n\t"
+                                  "nop\n\t");
+        }
+
+        /*
+        * Terminate the process.
+        */
 #if 0
-    if (pTib->tib_ptib2->tib2_usMCCount)
-    {
-        ULONG       ulIgnore;
-        unsigned    cMCExits = pTib->tib_ptib2->tib2_usMCCount;
-        LIBCLOG_MSG("Calling DosExitMustComplete() %u times\n", cMCExits);
-        while (cMCExits-- > 0)
-            DosExitMustComplete(&ulIgnore);
-    }
+        if (pTib->tib_ptib2->tib2_usMCCount)
+        {
+            ULONG       ulIgnore;
+            unsigned    cMCExits = pTib->tib_ptib2->tib2_usMCCount;
+            LIBCLOG_MSG("Calling DosExitMustComplete() %u times\n", cMCExits);
+            while (cMCExits-- > 0)
+                DosExitMustComplete(&ulIgnore);
+        }
 #endif
-    LIBCLOG_MSG("Calling DosKillProcess() \n");
-    for (;;)
-    {
-        DosKillProcess(DKP_PROCESS, pPib->pib_ulpid);
-        DosExit(EXIT_PROCESS, 127);
+        LIBCLOG_MSG("Calling DosKillProcess() \n");
+        for (;;)
+        {
+            DosKillProcess(DKP_PROCESS, pPib->pib_ulpid);
+            DosExit(EXIT_PROCESS, 127);
+        }
     }
+
+    PRINT_C("\r\n");
 }
 

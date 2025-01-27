@@ -40,6 +40,7 @@
 #include <InnoTekLIBC/backend.h>
 #define __LIBC_LOG_GROUP __LIBC_LOG_GRP_SIGNAL
 #include <InnoTekLIBC/logstrict.h>
+#include "backend.h"
 #include "b_signal.h"
 
 
@@ -323,6 +324,29 @@ ULONG _System __libc_Back_exceptionHandler(PEXCEPTIONREPORTRECORD       pXcptRep
 
         case XCPT_PROCESS_TERMINATE:
             /* Do nothing ATM - could be use for tls cleanup later. */
+            break;
+
+        case 0x71785158: /* EXCEPTQ_DEBUG_EXCEPTION */
+            /*
+             * Call panic without termination to trigger an EXCEPTQ report. Note that
+             * EXCEPTQ_DEBUG_EXCEPTION supports the format string in pXcptRepRec.ExceptionInfo[0]
+             * with arguments coming in ExceptionInfo[1] - ExceptionInfo[3]. Use this as a message
+             * if present.
+             */
+            if (pXcptRepRec->cParameters && pXcptRepRec->ExceptionInfo[0])
+            {
+                ULONG size = 0x1000, flags;
+                APIRET arc = DosQueryMem((PVOID)pXcptRepRec->ExceptionInfo[0], &size, &flags);
+                if (arc == 0 && (flags & PAG_COMMIT))
+                {
+                    __libc_Back_panic(__LIBC_PANIC_SIGNAL | __LIBC_PANIC_NO_SPM_TERM | __LIBC_PANIC_XCPTPARAMS | __LIBC_PANIC_NO_TERMINATE,
+                                      &pXcptRepRec, (const char *)pXcptRepRec->ExceptionInfo[0],
+                                      pXcptRepRec->ExceptionInfo[1], pXcptRepRec->ExceptionInfo[2], pXcptRepRec->ExceptionInfo[3]);
+                    break;
+                }
+            }
+            __libc_Back_panic(__LIBC_PANIC_SIGNAL | __LIBC_PANIC_NO_SPM_TERM | __LIBC_PANIC_XCPTPARAMS | __LIBC_PANIC_NO_TERMINATE,
+                              &pXcptRepRec, NULL);
             break;
     }
 
