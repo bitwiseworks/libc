@@ -608,7 +608,7 @@ void __libc_Back_panicV(unsigned fFlags, void *pvCtx, const char *pszFormat, va_
          * The new .TRP name should be in sync with what __libc_logInit does
          * for default log filenames!
          */
-        char szNewTrpFileBegin[] = "TTTTTTTT-PPPP_TT";
+        char szNewTrpFileBegin[] = "TTTTTTTTTTTTTTTT-PPPP_TT";
         char szNewTrpFileEnd[] = "-exceptq.txt";
 
         /* Query the EXE name and strip off the path and .EXE extension. */
@@ -655,15 +655,17 @@ void __libc_Back_panicV(unsigned fFlags, void *pvCtx, const char *pszFormat, va_
         if (cchLogDir + sizeof(szNewTrpFileBegin) - 1 + cchExeName + sizeof(szNewTrpFileEnd) <= CCHMAXPATH)
         {
             /*
-             * We don't query QSV_TIME_HIGH as it will remain 0 until 19-Jan-2038 and for
-             * our purposes (generate a unique log name sorted by date) it's fine.
+             * We don't query QSV_TIME_HIGH as it will remain 0 until 19-Jan-2038 and for our
+             * purposes (generate a unique log name sorted by date) it's fine. But we query
+             * QSV_MS_COUNT for cases when exceptions happen more often than once a second.
              */
-            ULONG ulTime;
-            DosQuerySysInfo(QSV_TIME_LOW, QSV_TIME_LOW, &ulTime, sizeof(ulTime));
+            ULONG ulTimes[2];
+            DosQuerySysInfo(QSV_MS_COUNT, QSV_TIME_LOW, &ulTimes, sizeof(ulTimes));
 
-            panicHex2(szNewTrpFileBegin + 0, ulTime, 8, 0);
-            panicHex2(szNewTrpFileBegin + 9, pPib->pib_ulpid, 4, 0);
-            panicHex2(szNewTrpFileBegin + 14, pTib->tib_ptib2->tib2_ultid, 2, 0);
+            panicHex2(szNewTrpFileBegin + 0, ulTimes[1], 8, 0);
+            panicHex2(szNewTrpFileBegin + 8, ulTimes[0], 8, 0);
+            panicHex2(szNewTrpFileBegin + 17, pPib->pib_ulpid, 4, 0);
+            panicHex2(szNewTrpFileBegin + 22, pTib->tib_ptib2->tib2_ultid, 2, 0);
 
             if (cchExeName)
             {
