@@ -347,6 +347,7 @@ ULONG _System __libc_Back_exceptionHandler(PEXCEPTIONREPORTRECORD       pXcptRep
                 {
                     switch (pXcptRepRec->cParameters)
                     {
+                        case 1: break;
                         case 2: pszMessage = "[1]=%p"; break;
                         case 3: pszMessage = "[1]=%p [2]=%p"; break;
                         default: pszMessage = "[1]=%p [2]=%p [3]=%p"; break;

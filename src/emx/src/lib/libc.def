@@ -2039,3 +2039,6 @@ EXPORTS
 
     ; LIBC Next 0.1.12
     "___libc_touch" @2026
+
+    ; LIBC Next 0.1.14
+    "___libc_debug_report" @2027

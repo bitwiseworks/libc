@@ -41,6 +41,7 @@
 #include <InnotekLIBC/backend.h>
 #include <InnotekLIBC/sharedpm.h>
 #include <InnotekLIBC/logstrict.h>
+#include <InnotekLIBC/libc.h>
 #include "backend.h"
 
 
@@ -752,3 +753,46 @@ void __libc_Back_panicV(unsigned fFlags, void *pvCtx, const char *pszFormat, va_
     PRINT_C("\r\n");
 }
 
+
+/**
+ * Raise an EXCEPTQ debug exception to generate a debug report and continue execution.
+ *
+ * The debug report may contain an optional message specified in pszFormat with a reduced set of
+ * printf-like format specifiers followed by up to 3 format arguments (the rest of arguments is
+ * ignored). If pszFormat is NULL and there are no additional arguments, `<no message>` is used. If
+ * pszFormat is a pointer that equals to 1, 2 or 3 (should be casted to const char* to avoid
+ * warnings), the specified number of arguments following it is printed as 32-bit hex integers .
+ *
+ * @param   pszFormat   User message which may contain %s and %x or NULL.
+ * @param   ...         String pointers and unsigned intergers as specified by the %s and %x in pszFormat.
+ */
+void __libc_debug_report(const char *pszFormat, ...)
+{
+    EXCEPTIONREPORTRECORD  XRepRec = {0};
+    XRepRec.ExceptionNum = 0x71785158; /* EXCEPTQ_DEBUG_EXCEPTION */
+
+    if (pszFormat)
+    {
+        if ((uintptr_t)pszFormat <= 3)
+        {
+            XRepRec.cParameters = (uintptr_t)pszFormat + 1;
+        }
+        else if ((uintptr_t)pszFormat >= 0x10000 && (uintptr_t)pszFormat < 0xe0000000)
+        {
+            XRepRec.cParameters = 4;
+            XRepRec.ExceptionInfo[0] = (ULONG)pszFormat;
+        }
+
+        if (XRepRec.cParameters)
+        {
+            va_list args;
+            va_start(args, pszFormat);
+            int n = 0;
+            while (++ n <= XRepRec.cParameters)
+                XRepRec.ExceptionInfo[n] = va_arg(args, ULONG);
+            va_end(args);
+        }
+    }
+
+    DosRaiseException(&XRepRec);
+}

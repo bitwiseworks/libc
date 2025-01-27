@@ -61,6 +61,20 @@ extern sigset_t __libc_gSignalRestartMask;
  */
 extern void __libc_touch(void *base, unsigned long count);
 
+/**
+ * Raise an EXCEPTQ debug exception to generate a debug report and continue execution.
+ *
+ * The debug report may contain an optional message specified in pszFormat with a reduced set of
+ * printf-like format specifiers followed by up to 3 format arguments (the rest of arguments is
+ * ignored). If pszFormat is NULL and there are no additional arguments, `<no message>` is used. If
+ * pszFormat is a pointer that equals to 1, 2 or 3 (should be casted to const char* to avoid
+ * warnings), the specified number of arguments following it is printed as 32-bit hex integers .
+ *
+ * @param   pszFormat   User message which may contain %s and %x or NULL.
+ * @param   ...         String pointers and unsigned intergers as specified by the %s and %x in pszFormat.
+ */
+extern void __libc_debug_report(const char *pszFormat, ...);
+
 __END_DECLS
 
 #endif
