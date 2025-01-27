@@ -333,17 +333,29 @@ ULONG _System __libc_Back_exceptionHandler(PEXCEPTIONREPORTRECORD       pXcptRep
              * with arguments coming in ExceptionInfo[1] - ExceptionInfo[3]. Use this as a message
              * if present.
              */
-            if (pXcptRepRec->cParameters && pXcptRepRec->ExceptionInfo[0])
+            if (pXcptRepRec->cParameters)
             {
-                ULONG size = 0x1000, flags;
-                APIRET arc = DosQueryMem((PVOID)pXcptRepRec->ExceptionInfo[0], &size, &flags);
-                if (arc == 0 && (flags & PAG_COMMIT))
+                const char *pszMessage = NULL;
+                if (pXcptRepRec->ExceptionInfo[0])
                 {
-                    __libc_Back_panic(__LIBC_PANIC_SIGNAL | __LIBC_PANIC_NO_SPM_TERM | __LIBC_PANIC_XCPTPARAMS | __LIBC_PANIC_NO_TERMINATE,
-                                      &pXcptRepRec, (const char *)pXcptRepRec->ExceptionInfo[0],
-                                      pXcptRepRec->ExceptionInfo[1], pXcptRepRec->ExceptionInfo[2], pXcptRepRec->ExceptionInfo[3]);
-                    break;
+                    ULONG size = 0x1000, flags;
+                    APIRET arc = DosQueryMem((PVOID)pXcptRepRec->ExceptionInfo[0], &size, &flags);
+                    if (arc == 0 && (flags & PAG_COMMIT))
+                        pszMessage = (const char *)pXcptRepRec->ExceptionInfo[0];
                 }
+                if (!pszMessage)
+                {
+                    switch (pXcptRepRec->cParameters)
+                    {
+                        case 2: pszMessage = "[1]=%p"; break;
+                        case 3: pszMessage = "[1]=%p [2]=%p"; break;
+                        default: pszMessage = "[1]=%p [2]=%p [3]=%p"; break;
+                    }
+                }
+                __libc_Back_panic(__LIBC_PANIC_SIGNAL | __LIBC_PANIC_NO_SPM_TERM | __LIBC_PANIC_XCPTPARAMS | __LIBC_PANIC_NO_TERMINATE,
+                                &pXcptRepRec, pszMessage,
+                                pXcptRepRec->ExceptionInfo[1], pXcptRepRec->ExceptionInfo[2], pXcptRepRec->ExceptionInfo[3]);
+                break;
             }
             __libc_Back_panic(__LIBC_PANIC_SIGNAL | __LIBC_PANIC_NO_SPM_TERM | __LIBC_PANIC_XCPTPARAMS | __LIBC_PANIC_NO_TERMINATE,
                               &pXcptRepRec, NULL);
