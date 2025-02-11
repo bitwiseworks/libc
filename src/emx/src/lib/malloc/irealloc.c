@@ -142,7 +142,7 @@ static void *_um_lump_expand_up2 (Heap_t h, struct _um_seg *seg,
 
   if (osize > rsize)
     {
-      assert ((osize - rsize) % _UM_PAGE_SIZE == 0);
+      _um_assert ((osize - rsize) % _UM_PAGE_SIZE == 0, h);
       slack = (struct _um_lump *)_UM_ADD (lump, rsize);
       _um_lump_coalesce_free (seg->parent_heap, slack, seg, osize - rsize);
     }
@@ -191,19 +191,19 @@ static void *_um_lump_expand_up (Heap_t h, struct _um_seg *seg,
      segment, either by adding a free lump or by extending the free
      lump following LUMP; the segment must be large enough now. */
 
-  assert (!_UM_LAST_LUMP (seg, lump));
+  _um_assert (!_UM_LAST_LUMP (seg, lump), h);
   next = _UM_NEXT_LUMP (lump);
-  assert (_UM_LAST_LUMP (seg, next));
-  assert (_UM_LUMP_STATUS (next) == _UMS_FREE);
+  _um_assert (_UM_LAST_LUMP (seg, next), h);
+  _um_assert (_UM_LUMP_STATUS (next) == _UMS_FREE, h);
   block = _um_lump_expand_up2 (h, seg, lump, next, new_size, align, flags);
-  assert (block != NULL);
+  _um_assert (block != NULL, h);
   return block;
 }
 
 
 static void *_um_lump_expand_down (struct _um_seg *seg,
                                    struct _um_lump *lump, size_t new_size,
-                                   size_t align, unsigned flags)
+                                   size_t align, unsigned flags _UM_ASSERT_HEAP_PARAM(h))
 {
   struct _um_lump *prev, *slack;
   size_t rsize, osize;
@@ -238,7 +238,7 @@ static void *_um_lump_expand_down (struct _um_seg *seg,
 
   if (osize > rsize)
     {
-      assert ((osize - rsize) % _UM_PAGE_SIZE == 0);
+      _um_assert ((osize - rsize) % _UM_PAGE_SIZE == 0, h);
       slack = (struct _um_lump *)_UM_ADD (prev, rsize);
       _um_lump_coalesce_free (seg->parent_heap, slack, seg, osize - rsize);
     }
@@ -269,7 +269,7 @@ static void *_um_lump_realloc (struct _um_seg *seg, struct _um_lump *lump,
     {
       /* TODO: Use crateset? */
       _um_lump_set_size (lump, new_size);
-      assert ((osize - rsize) % _UM_PAGE_SIZE == 0);
+      _um_assert ((osize - rsize) % _UM_PAGE_SIZE == 0, h);
       slack = (struct _um_lump *)_UM_ADD (lump, rsize);
       _um_lump_coalesce_free (h, slack, seg, osize - rsize);
     }
@@ -279,7 +279,7 @@ static void *_um_lump_realloc (struct _um_seg *seg, struct _um_lump *lump,
       if (flags & _UMFI_NOMOVE)
         return r;
       if (r == NULL)
-        r = _um_lump_expand_down (seg, lump, new_size, align, flags);
+        r = _um_lump_expand_down (seg, lump, new_size, align, flags _UM_ASSERT_HEAP_ARG(h));
       if (r == NULL)
         {
           r = _um_lump_alloc (h, new_size, align, flags);

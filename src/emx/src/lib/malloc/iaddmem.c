@@ -15,7 +15,7 @@ Heap_t _um_seg_addmem (Heap_t h, struct _um_seg *seg, void *memory,
   struct _um_lump *lump;
   size_t asize, osize;
 
-  assert (_UM_ADD (seg->mem, seg->size) == memory);
+  _um_assert (_UM_ADD (seg->mem, seg->size) == memory, h);
 
   /* Expand the segment SEG by adding free space at the end.  First,
      compute the new number of bytes available at START.  Drop the
@@ -86,7 +86,7 @@ Heap_t _um_seg_setmem (Heap_t h, struct _um_seg *seg, void *memory,
   start = _UM_ADD (seg, sizeof (struct _um_seg));
   diff = _UM_ALIGN_DIFF (start + _UM_LUMP_HEADER_SIZE, _UM_PAGE_SIZE);
   start += diff;
-  assert (_UM_IS_ALIGNED (start + _UM_LUMP_HEADER_SIZE, _UM_PAGE_SIZE));
+  _um_assert (_UM_IS_ALIGNED (start + _UM_LUMP_HEADER_SIZE, _UM_PAGE_SIZE), h);
 
   /* Compute the number of bytes available at START.  Drop the partial
      page at the end, if there is any. */
@@ -138,7 +138,7 @@ Heap_t _um_addmem_nolock (Heap_t h, void *memory, size_t size, int clean)
 
   diff = _UM_ALIGN_DIFF (memory, _UM_PARENT_ALIGN);
   seg = (struct _um_seg *)_UM_ADD (memory, diff);
-  assert (((unsigned long)seg & _UMF_MASK) == 0);
+  _um_assert (((unsigned long)seg & _UMF_MASK) == 0, h);
 
   /* Create a segment. */
 

@@ -10,7 +10,7 @@
 #include <emx/umalloc.h>
 
 static void _um_crate_free (struct _um_crateset *crateset,
-                            struct _um_crate *crate)
+                            struct _um_crate *crate _UM_ASSERT_HEAP_PARAM(h))
 {
   struct _um_crumb *crumb;
   struct _um_crate **patch;
@@ -27,8 +27,8 @@ static void _um_crate_free (struct _um_crateset *crateset,
   for (i = 0; i < crate->init; ++i)
     {
       crumb = _UM_CRUMB_BY_INDEX (crate, i);
-      assert (_UM_CRUMB_STATUS (crumb) == _UMS_FREE);
-      assert (_PTR_FROM_UMINT (crumb->x.free.parent_crate, struct _um_crate) == crate);
+      _um_assert (_UM_CRUMB_STATUS (crumb) == _UMS_FREE, h);
+      _um_assert (_PTR_FROM_UMINT (crumb->x.free.parent_crate, struct _um_crate) == crate, h);
       _um_crumb_unlink (crateset, crumb);
     }
 
@@ -39,6 +39,7 @@ static void _um_crate_free (struct _um_crateset *crateset,
       break;
   if (*patch == NULL)
     {
+      _um_heap_maybe_unlock (h);
       _um_abort ("_um_crate_free: patch not found! patch=%p crate=%p crateset=%p\n",
                  patch, crate, crateset);
       return;
@@ -60,10 +61,10 @@ void _um_crumb_free_maybe_lock (struct _um_crate *crate,
   if (lock)
     _um_heap_lock (crate->parent_heap);
 
-  assert (_UM_CRUMB_STATUS (crumb) != _UMS_FREE);
-  assert (crateset->crumb_size == crate->crumb_size);
-  assert (crumb->x.used.size <= crate->crumb_size);
-  assert (crate->used != 0);
+  _um_assert (_UM_CRUMB_STATUS (crumb) != _UMS_FREE, crate->parent_heap);
+  _um_assert (crateset->crumb_size == crate->crumb_size, crate->parent_heap);
+  _um_assert (crumb->x.used.size <= crate->crumb_size, crate->parent_heap);
+  _um_assert (crate->used != 0, crate->parent_heap);
 
   /* Insert the crumb at the head of the crateset's free list. */
 
@@ -90,7 +91,7 @@ void _um_crumb_free_maybe_lock (struct _um_crate *crate,
       /* The crate is no longer used.  Remove all its initialized
          crumbs from the free list and deallocate the crate. */
 
-      _um_crate_free (crateset, crate);
+      _um_crate_free (crateset, crate _UM_ASSERT_HEAP_ARG(crate->parent_heap));
     }
 
   if (lock)
@@ -107,7 +108,7 @@ void _um_lump_free_maybe_lock (struct _um_seg *seg, struct _um_lump *lump,
   if (lock)
     _um_heap_lock (h);
 
-  assert (_UM_LUMP_STATUS (lump) != _UMS_FREE);
+  _um_assert (_UM_LUMP_STATUS (lump) != _UMS_FREE, h);
   _um_lump_coalesce_free (h, lump, seg, _UM_ROUND_LUMP (lump->size));
 
   if (lock)

@@ -69,8 +69,8 @@ void _um_lump_make_free (Heap_t h, struct _um_lump *lump,
 {
   int bucket_number;
 
-  assert (_UM_IS_ALIGNED (seg, _UM_PARENT_ALIGN));
-  assert (rsize % _UM_PAGE_SIZE == 0);
+  _um_assert (_UM_IS_ALIGNED (seg, _UM_PARENT_ALIGN), h);
+  _um_assert (rsize % _UM_PAGE_SIZE == 0, h);
   lump->parent_seg = _UMINT_FROM_PTR (seg) | _UMS_FREE;
   _um_lump_set_size (lump, rsize - _UM_LUMP_OVERHEAD);
 
@@ -88,8 +88,8 @@ void _um_lump_make_free (Heap_t h, struct _um_lump *lump,
 void _um_lump_coalesce_free (Heap_t h, struct _um_lump *lump,
                              struct _um_seg *seg, size_t rsize)
 {
-  assert (_UM_IS_ALIGNED (seg, _UM_PARENT_ALIGN));
-  assert (rsize % _UM_PAGE_SIZE == 0);
+  _um_assert (_UM_IS_ALIGNED (seg, _UM_PARENT_ALIGN), h);
+  _um_assert (rsize % _UM_PAGE_SIZE == 0, h);
   lump->parent_seg = _UMINT_FROM_PTR (seg) | _UMS_FREE;
   _um_lump_set_size (lump, rsize - _UM_LUMP_OVERHEAD);
 
@@ -101,7 +101,7 @@ void _um_lump_coalesce_free (Heap_t h, struct _um_lump *lump,
       if (_UM_LUMP_STATUS (prev) == _UMS_FREE)
         {
           _um_lump_unlink_heap (h, prev);
-          assert (_UM_IS_ALIGNED (seg, _UM_PARENT_ALIGN));
+          _um_assert (_UM_IS_ALIGNED (seg, _UM_PARENT_ALIGN), h);
           prev->parent_seg = _UMINT_FROM_PTR (seg) | _UMS_FREE;
 
           /* It's important to round at least one of the sizes,

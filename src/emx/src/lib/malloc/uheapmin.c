@@ -63,7 +63,10 @@ int _uheapmin (Heap_t h)
                     }
                 }
               else
-                 _um_abort ("_uheapmin: shrink_size=%x seg->size=%x\n", shrink_size, seg->size);
+                {
+                  _um_heap_maybe_unlock (h);
+                  _um_abort ("_uheapmin: shrink_size=%x seg->size=%x\n", shrink_size, seg->size);
+                }
             }
           else
             {
@@ -104,8 +107,8 @@ int _uheapmin (Heap_t h)
               shrink_size = new_size - min_size;
               h->shrink_fun (h, _UM_ADD (seg->mem, min_size),
                              seg->size - min_size, &shrink_size);
-              assert (shrink_size <= seg->size - min_size);
-              assert (shrink_size >= new_size - min_size);
+              _um_assert (shrink_size <= seg->size - min_size, h);
+              _um_assert (shrink_size >= new_size - min_size, h);
               seg->size = shrink_size + min_size;
 
               /* Compute the number of bytes available at seg->start.
@@ -114,7 +117,7 @@ int _uheapmin (Heap_t h)
               mem_end = (char *)_UM_ADD (seg->mem, seg->size);
               asize = mem_end - (char *)seg->start;
               asize &= ~(_UM_PAGE_SIZE-1);
-              assert (asize > 0);
+              _um_assert (asize > 0, h);
 
               /* Set the new segment end. */
 
@@ -128,9 +131,9 @@ int _uheapmin (Heap_t h)
 
               if ((void *)lump != seg->end)
                 {
-                  assert ((void *)lump < seg->end);
+                  _um_assert ((void *)lump < seg->end, h);
                   fsize = (char *)seg->end - (char *)lump;
-                  assert (fsize % _UM_PAGE_SIZE == 0);
+                  _um_assert (fsize % _UM_PAGE_SIZE == 0, h);
                   _um_lump_make_free (h, lump, seg, fsize);
                 }
             }

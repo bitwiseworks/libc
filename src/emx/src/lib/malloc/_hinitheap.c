@@ -93,6 +93,7 @@ Heap_t   _hinitheap(void)
     pvInitial = __libc_HimemDefaultAlloc(NULL, &cbInitial, &fClean);
     if (!pvInitial)
     {
+        _smutex_release(&lock);
         _um_abort("_hinitheap: __libc_HimemDefaultAlloc failed!\n");
         LIBCLOG_RETURN_P(NULL);
     }
@@ -106,11 +107,13 @@ Heap_t   _hinitheap(void)
                      NULL, NULL);
     if (Heap == NULL)
     {
+        _smutex_release(&lock);
         _um_abort("_hinitheap: _ucreate2 failed!\n");
         LIBCLOG_RETURN_P(NULL);
     }
     if (_uopen(Heap) != 0)
     {
+        _smutex_release(&lock);
         _um_abort("_hinitheap: _uopen(%p) failed!\n", Heap);
         LIBCLOG_RETURN_P(NULL);
     }

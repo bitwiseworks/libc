@@ -40,7 +40,7 @@ int _udestroy (Heap_t h, int force)
             }
         }
     }
-  
+
   h->magic = 0;
   _um_heap_unlock (h);
 
@@ -69,7 +69,7 @@ int _udestroy (Heap_t h, int force)
   if (h->initial_seg->size != h->initial_seg_size)
     {
       seg = h->initial_seg;
-      assert (seg->size > h->initial_seg_size);
+      _um_assert (seg->size > h->initial_seg_size, h);
       if (h->release_fun != NULL)
         h->release_fun (h, _UM_ADD (seg->mem, h->initial_seg_size),
                         seg->size - h->initial_seg_size);

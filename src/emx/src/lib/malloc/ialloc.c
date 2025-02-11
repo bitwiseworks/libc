@@ -13,7 +13,7 @@
 /* ALIGN must be a power of two. */
 
 static void *_um_crumb_alloc (struct _um_crateset *crateset, size_t size,
-                              size_t align, unsigned flags)
+                              size_t align, unsigned flags _UM_ASSERT_HEAP_PARAM(h))
 {
   void *result;
   struct _um_crumb *crumb;
@@ -24,10 +24,10 @@ static void *_um_crumb_alloc (struct _um_crateset *crateset, size_t size,
     {
       crate = _PTR_FROM_UMINT (crumb->x.free.parent_crate, struct _um_crate);
 
-      assert (_UM_CRUMB_STATUS (crumb) == _UMS_FREE);
-      assert (crate->magic == _UM_MAGIC_CRATE);
-      assert (crate->parent_crateset == crateset);
-      assert (crate->used < crate->max);
+      _um_assert (_UM_CRUMB_STATUS (crumb) == _UMS_FREE, h);
+      _um_assert (crate->magic == _UM_MAGIC_CRATE, h);
+      _um_assert (crate->parent_crateset == crateset, h);
+      _um_assert (crate->used < crate->max, h);
 
       result = _UM_BLOCK_FROM_CRUMB (crumb);
       if (_UM_IS_ALIGNED (result, align)
@@ -62,7 +62,7 @@ static void *_um_crumb_alloc (struct _um_crateset *crateset, size_t size,
   if (_UM_IS_ALIGNED (result, align)
       && (!(flags & _UMFI_TILED) || _UM_TILE_OK (result, size)))
     {
-      assert (_UM_IS_ALIGNED (crate, _UM_PARENT_ALIGN));
+      _um_assert (_UM_IS_ALIGNED (crate, _UM_PARENT_ALIGN), h);
       crumb->x.used.parent_crate = _UMINT_FROM_PTR (crate) | _UMS_USER;
       crumb->x.used.size = size;
       crate->init += 1;
@@ -113,7 +113,7 @@ static void *_um_lump_alloc_noexpand (Heap_t h, size_t size, size_t align,
       for (olump = h->buckets[bucket_number].head;
            olump != NULL; olump = olump->x.free.next)
         {
-          assert (_UM_LUMP_STATUS (olump) == _UMS_FREE);
+          _um_assert (_UM_LUMP_STATUS (olump) == _UMS_FREE, h);
 
           /* Compute the rounded size of the current lump; try the
              next lump if it's too small. */
@@ -127,7 +127,7 @@ static void *_um_lump_alloc_noexpand (Heap_t h, size_t size, size_t align,
 
           block = _UM_BLOCK_FROM_LUMP (olump);
           diff = _UM_ALIGN_DIFF (block, align);
-          assert (diff % _UM_PAGE_SIZE == 0);
+          _um_assert (diff % _UM_PAGE_SIZE == 0, h);
           if (osize < diff + rsize)
             continue;
 
@@ -135,7 +135,7 @@ static void *_um_lump_alloc_noexpand (Heap_t h, size_t size, size_t align,
              of DIFF bytes preceding the block. */
 
           block = _UM_ADD (block, diff);
-          assert (_UM_IS_ALIGNED (block, align));
+          _um_assert (_UM_IS_ALIGNED (block, align), h);
 
           /* If tiling is requested, realign the block again if
              required.  Reject this lump if it's not big enough to
@@ -155,7 +155,7 @@ static void *_um_lump_alloc_noexpand (Heap_t h, size_t size, size_t align,
                   if (!_UM_TILE_TILED (block, size))
                     continue;
                 }
-              assert (_UM_TILE_OK (block, size));
+              _um_assert (_UM_TILE_OK (block, size), h);
             }
 
           /* Remove the lump from the free list. */
@@ -167,7 +167,7 @@ static void *_um_lump_alloc_noexpand (Heap_t h, size_t size, size_t align,
 
           seg = _PTR_FROM_UMINT (olump->parent_seg, struct _um_seg);
           ulump = _UM_ADD (olump, diff);
-          assert (_UM_IS_ALIGNED (seg, _UM_PARENT_ALIGN));
+          _um_assert (_UM_IS_ALIGNED (seg, _UM_PARENT_ALIGN), h);
           ulump->parent_seg = _UMINT_FROM_PTR (seg) | _UMS_USER;
           if (flags & _UMFI_CRATE)
             _UM_LUMP_SET_STATUS (ulump, _UMS_CRATE);
@@ -180,7 +180,7 @@ static void *_um_lump_alloc_noexpand (Heap_t h, size_t size, size_t align,
 
           if (osize > diff + rsize)
             {
-              assert ((osize - rsize) % _UM_PAGE_SIZE == 0);
+              _um_assert ((osize - rsize) % _UM_PAGE_SIZE == 0, h);
               slack = (struct _um_lump *)_UM_ADD (olump, diff + rsize);
               _um_lump_make_free (h, slack, seg, osize - (diff + rsize));
             }
@@ -193,7 +193,7 @@ static void *_um_lump_alloc_noexpand (Heap_t h, size_t size, size_t align,
 
           if (diff > 0)
             {
-              assert (diff % _UM_PAGE_SIZE == 0);
+              _um_assert (diff % _UM_PAGE_SIZE == 0, h);
               _um_lump_make_free (h, olump, seg, diff);
             }
 
@@ -245,7 +245,7 @@ static int _um_heap_expand2 (Heap_t h, size_t size)
 
 
 /* Attempt to expand the heap to enable allocation of a lump of SIZE
-   bytes suitable for an ALIGN aligned allocation.  
+   bytes suitable for an ALIGN aligned allocation.
    Return true iff successful. */
 
 static int _um_heap_expand (Heap_t h, size_t size, size_t align)
@@ -313,7 +313,7 @@ static void *_um_crateset_alloc (Heap_t h, struct _um_crateset *crateset,
   void *block;
   int n;
 
-  block = _um_crumb_alloc (crateset, size, align, flags);
+  block = _um_crumb_alloc (crateset, size, align, flags _UM_ASSERT_HEAP_ARG(h));
   if (block != NULL)
     return block;
 
@@ -348,7 +348,7 @@ static void *_um_crateset_alloc (Heap_t h, struct _um_crateset *crateset,
 
           /* Try again to allocate a crumb. */
 
-          return _um_crumb_alloc (crateset, size, align, flags);
+          return _um_crumb_alloc (crateset, size, align, flags _UM_ASSERT_HEAP_ARG(h));
         }
     }
   return NULL;

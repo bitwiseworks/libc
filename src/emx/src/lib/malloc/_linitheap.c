@@ -77,6 +77,7 @@ Heap_t   _linitheap(void)
     pvInitial = sbrk(_INITIAL_DEFAULT_HEAP_SIZE);
     if (pvInitial == (void *)-1)
     {
+        _smutex_release(&lock);
         _um_abort("_linitheap: sbrk failed!\n");
         LIBCLOG_RETURN_P(NULL);
     }
@@ -90,11 +91,13 @@ Heap_t   _linitheap(void)
                      _um_default_expand, _um_default_shrink);
     if (Heap == NULL)
     {
+        _smutex_release(&lock);
         _um_abort("_linitheap: _ucreate2 failed!\n");
         LIBCLOG_RETURN_P(NULL);
     }
     if (_uopen(Heap) != 0)
     {
+        _smutex_release(&lock);
         _um_abort("_linitheap: _uopen(%p) failed!\n", Heap);
         LIBCLOG_RETURN_P(NULL);
     }

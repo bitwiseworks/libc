@@ -275,6 +275,22 @@ typedef unsigned long _umagic;
 
 struct _uheap;
 
+/* Special assert that releases the heap lock if triggered */
+
+#if defined (NDEBUG)
+#define _um_heap_maybe_unlock(h)  ((void)0)
+#define _um_assert(exp, h) ((void)0)
+#define _UM_ASSERT_HEAP_PARAM(h)
+#define _UM_ASSERT_HEAP_ARG(h)
+#else
+#define _um_heap_maybe_unlock(h) \
+  (h && _fmutex_is_owner (&h->fsem) ? _fmutex_release(&h->fsem) : (void)0)
+#define _um_assert(exp, h) ((exp) ? (void)0 : \
+  _um_heap_maybe_unlock (h), assert (exp))
+#define _UM_ASSERT_HEAP_PARAM(h) , Heap_t h
+#define _UM_ASSERT_HEAP_ARG(h) , h
+#endif
+
 
 /* ============================== Header ============================== */
 
