@@ -144,7 +144,7 @@ __bswap16(__uint16_t _x)
  * Not sure how correct this is now. And mixing 4 versions
  * of (Free)BSD doesn't help....
  */
-#ifndef _POSIX_SOURCE
+#if !defined(_POSIX_SOURCE) || defined(__USE_EMX)
 
 #ifndef _KERNEL
 #include <sys/cdefs.h>
@@ -173,7 +173,7 @@ __END_DECLS
 #define HTONL(x)   ((x) = htonl((u_long)(x)))
 #define HTONS(x)   ((x) = htons((u_short)(x)))
 
-#endif /*!_POSIX_SOURCE*/
+#endif /* !_POSIX_SOURCE || __USE_EMX */
 
 
 #endif /* _MACHINE_ENDIAN_H_ */

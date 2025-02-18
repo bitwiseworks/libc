@@ -676,7 +676,7 @@ int      _getopt(int, char **, const char *);
 #include <sys/cdefs.h>
 #include <sys/types.h>
 int     TCPCALL     soclose(int);
-#ifndef _POSIX_SOURCE
+#if !defined(_POSIX_SOURCE) || defined(__USE_EMX)
 int     TCPCALL     gethostid(void);
 int     TCPCALL     gethostname(char *, int);
 #ifndef TCPV40HDRS
@@ -686,7 +686,7 @@ int     TCPCALL     rresvport(int *);
 int     TCPCALL     ruserok(const char *, int, const char *, const char *);
 #include <sys/select.h>
 #endif /* !TCP40HDRS */
-#endif /* !_POSIX_SOURCE */
+#endif /* !_POSIX_SOURCE || __USE_EMX */
 
 #ifdef __USE_GNU
 
