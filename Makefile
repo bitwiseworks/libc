@@ -68,15 +68,19 @@ release-distbuild:
 	$(MAKE) release-libs
 
 release-bootstrap:
-	@rm -rf "$(LIBC_OUTPUT_DIR)"
-	@rm -rf "$(LIBC_INSTALL_DIR)"
+	rm -rf "$(LIBC_OUTPUT_DIR)"
+	rm -rf "$(LIBC_INSTALL_DIR)"
 	$(MAKE) release
 	$(MAKE) release-install
 	$(MAKE) release-clean
-	@rm -rf "$(LIBC_OUTPUT_DIR)"
+	rm -rf "$(LIBC_OUTPUT_DIR)"
 	$(MAKE) release-distbuild
-	@rm -rf "$(LIBC_INSTALL_DIR)"
+	rm -rf "$(LIBC_INSTALL_DIR)"
 	$(MAKE) release-install
+
+rm-build-dirs:
+	rm -rf "$(LIBC_OUTPUT_DIR)"
+	rm -rf "$(LIBC_INSTALL_DIR)"
 
 #help:
 #	$(MAKE) -C src/emx MODE=opt $(MAKE_DEFS) help
