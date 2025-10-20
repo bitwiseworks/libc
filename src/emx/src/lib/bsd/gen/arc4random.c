@@ -226,6 +226,18 @@ arc4random()
 	return (rnd);
 }
 
+void arc4random_buf(buf, n)
+	void *buf;
+	size_t n;
+{
+	THREAD_LOCK();
+	arc4_check_init();
+	arc4_check_stir();
+	while (n--)
+		*(u_int8_t *)buf++ = arc4_getbyte(&rs);
+	THREAD_UNLOCK();
+}
+
 #if 0
 /*-------- Test code for i386 --------*/
 #include <stdio.h>

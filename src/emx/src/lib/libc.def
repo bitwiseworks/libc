@@ -2042,3 +2042,4 @@ EXPORTS
 
     ; LIBC Next 0.1.14
     "___libc_debug_report" @2027
+    "_arc4random_buf" @2028
