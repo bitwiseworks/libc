@@ -653,10 +653,17 @@ int __spawnve(struct _new_proc *np)
             const char *pszSrcSave = NULL;
             if (i == -1)
             {
-                if (!pszInterpreterArgs)
-                    continue;
-                pszSrcSave = pszSrc;
-                pszSrc = pszInterpreterArgs;
+                if (pszInterpreterArgs)
+                {
+                    /*
+                     * Don't apply any special processing to interpreter args (we don't recognize
+                     * quotes or any special chars there yet), see hash bang handling above)
+                     */
+                    ADD(cchInterpreterArgs);
+                    memcpy(pszArg, pszInterpreterArgs, cchInterpreterArgs);
+                    pszArg += cchInterpreterArgs;
+                }
+                continue;
             }
             else if (i == 0)
             {
@@ -666,7 +673,7 @@ int __spawnve(struct _new_proc *np)
             else
                 ++pszSrc;                    /* skip flags byte */
 
-            if (i > 1 || ((pszInterpreterArgs && i > -1) || i > 0))
+            if (i > 1 || pszInterpreterArgs || (pszInterpreter && i == 1))
             {
                 ADD(1);
                 *pszArg++ = ' ';
