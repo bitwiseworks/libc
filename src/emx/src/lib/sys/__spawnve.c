@@ -6,8 +6,10 @@
 #include <process.h>
 #include <errno.h>
 #include <alloca.h>
+#include <io.h>
 #include <386/builtin.h>
 #include <sys/fmutex.h>
+#include <sys/fcntl.h>
 #define INCL_DOSPROCESS
 #define INCL_FSMACROS
 #define INCL_DOSERRORS
@@ -184,6 +186,43 @@ static int resolveInterpreter(const char* pszInterpreter, char* szPathBuf)
 }
 
 
+/*
+ * Worker thread to to proxy I/O between native pipes and kLIBC file handles.
+ */
+static void fdMapper(ULONG fdPair)
+{
+    int fdFrom = fdPair & 0xFFFF;
+    int fdTo = fdPair >> 16;
+    LIBCLOG_MSG2("START {%d -> %d}", fdFrom, fdTo);
+
+    char buf[8192]; /* Must match the __pipe call below in __spawnve */
+    int rlen, wlen;
+    for (;;)
+    {
+        /* NOTE: use __read/__write to avoid extra processing (O_TEXT, raising SIGPIPE etc) */
+        do {
+            rlen = __read(fdFrom, buf, sizeof(buf));
+        } while (rlen < 0 && errno == EINTR);
+        if (rlen <= 0)
+            break;
+        do {
+            wlen = __write(fdTo, buf, rlen);
+        } while (wlen < 0 && errno == EINTR);
+        if (wlen <= 0)
+            break;
+    }
+
+    LIBCLOG_MSG2("END {%d -> %d}", fdFrom, fdTo);
+
+    /*
+     * Close the descriptors when done. It's especially important for stdin to signal EOF to the
+     * child process that may be still polling it and let it terminate.
+     */
+    close(fdFrom);
+    close(fdTo);
+}
+
+
 /* Note: We are allowed to call _trealloc() as this module is not used
    in an .a library. */
 
@@ -290,6 +329,10 @@ int __spawnve(struct _new_proc *np)
      * (1 == cmd or 4os2 shell, 0 == anything else)
      */
     enum { args_standard, args_cmd, args_unix } enmMethod = args_standard;
+
+    int stdPipes[3][2];
+    int savedStdFds[3];
+    TID fdTids[3];
 
     const char *pszInterpreter = NULL;
     const char *pszInterpreterArgs = NULL;
@@ -745,6 +788,90 @@ int __spawnve(struct _new_proc *np)
     }
 
 
+    if (enmMethod != args_unix)
+    {
+        /*
+         * Check if stdio handles represent non-standard file handles and install wrapper threads if
+         * so (to proxy I/O from a child). This is required for non-kLIBC binaries that know nothing
+         * about kLIBC file handles and allows communication if they are e.g. socket pipes.
+         */
+        for (int fd = 0; fd <= 2; ++fd)
+        {
+            stdPipes[fd][0] = -1;
+            fdTids[fd] = -1;
+            PLIBCFH pFH = __libc_FH(fd);
+            if (pFH && pFH->pOps)
+            {
+                LIBCLOG_MSG("Proxying non-standard stdio handle %d\n", fd);
+                if ((rc = __pipe(stdPipes[fd], 8192, NULL, NULL)) != -1 && (rc = savedStdFds[fd] = dup(fd)) != -1 && (rc = dup2(stdPipes[fd][fd == 0 ? 0 : 1], fd)) != -1)
+                {
+                    /* Close the child end of the pipe (already bound to the stdio one) */
+                    close(stdPipes[fd][fd == 0 ? 0 : 1]);
+                    /* Ensure the parent end is inherited by the child */
+                    fcntl(stdPipes[fd][fd == 0 ? 1 : 0], F_SETFD, FD_CLOEXEC);
+
+                    /*
+                     * NOTE: No need to deal with O_TEXT since __pipe doesn't set it and we use
+                     * __read/__write in fdMapper that ignore it anyway.
+                     */
+
+                    ULONG fdPair;
+                    LIBC_ASSERTM(savedStdFds[fd] <= 0xFFFF, "Handle %d > 0xFFFF\n", savedStdFds[fd]);
+                    if (fd == 0)
+                    {
+                        LIBC_ASSERTM(stdPipes[fd][1] <= 0xFFFF, "Handle %d > 0xFFFF\n", stdPipes[fd][1]);
+                        fdPair = savedStdFds[fd] | (stdPipes[fd][1] << 16);
+                    }
+                    else
+                    {
+                        LIBC_ASSERTM(stdPipes[fd][0] <= 0xFFFF, "Handle %d > 0xFFFF", stdPipes[fd][0]);
+                        fdPair = stdPipes[fd][0] | (savedStdFds[fd] << 16);
+                    }
+
+                    /* Prepare the proxy thread */
+                    FS_SAVE_LOAD();
+                    rc = DosCreateThread(&fdTids[fd],
+                        (PFNTHREAD)fdMapper,
+                        fdPair,
+                        CREATE_SUSPENDED | STACK_COMMITTED,
+                        4096 * 3); /* 8KB buf + extra */
+                    FS_RESTORE();
+                    LIBCLOG_MSG("DosCreateThread(tid=%lu, fdPair=0x%08lx) rc=%d\n", fdTids[fd], fdPair, rc);
+                    if (rc != NO_ERROR)
+                    {
+                        _sys_set_errno(rc);
+                        rc = -1;
+                    }
+                }
+                if (rc == -1)
+                {
+                    int err = errno;
+                    for (int fd2 = 0; fd2 <= fd; ++fd2)
+                    {
+                        if (stdPipes[fd2][0] != -1)
+                        {
+                            if (fdTids[fd2] != -1)
+                                DosKillThread(fdTids[fd2]);
+                            if (savedStdFds[fd2] != -1)
+                            {
+                                dup2(savedStdFds[fd2], fd2);
+                                close(savedStdFds[fd2]);
+                            }
+                            close(stdPipes[fd2][0]);
+                            close(stdPipes[fd2][1]);
+                        }
+                    }
+                    if (pszArgsBuf != NULL)
+                        _tfree(pszArgsBuf);
+                    if (pShMem != NULL)
+                        DosFreeMem(pShMem);
+                    errno = err;
+                    LIBCLOG_ERROR_RETURN_INT(-1);
+                }
+            }
+        }
+    }
+
     /*
      * Now create an embryo process.
      */
@@ -889,6 +1016,29 @@ int __spawnve(struct _new_proc *np)
                     __libc_spmRelease(pEmbryo);
                     _fmutex_release(&__libc_gmtxExec);
                 }
+
+                if (enmMethod != args_unix)
+                {
+                    for (int fd = 0; fd <= 2; ++fd)
+                    {
+                        if (stdPipes[fd][0] != -1)
+                        {
+                            /*
+                             * Restore the handle (unless we're in exec when we don't return, so
+                             * restoring is pointless and the FH mutex used by dup2 is still locked
+                             * at this point).
+                             */
+                            if ((ulMode & 0xff) != P_OVERLAY)
+                                dup2(savedStdFds[fd], fd);
+                            /* Resume the proxy thread (it will close the handles when done) */
+                            FS_SAVE_LOAD();
+                            rc = DosResumeThread(fdTids[fd]);
+                            FS_RESTORE();
+                            LIBCLOG_MSG("DosResumeThread(tid=%lu) rc=%d\n", fdTids[fd], rc);
+                        }
+                    }
+                }
+
                 if (pszArgsBuf != NULL)
                     _tfree(pszArgsBuf);
                 if (pShMem != NULL)
@@ -961,11 +1111,24 @@ int __spawnve(struct _new_proc *np)
                         doInheritDone();
                         _fmutex_release(&__libc_gmtxExec);
 
-                        /*
-                         * Shut down the process...
-                         */
-                        _rmtmp();
-                        __libc_fhExecDone();
+                        if (enmMethod != args_unix)
+                        {
+                            /* Delay __libc_fhExecDone as we may still need some handles for the proxy threads. */
+                            for (int fd = 0; fd <= 2; ++fd)
+                            {
+                                if (stdPipes[fd][0] != -1)
+                                {
+                                    /* Close the stdio handle still bound to the child end of the pipe */
+                                    close(fd);
+                                }
+                            }
+                        }
+                        else
+                        {
+                            /* Close all remaining open files */
+                            _rmtmp();
+                            __libc_fhExecDone();
+                        }
 
                         /*
                          * Wait for the child to complete and forward stuff while doing so...
@@ -992,6 +1155,38 @@ int __spawnve(struct _new_proc *np)
                             }
                             else
                             {
+                                if (enmMethod != args_unix)
+                                {
+                                    /*
+                                     * Wait for stdio proxy threads to handle any remaining I/O and release handles
+                                     * before termination.
+                                     */
+                                    for (int fd = 0; fd <= 2; ++fd)
+                                    {
+                                        if (stdPipes[fd][0] != -1)
+                                        {
+                                            LIBCLOG_MSG("Waiting for stdio handle %d fdMapper tid=%lu...\n", fd, fdTids[fd]);
+                                            if (fd == 0)
+                                            {
+                                                /*
+                                                 * For stdin, we are the reader and the other end may still be open but
+                                                 * not writing anything. Close our end to unblock the thread. Not needed
+                                                 * for stdout/stderr as the child is already dead and closed its ends.
+                                                 */
+                                                close(savedStdFds[fd]);
+                                            }
+                                            FS_SAVE_LOAD();
+                                            rc = DosWaitThread(&fdTids[fd], DCWW_WAIT);
+                                            FS_RESTORE();
+                                            LIBCLOG_MSG("DosWaitThread(tid=%lu) rc=%d\n", fdTids[fd], rc);
+                                        }
+                                    }
+
+                                    /* Close all remaining open files */
+                                    _rmtmp();
+                                    __libc_fhExecDone();
+                                }
+
                                 /*
                                  * Terminate the process.
                                  */
@@ -1030,6 +1225,13 @@ int __spawnve(struct _new_proc *np)
                             }
                         }
 
+                        if (enmMethod != args_unix)
+                        {
+                            /* Close all remaining open files */
+                            _rmtmp();
+                            __libc_fhExecDone();
+                        }
+
                         LIBC_ASSERTM_FAILED("__libc_Back_processWait(P_PID,%d,,WEXITED,NULL) returned %d\n", pid, rc);
                         __libc_spmTerm(__LIBC_EXIT_REASON_KILL + SIGABRT, 123);
                         for (;;)
@@ -1054,6 +1256,19 @@ int __spawnve(struct _new_proc *np)
         __libc_spmRelease(pEmbryo);
     }
 
+    if (enmMethod != args_unix)
+    {
+        for (int fd = 0; fd <= 2; ++fd)
+        {
+            if (stdPipes[fd][0] != -1)
+            {
+                dup2(savedStdFds[fd], fd);
+                close(savedStdFds[fd]);
+                close(stdPipes[fd][0]);
+                close(stdPipes[fd][1]);
+            }
+        }
+    }
     if (pszArgsBuf != NULL)
         _tfree(pszArgsBuf);
     if (pShMem != NULL)
