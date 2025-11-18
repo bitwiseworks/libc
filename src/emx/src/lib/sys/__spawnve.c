@@ -787,7 +787,6 @@ int __spawnve(struct _new_proc *np)
         *pszArg++ = '\0';
     }
 
-
     if (enmMethod != args_unix)
     {
         /*
@@ -845,7 +844,7 @@ int __spawnve(struct _new_proc *np)
                 }
                 if (rc == -1)
                 {
-                    int err = errno;
+                    int savedErrno = errno;
                     for (int fd2 = 0; fd2 <= fd; ++fd2)
                     {
                         if (stdPipes[fd2][0] != -1)
@@ -861,11 +860,11 @@ int __spawnve(struct _new_proc *np)
                             close(stdPipes[fd2][1]);
                         }
                     }
+                    errno = savedErrno;
                     if (pszArgsBuf != NULL)
                         _tfree(pszArgsBuf);
                     if (pShMem != NULL)
                         DosFreeMem(pShMem);
-                    errno = err;
                     LIBCLOG_ERROR_RETURN_INT(-1);
                 }
             }
@@ -1258,16 +1257,19 @@ int __spawnve(struct _new_proc *np)
 
     if (enmMethod != args_unix)
     {
+        int savedErrno = errno;
         for (int fd = 0; fd <= 2; ++fd)
         {
             if (stdPipes[fd][0] != -1)
             {
+                DosKillThread(fdTids[fd]);
                 dup2(savedStdFds[fd], fd);
                 close(savedStdFds[fd]);
                 close(stdPipes[fd][0]);
                 close(stdPipes[fd][1]);
             }
         }
+        errno = savedErrno;
     }
     if (pszArgsBuf != NULL)
         _tfree(pszArgsBuf);
