@@ -149,3 +149,7 @@ EXTERN _fmutex          __libc_gmtxExec INIT({0});
 void                    __libc_fhExecDone(void);
 /** @} */
 
+/** @group Fcntl stuff.
+ * @{ */
+int                     __libc_fhFcntl(int fh, int iRequest, intptr_t iArg, int *prc);
+/** @} */

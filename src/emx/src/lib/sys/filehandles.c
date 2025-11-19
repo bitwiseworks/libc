@@ -88,6 +88,7 @@ extern int _fmode_bin;
 *******************************************************************************/
 static int      fhMoreHandles(unsigned cMin);
 static int      fhAllocate(int fh, unsigned fFlags, int cb, __LIBC_PCFHOPS pOps, __LIBC_PFH *ppFH, int *pfh, int fOwnSem);
+static int      fhClose(int fh, int fOwnSem);
 static void     fhFreeHandle(__LIBC_PFH pFH);
 static __LIBC_PFH  fhGet(int fh);
 static int      fhForkParent1(__LIBC_PFORKHANDLE pForkHandle, __LIBC_FORKOP enmOperation);
@@ -559,19 +560,53 @@ void        __libc_fhExecDone(void)
 {
     LIBCLOG_ENTER("\n");
 
-    /*
-     * This isn't thread safe, but there shouldn't be any threads
-     * around so it'll have to do for now.
-     */
-    unsigned iFH;
-    for (iFH = 0; iFH < gcFHs; iFH++)
-    {
-        __LIBC_PFH pFH = gpapFHs[iFH];
-        if (pFH)
-            __libc_FHClose(iFH);
-    }
+    __libc_fhFcntl(0, F_CLOSEM, 0, NULL);
 
     LIBCLOG_RETURN_VOID();
+}
+
+/**
+ * Called from fcntl for certain request types.
+ */
+int         __libc_fhFcntl(int fh, int iRequest, intptr_t iArg, int *prc)
+{
+    LIBCLOG_ENTER("\n");
+
+    int rc = _fmutex_request(&gmtx, 0);
+    if (rc)
+        LIBCLOG_ERROR_RETURN_INT(-__libc_native2errno(rc));
+
+    switch (iRequest)
+    {
+        case F_CLOSEM:
+        {
+            if (fh < 0)
+            {
+                rc = -EINVAL;
+                break;
+            }
+            for (; fh < gcFHs; fh++)
+            {
+                if (gpapFHs[fh])
+                    fhClose(fh, 1);
+            }
+            break;
+        }
+
+        case F_MAXFD:
+        {
+            fh = gcFHs - 1;
+            while (fh >= 0 && !gpapFHs[fh])
+                --fh;
+            /* Will end up with -1 if no file descriptors are open */
+            *prc = fh;
+            break;
+        }
+    }
+
+    _fmutex_release(&gmtx);
+
+    LIBCLOG_MIX0_RETURN_INT(rc);
 }
 
 
@@ -1027,15 +1062,16 @@ int __libc_FHAllocate(int fh, unsigned fFlags, int cb, __LIBC_PCFHOPS pOps, __LI
  * @returns 0 on success.
  * @returns OS/2 error code on failure and errno set to corresponding error number.
  * @param   fh      Filehandle to close.
+ * @param   fOwnSem Set if we should not take or release the semaphore.
  */
-int __libc_FHClose(int fh)
+static int fhClose(int fh, int fOwnSem)
 {
     LIBCLOG_ENTER("fh=%d\n", fh);
     __LIBC_PFH  pFH;
     int         rc;
     FS_VAR();
 
-    if (_fmutex_request(&gmtx, 0))
+    if (!fOwnSem && _fmutex_request(&gmtx, 0))
         LIBCLOG_ERROR_RETURN(-1, "ret -1 - fh=%d is not opened according to our table!\n", fh);
 
     /*
@@ -1043,7 +1079,8 @@ int __libc_FHClose(int fh)
      */
     if (!fhGet(fh))
     {
-        _fmutex_release(&gmtx);
+        if (!fOwnSem)
+            _fmutex_release(&gmtx);
         errno = EBADF;
         LIBCLOG_ERROR_RETURN(-1, "ret -1 - fh=%d is not opened according to our table!\n", fh);
     }
@@ -1100,7 +1137,8 @@ int __libc_FHClose(int fh)
         }
     }
 
-    _fmutex_release(&gmtx);
+    if (!fOwnSem)
+        _fmutex_release(&gmtx);
 
     if (!rc)
         LIBCLOG_RETURN_INT(0);
@@ -1111,6 +1149,18 @@ int __libc_FHClose(int fh)
     LIBCLOG_ERROR_RETURN_INT(rc);
 }
 
+
+/**
+ * Close (i.e. free) a file handle.
+ *
+ * @returns 0 on success.
+ * @returns OS/2 error code on failure and errno set to corresponding error number.
+ * @param   fh      Filehandle to close.
+ */
+int __libc_FHClose(int fh)
+{
+    return fhClose(fh, 0);
+}
 
 /**
  * Get the LIBC handle structure corresponding to a filehandle.
@@ -1166,6 +1216,20 @@ static __LIBC_PFH fhGet(int fh)
                 errno = EBADF;
                 return NULL;
             }
+
+#ifdef DEBUG_LOGGING
+            /*
+             * Avoid auto-importing the default log file handle. This is to avoid accidentally
+             * closing the log file by e.g. enumerating all fds up to sysconf(_SC_OPEN_MAX) and
+             * closing them (some software does that before child exec etc).
+             */
+            extern int __libc_logGetDefaultFD(void); /* defined in logstrict.c */
+            if (__libc_logGetDefaultFD() == fh)
+            {
+                errno = EBADF;
+                return NULL;
+            }
+#endif
 
             /*
              * Determin initial flags.

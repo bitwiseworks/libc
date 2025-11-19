@@ -220,7 +220,10 @@ typedef	__pid_t		pid_t;
 #define	F_GETLK		7		/* get record locking information */
 #define	F_SETLK		8		/* set record locking information */
 #define	F_SETLKW	9		/* F_SETLK; wait if blocked */
-
+#if __BSD_VISIBLE /* NOTE: we actually take these from _NETBSD_SOURCE */
+#define	F_CLOSEM	10		/* close all fds >= to the one given */
+#define	F_MAXFD		11		/* return the max open fd */
+#endif
 
 /* file descriptor flags (F_GETFD, F_SETFD) */
 #define	FD_CLOEXEC	1		/* close-on-exec flag */

@@ -75,7 +75,7 @@ int _STD(fcntl)(int fh, int iRequest, ...)
             rc = __libc_Back_ioFileControl(fh, iRequest, fFlags, &rcSuccess);
             break;
         }
-        
+
         /*
          * struct flock * argument.
          */
@@ -105,7 +105,13 @@ int _STD(fcntl)(int fh, int iRequest, ...)
                 LIBCLOG_RETURN_INT(rc);
             break;
         }
-
+        case F_CLOSEM:
+        case F_MAXFD:
+        {
+            /* NOTE: Arg is ignored */
+            rc = __libc_fhFcntl(fh, iRequest, 0, &rcSuccess);
+            break;
+        }
 
         default:
             errno = -EINVAL;
@@ -120,9 +126,9 @@ int _STD(fcntl)(int fh, int iRequest, ...)
 
 
 /**
- * Create a new file handle for 'fh' that is the lowest numbered 
+ * Create a new file handle for 'fh' that is the lowest numbered
  * available file handle greater than or equal to 'fhMin'.
- * 
+ *
  * @returns New file handle on success.
  * @returns -1 and errno on failure.
  * @param   fh      The file handle to duplicate.
@@ -160,7 +166,7 @@ static int dupfd(int fh, int fhMin)
                happens not to work as advertised. */
 
             close(fhNew);
-            fhNew = -1; 
+            fhNew = -1;
             errno = EMFILE;
             break;
         }
