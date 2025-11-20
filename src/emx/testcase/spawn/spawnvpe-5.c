@@ -145,6 +145,13 @@ int main (int argc, char * argv [])
     NULL
   };
 
+  const char * argv_4 [] =
+  {
+    "dash", "-c", // Use dash since it's unlikely to be running (useful for LIBPATHSTRICT=T)
+    "make -f spawnvpe-5-Makefile",
+    NULL
+  };
+
   const char * const * argv_c;
 
   if (argc <= 1 || ! strcmp (argv [1], "1"))
@@ -153,6 +160,8 @@ int main (int argc, char * argv [])
     argv_c = argv_2;
   else if (! strcmp (argv [1], "3"))
     argv_c = argv_3;
+  else if (! strcmp (argv [1], "4"))
+    argv_c = argv_4;
   else
     argv_c = argv_1;
 

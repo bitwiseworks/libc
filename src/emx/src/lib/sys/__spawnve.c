@@ -20,6 +20,7 @@
 #include <emx/syscalls.h>
 #include <InnoTekLIBC/sharedpm.h>
 #include <InnoTekLIBC/backend.h>
+#include <InnoTekLIBC/thread.h>
 #include <klibc/startup.h>
 #define __LIBC_LOG_GROUP    __LIBC_LOG_GRP_PROCESS
 #include <InnoTekLIBC/logstrict.h>
@@ -186,16 +187,18 @@ static int resolveInterpreter(const char* pszInterpreter, char* szPathBuf)
 }
 
 
+#define FD_MAPPER_BUFSIZE 8192
+
 /*
  * Worker thread to to proxy I/O between native pipes and kLIBC file handles.
  */
-static void fdMapper(ULONG fdPair)
+static void fdMapper(void *fdPair)
 {
-    int fdFrom = fdPair & 0xFFFF;
-    int fdTo = fdPair >> 16;
+    int fdFrom = ((ULONG)fdPair) & 0xFFFF;
+    int fdTo = ((ULONG)fdPair) >> 16;
     LIBCLOG_MSG2("START {%d -> %d}", fdFrom, fdTo);
 
-    char buf[8192]; /* Must match the __pipe call below in __spawnve */
+    char buf[FD_MAPPER_BUFSIZE];
     int rlen, wlen;
     for (;;)
     {
@@ -332,7 +335,6 @@ int __spawnve(struct _new_proc *np)
 
     int stdPipes[3][2];
     int savedStdFds[3];
-    TID fdTids[3];
 
     const char *pszInterpreter = NULL;
     const char *pszInterpreterArgs = NULL;
@@ -797,60 +799,28 @@ int __spawnve(struct _new_proc *np)
         for (int fd = 0; fd <= 2; ++fd)
         {
             stdPipes[fd][0] = -1;
-            fdTids[fd] = -1;
             PLIBCFH pFH = __libc_FH(fd);
             if (pFH && pFH->pOps)
             {
                 LIBCLOG_MSG("Proxying non-standard stdio handle %d\n", fd);
-                if ((rc = __pipe(stdPipes[fd], 8192, NULL, NULL)) != -1 && (rc = savedStdFds[fd] = dup(fd)) != -1 && (rc = dup2(stdPipes[fd][fd == 0 ? 0 : 1], fd)) != -1)
+                if ((rc = __pipe(stdPipes[fd], FD_MAPPER_BUFSIZE, NULL, NULL)) != -1 && (rc = savedStdFds[fd] = dup(fd)) != -1 && (rc = dup2(stdPipes[fd][fd == 0 ? 0 : 1], fd)) != -1)
                 {
                     /* Close the child end of the pipe (already bound to the stdio one) */
                     close(stdPipes[fd][fd == 0 ? 0 : 1]);
                     /* Ensure the parent end is inherited by the child */
                     fcntl(stdPipes[fd][fd == 0 ? 1 : 0], F_SETFD, FD_CLOEXEC);
-
                     /*
                      * NOTE: No need to deal with O_TEXT since __pipe doesn't set it and we use
                      * __read/__write in fdMapper that ignore it anyway.
                      */
-
-                    ULONG fdPair;
-                    LIBC_ASSERTM(savedStdFds[fd] <= 0xFFFF, "Handle %d > 0xFFFF\n", savedStdFds[fd]);
-                    if (fd == 0)
-                    {
-                        LIBC_ASSERTM(stdPipes[fd][1] <= 0xFFFF, "Handle %d > 0xFFFF\n", stdPipes[fd][1]);
-                        fdPair = savedStdFds[fd] | (stdPipes[fd][1] << 16);
-                    }
-                    else
-                    {
-                        LIBC_ASSERTM(stdPipes[fd][0] <= 0xFFFF, "Handle %d > 0xFFFF", stdPipes[fd][0]);
-                        fdPair = stdPipes[fd][0] | (savedStdFds[fd] << 16);
-                    }
-
-                    /* Prepare the proxy thread */
-                    FS_SAVE_LOAD();
-                    rc = DosCreateThread(&fdTids[fd],
-                        (PFNTHREAD)fdMapper,
-                        fdPair,
-                        CREATE_SUSPENDED | STACK_COMMITTED,
-                        4096 * 3); /* 8KB buf + extra */
-                    FS_RESTORE();
-                    LIBCLOG_MSG("DosCreateThread(tid=%lu, fdPair=0x%08lx) rc=%d\n", fdTids[fd], fdPair, rc);
-                    if (rc != NO_ERROR)
-                    {
-                        _sys_set_errno(rc);
-                        rc = -1;
-                    }
                 }
-                if (rc == -1)
+                else
                 {
                     int savedErrno = errno;
                     for (int fd2 = 0; fd2 <= fd; ++fd2)
                     {
                         if (stdPipes[fd2][0] != -1)
                         {
-                            if (fdTids[fd2] != -1)
-                                DosKillThread(fdTids[fd2]);
                             if (savedStdFds[fd2] != -1)
                             {
                                 dup2(savedStdFds[fd2], fd2);
@@ -1016,24 +986,38 @@ int __spawnve(struct _new_proc *np)
                     _fmutex_release(&__libc_gmtxExec);
                 }
 
+                TID fdTids[3];
                 if (enmMethod != args_unix)
                 {
                     for (int fd = 0; fd <= 2; ++fd)
                     {
+                        fdTids[fd] = -1;
                         if (stdPipes[fd][0] != -1)
                         {
                             /*
                              * Restore the handle (unless we're in exec when we don't return, so
                              * restoring is pointless and the FH mutex used by dup2 is still locked
-                             * at this point).
+                             * at this point anyway).
                              */
                             if ((ulMode & 0xff) != P_OVERLAY)
                                 dup2(savedStdFds[fd], fd);
-                            /* Resume the proxy thread (it will close the handles when done) */
-                            FS_SAVE_LOAD();
-                            rc = DosResumeThread(fdTids[fd]);
-                            FS_RESTORE();
-                            LIBCLOG_MSG("DosResumeThread(tid=%lu) rc=%d\n", fdTids[fd], rc);
+                            /* Create the proxy thread (it will close the handles when done) */
+                            ULONG fdRead, fdWrite;
+                            if (fd == 0)
+                            {
+                                fdRead = savedStdFds[fd];
+                                fdWrite = stdPipes[fd][1];
+                            }
+                            else
+                            {
+                                fdRead = stdPipes[fd][0];
+                                fdWrite = savedStdFds[fd];
+                            }
+                            LIBC_ASSERTM(fdRead <= 0xFFFF, "Read handle %lu > 0xFFFF\n", fdRead);
+                            LIBC_ASSERTM(fdWrite <= 0xFFFF, "Write handle %lu > 0xFFFF\n", fdWrite);
+                            fdTids[fd] = __libc_back_threadCreate(fdMapper, FD_MAPPER_BUFSIZE * 2, (void *)(fdRead | fdWrite << 16), 1);
+                            /* If we failed to start a thread here, we are toast */
+                            LIBC_ASSERTM(fdTids[fd] >= 0, "Failed to create fdMapper thread for stdio handle %d, rc=%lu\n", fd, fdTids[fd]);
                         }
                     }
                 }
@@ -1168,9 +1152,11 @@ int __spawnve(struct _new_proc *np)
                                             if (fd == 0)
                                             {
                                                 /*
-                                                 * For stdin, we are the reader and the other end may still be open but
-                                                 * not writing anything. Close our end to unblock the thread. Not needed
-                                                 * for stdout/stderr as the child is already dead and closed its ends.
+                                                 * For stdin, we are the reader and the other end at the caller site may
+                                                 * still be open (the caller does not know the actual child has gone
+                                                 * since we are still alive). Close our end to unblock the thread. Not
+                                                 * needed for stdout/stderr as the child is already dead and closed its
+                                                 * ends of pipes we read so the threads should have been unblocked.
                                                  */
                                                 close(savedStdFds[fd]);
                                             }
@@ -1262,7 +1248,6 @@ int __spawnve(struct _new_proc *np)
         {
             if (stdPipes[fd][0] != -1)
             {
-                DosKillThread(fdTids[fd]);
                 dup2(savedStdFds[fd], fd);
                 close(savedStdFds[fd]);
                 close(stdPipes[fd][0]);
