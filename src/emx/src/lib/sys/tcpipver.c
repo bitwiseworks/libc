@@ -156,6 +156,7 @@ static int TCPNAME(ops_Select)(int cFHs, struct fd_set *pRead, struct fd_set *pW
 static int TCPNAME(ops_ForkChild)(struct __libc_FileHandle *pFH, int fh, __LIBC_PFORKHANDLE pForkHandle, __LIBC_FORKOP enmOperation);
 
 static int TCPNAME(imp_soclose)(int s);
+static int TCPNAME(imp_so_cancel)(int s);
 #ifndef TCPV40HDRS
 static int TCPNAME(imp_ioctl)(int, int, char *);
 #endif
@@ -247,18 +248,32 @@ static int TCPNAME(ops_Close)(PLIBCFH pFH, int fh)
          * sockets owned by this process to prevent it from being closed on exit. The other process(es)
          * will do the closing.
          *
-         * Please note that removesocketfromlist returns a boolean success indicator and proably no errno.
+         * If there is a thread waiting on a blocking socket in this process, it will not get
+         * notified by removesocketfromlist and continue to wait forever. Work around this by
+         * canceling the socket (note that soclose is not called since it is in use by another
+         * process). This will cause EINTR to be returned for the socket and no further operation
+         * will succeed since it will be gone from the kLIBC POV in this process by the time we
+         * return. Other processes should not be affected (they should retry on EINTR).
+         *
+         * Please note that removesocketfromlist returns a boolean success indicator and probably no errno.
          */
         int iSavedTcpipErrno = TCPNAME(imp_sock_errno)();
+        TCPNAME(imp_so_cancel)(pSocketFH->iSocket);
         TCPNAME(imp_set_errno)(0);
-        rc = TCPNAME(imp_removesocketfromlist)(pSocketFH->iSocket);
-        if (!rc)
+        rc = !TCPNAME(imp_removesocketfromlist)(pSocketFH->iSocket);
+        if (rc)
         {
+            /*
+             * @todo removesocketfromlist fails in some cases (e.g. when the child inheritance chain
+             * is too long and complex). This might be a race in TCPIP32.DLL. Do not assert for now.
+             */
+#if 0
             LIBC_ASSERTM_FAILED("removesocketfromlist(%d) -> false! sock_errno()->%d\n", pSocketFH->iSocket, TCPNAME(imp_sock_errno)());
+#else
+            LIBCLOG_MSG("removesocketfromlist(%d) -> false! sock_errno()->%d\n", pSocketFH->iSocket, TCPNAME(imp_sock_errno)());
+#endif
             rc = -EBADF; /* this is an internal error, it should *NOT* happen! */
         }
-        else
-            rc = 0;
         TCPNAME(imp_set_errno)(iSavedTcpipErrno);
     }
 
@@ -280,9 +295,7 @@ static int TCPNAME(ops_Close)(PLIBCFH pFH, int fh)
         _smutex_release(&gsmtxSockets);
     }
 
-    if (rc)
-        LIBCLOG_RETURN_INT(rc);
-    LIBCLOG_ERROR_RETURN_INT(rc);
+    LIBCLOG_MIX0_RETURN_INT(rc);
 }
 
 
@@ -1156,8 +1169,6 @@ int TCPNAMEG(bsdselect)(int nfds, struct fd_set *readfds, struct fd_set *writefd
 
 
 
-
-
 //\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//
 //
 //          DYNAMIC IMPORTS
@@ -1167,6 +1178,7 @@ int TCPNAMEG(bsdselect)(int nfds, struct fd_set *readfds, struct fd_set *writefd
 # define ORD_SOCK_ERRNO                 20
 # define ORD_SET_ERRNO                  35
 # define ORD_SOCLOSE                    17
+# define ORD_SO_CANCEL                  18
 # define ORD_IOCTL                      8
 # define ORD_OS2_IOCTL                  8
 # define ORD_RECV                       10
@@ -1178,6 +1190,7 @@ int TCPNAMEG(bsdselect)(int nfds, struct fd_set *readfds, struct fd_set *writefd
 # define ORD_SOCK_ERRNO                 20
 # define ORD_SET_ERRNO                  35
 # define ORD_SOCLOSE                    17
+# define ORD_SO_CANCEL                  18
 # define ORD_IOCTL                      8
 # define ORD_OS2_IOCTL                  200
 # define ORD_RECV                       10
@@ -1256,7 +1269,17 @@ static int     TCPNAME(imp_soclose)(int s)
     if (!pfn && TCPNAME(get_imp)(ORD_SOCLOSE, (void **)(void *)&pfn))
         LIBCLOG_ERROR_RETURN_INT(-1);
     int rc = pfn(s);
-    LIBCLOG_RETURN_INT(rc);
+    LIBCLOG_MIX_RETURN_INT(rc);
+}
+
+static int     TCPNAME(imp_so_cancel)(int s)
+{
+    LIBCLOG_ENTER("iSocket=%d\n", s);
+    static int (*TCPCALL pfn)(int s);
+    if (!pfn && TCPNAME(get_imp)(ORD_SO_CANCEL, (void **)(void *)&pfn))
+        LIBCLOG_ERROR_RETURN_INT(-1);
+    int rc = pfn(s);
+    LIBCLOG_MIX_RETURN_INT(rc);
 }
 
 #ifndef TCPV40HDRS
@@ -1389,7 +1412,16 @@ static void TCPNAME(Cleanup)(void)
              */
             TCPNAME(imp_set_errno)(0);
             rc = TCPNAME(imp_removesocketfromlist)(pFH->iSocket);
+            /*
+             * @todo removesocketfromlist fails in some cases (e.g. when the child inheritance chain
+             * is too long and complex). This might be a race in TCPIP32.DLL. Do not assert for now.
+             */
+#if 0
             LIBC_ASSERTM(rc == 1, "removesocketfromlist(%d) -> rc=%d sock_errno()->%d\n", pFH->iSocket, rc, TCPNAME(imp_sock_errno)());
+#else
+            if (!rc)
+                LIBCLOG_MSG("removesocketfromlist(%d) -> false! sock_errno()->%d\n", pFH->iSocket, TCPNAME(imp_sock_errno)());
+#endif
         }
 
         /* next */
