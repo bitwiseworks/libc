@@ -1,6 +1,6 @@
 /*
     _sem.h -- Internal definitions for POSIX semaphores
-    Copyright (c) 2020 bww bitwiseworks GmbH
+    Copyright (c) 2020 bww bitwise works GmbH
 */
 
 #ifndef __SYS__SEM_H__

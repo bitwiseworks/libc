@@ -1,6 +1,6 @@
 /*
     fputwc.c -- copied from fputc.c
-    Copyright (c) 2020 bww bitwiseworks GmbH
+    Copyright (c) 2020 bww bitwise works GmbH
 */
 
 #define _GNU_SOURCE /* for _unlocked prototypes */

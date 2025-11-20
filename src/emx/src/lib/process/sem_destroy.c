@@ -1,6 +1,6 @@
 /*
     sem_destroy.c
-    Copyright (c) 2020 bww bitwiseworks GmbH
+    Copyright (c) 2020 bww bitwise works GmbH
 */
 
 #include "libc-alias.h"
