@@ -155,8 +155,9 @@
 #define	_PC_MAC_PRESENT		63
 #endif
 
-#if 0 /* bird */
 #if __BSD_VISIBLE
+
+#if 0 /* bird */
 /*
  * rfork() options.
  *
@@ -179,8 +180,13 @@
 #define	RFHIGHPID	(1<<18)	/* use a pid higher then 10 (idleproc) */
 #define	RFPPWAIT	(1<<31)	/* parent sleeps until child exits (vfork) */
 #define	RFKERNELONLY	(RFSTOPPED | RFHIGHPID | RFPPWAIT)
+#endif /* bird */
+
+/*
+ * close_range() options.
+ */
+#define	CLOSE_RANGE_CLOEXEC	(1<<2)
 
 #endif /* __BSD_VISIBLE */
-#endif /* bird */
 
 #endif /* !_SYS_UNISTD_H_ */

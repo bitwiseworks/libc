@@ -350,6 +350,7 @@ unsigned int	 alarm(unsigned int);
 int	 chdir(const char *);
 int	 chown(const char *, uid_t, gid_t);
 int	 close(int);
+void	 closefrom(int);
 int	 dup(int);
 int	 dup2(int, int);
 int	 eaccess(const char *, int);
@@ -494,6 +495,7 @@ struct timeval;				/* select(2) */
 /** @todo int	 acct(const char *); */
 /** @todo int	 async_daemon(void); */
 /** @todo int	 check_utility_compat(const char *); */
+int	 close_range(unsigned int, unsigned int, int);
 /** @todo const char *
 	 crypt_get_format(void); */
 /** @todo int	 crypt_set_format(const char *); */

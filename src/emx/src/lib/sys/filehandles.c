@@ -44,6 +44,7 @@
 #include <malloc.h>
 #include <string.h>
 #include <sys/fcntl.h>
+#include <sys/unistd.h>
 #include <errno.h>
 #include <InnoTekLIBC/fork.h>
 #include <InnoTekLIBC/sharedpm.h>
@@ -1160,6 +1161,69 @@ static int fhClose(int fh, int fOwnSem)
 int __libc_FHClose(int fh)
 {
     return fhClose(fh, 0);
+}
+
+/**
+ * Closes a range of file handles.
+ *
+ * All open file handles within the given range [fhLow, fhHigh] (inclusive) are
+ * closed unless fFlags contains CLOSE_RANGE_CLOEXEC in which case the
+ * close-on-exec flag is set on each handle in the range instead.
+ *
+ * @returns 0 on success.
+ * @returns OS/2 error code on failure and errno set to corresponding error number.
+ * @param   fhLow   First filehandle to close.
+ * @param   fhHigh  Last filehandle to close.
+ * @param   fFlags  CLOSE_RANGE_CLOEXEC or 0.
+ */
+int __libc_FHCloseRange(unsigned int fhLow, unsigned int fhHigh, int fFlags)
+{
+    LIBCLOG_ENTER("fhLow=%u fhHigh=%u flags=%#x\n", fhLow, fhHigh, fFlags);
+
+    /*
+     * Similar to what fcntl(F_CLOSEM) does but includes FD_CLOEXEC handling.
+     */
+
+    if (fhLow > fhHigh || (fFlags & ~CLOSE_RANGE_CLOEXEC))
+    {
+        errno = EINVAL;
+        LIBCLOG_ERROR_RETURN_INT(-EINVAL);
+    }
+
+    int rc = _fmutex_request(&gmtx, 0);
+    if (rc)
+        LIBCLOG_ERROR_RETURN_INT(-__libc_native2errno(rc));
+
+    for (; fhLow < gcFHs && fhLow <= fhHigh; fhLow++)
+    {
+        __LIBC_PFH pFH = gpapFHs[fhLow];
+        if (pFH)
+        {
+            if (fFlags & CLOSE_RANGE_CLOEXEC)
+            {
+                if (!(pFH->fFlags & (O_NOINHERIT | (FD_CLOEXEC << __LIBC_FH_FDFLAGS_SHIFT))))
+                {
+                    /* Grab the current FD flags and apply FD_CLOEXEC */
+                    fFlags = ((pFH->fFlags & __LIBC_FH_FDFLAGS_MASK) >> __LIBC_FH_FDFLAGS_SHIFT) | FD_CLOEXEC;
+                    /*
+                     * Similar to __libc_Back_ioFileControl but it locks the mutex so we can't use
+                     * it (and we don't need to set the errno).
+                     */
+                    int unused;
+                    if (!pFH->pOps)
+                        __libc_Back_ioFileControlStandard(pFH, fhLow, F_SETFD, fFlags, &unused);
+                    else
+                        pFH->pOps->pfnFileControl(pFH, fhLow, F_SETFD, fFlags, &unused);
+                }
+            }
+            else
+                fhClose(fhLow, 1);
+        }
+    }
+
+    _fmutex_release(&gmtx);
+
+    LIBCLOG_MIX0_RETURN_INT(rc);
 }
 
 /**

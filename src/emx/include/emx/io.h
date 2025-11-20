@@ -546,6 +546,7 @@ int     __libc_FHEnsureHandles(int fh);
 int     __libc_FHMoreHandles(void);
 int     __libc_FHAllocate(int fh, unsigned fFlags, int cb, __LIBC_PCFHOPS pOps, PLIBCFH *ppFH, int *pfh);
 int     __libc_FHClose(int fh);
+int     __libc_FHCloseRange(unsigned int lowfd, unsigned int highfd, int flags);
 PLIBCFH __libc_FH(int fh);
 int     __libc_FHEx(int fh, __LIBC_PFH *ppFH);
 int     __libc_FHSetFlags(__LIBC_PFH pFH, int fh, unsigned fFlags);
