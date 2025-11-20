@@ -44,8 +44,5 @@
     "Systemberatung",
     "TIMEBOMB",
     "USEDENTRY"
-  ],
-  "git.enableStatusBarSync": false,
-  "git.enabled": false,
-  "git.detectSubmodules": false
+  ]
 }
