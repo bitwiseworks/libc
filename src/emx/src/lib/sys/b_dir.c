@@ -44,6 +44,7 @@
 #define __LIBC_LOG_GROUP __LIBC_LOG_GRP_BACK_IO
 #include <InnoTekLIBC/logstrict.h>
 #include <InnoTekLIBC/libc.h>
+#include <InnoTekLIBC/backend.h>
 
 
 /*******************************************************************************
@@ -159,7 +160,8 @@ static int dirRead(__LIBC_PFH pFH, int fh, void *pvBuf, size_t cbRead, size_t *p
 static int dirWrite(__LIBC_PFH pFH, int fh, const void *pvBuf, size_t cbWrite, size_t *pcbWritten)
 {
     LIBCLOG_ENTER("pFH=%p fh=%d pvBuf=%p cbWrite=%d pcbWritten=%p\n", (void *)pFH, fh, pvBuf, cbWrite, (void *)pcbWritten);
-    LIBCLOG_ERROR_RETURN_INT(-EOPNOTSUPP);
+    /* Most (all?) systems return EISDIR, not E(OP)NOTSUP(P), follow them */
+    LIBCLOG_ERROR_RETURN_INT(-EISDIR);
 }
 
 
@@ -186,7 +188,7 @@ static int dirDuplicate(__LIBC_PFH pFH, int fh, int *pfhNew)
  * @returns OS/2 error code or negated errno on failure.
  * @param   pFH         Pointer to the handle structure to operate on.
  * @param   fh          It's associated filehandle.
- * @param   iRequest    Which file file descriptior request to perform.
+ * @param   iRequest    Which file file descriptor request to perform.
  * @param   iArg        Argument which content is specific to each
  *                      iRequest operation.
  * @param   prc         Where to store the value which upon success is
@@ -195,7 +197,35 @@ static int dirDuplicate(__LIBC_PFH pFH, int fh, int *pfhNew)
 static int dirFileControl(__LIBC_PFH pFH, int fh, int iRequest, int iArg, int *prc)
 {
     LIBCLOG_ENTER("pFH=%p fh=%d iRequest=%d iArg=%d prc=%p\n", (void *)pFH, fh, iRequest, iArg, (void *)prc);
-    LIBCLOG_ERROR_RETURN_INT(-EOPNOTSUPP);
+
+    int rc;
+
+    /*
+     * Service the request (very similar to __fcntl()!).
+     */
+    switch (iRequest)
+    {
+        /*
+         * These can be forwarded handled as-if this was a normal file. Note
+         * that getting and setting of all flags is accepted but all of them are
+         * ignored on most platforms (except for FD_CLOEXEC). We do the same.
+         */
+        case F_GETFL:
+        case F_GETFD:
+        case F_SETFD:
+        case F_SETFL:
+            rc = __libc_Back_ioFileControlStandard(pFH, fh, iRequest, iArg, prc);
+            break;
+
+        /*
+         * Other operations are not supported on directories.
+         */
+        default:
+            *prc = -1;
+            LIBCLOG_ERROR_RETURN(-EINVAL, "Invalid or unsupported request %#x %#x\n", iRequest, iArg);
+    }
+
+    LIBCLOG_MIX0_RETURN_INT(rc);
 }
 
 
@@ -258,7 +288,7 @@ static int dirSelect(int cFHs, struct fd_set *pRead, struct fd_set *pWrite, stru
 
 /** Fork notification - child context.
  * Only the __LIBC_FORK_OP_FORK_CHILD operation is forwarded atm.
- * If NULL it's assumed that no notifiction is needed.
+ * If NULL it's assumed that no notification is needed.
  *
  * @returns 0 on success.
  * @returns OS/2 error code or negated errno on failure.

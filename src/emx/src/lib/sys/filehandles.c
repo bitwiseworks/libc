@@ -1096,7 +1096,7 @@ static int fhClose(int fh, int fOwnSem)
         rc = pFH->pOps->pfnClose(pFH, fh);
 
     /*
-     * We should continue closing the OS/2 handle if the previuos step
+     * We should continue closing the OS/2 handle if the previous step
      * were successful or if the handle has become invalid.
      */
     if (    !rc
@@ -1130,7 +1130,7 @@ static int fhClose(int fh, int fOwnSem)
             fhFreeHandle(pFH);
             /*
              * Reset the error as from the LIBC point of view it's a success
-             * (the file hangle is gone).
+             * (the file handle is gone).
              * Check https://github.com/bitwiseworks/libcx/issues/60 for a
              * consequence of not doing this.
              */
@@ -1485,7 +1485,7 @@ _FORK_PARENT1(0xfffff000, fhForkParent1)
  * Parent fork callback.
  *
  * There are two purposes for this function. First, lock the filehandle
- * array while forking. Second, force all handles to tempoarily be inherited
+ * array while forking. Second, force all handles to temporaily be inherited
  * by child process.
  *
  * @returns 0 on success.
@@ -1650,6 +1650,18 @@ static int fhForkChild1(__LIBC_PFORKHANDLE pForkHandle, __LIBC_FORKOP enmOperati
                 __LIBC_PFH pFH;
                 if ((pFH = gpapFHs[iFH]) != NULL)
                 {
+#ifdef __LIBC_STRICT
+                    /*
+                     * Sanity: check that the native handle was actually inherited and is allocated
+                     * in this process to make sure we don't accidentally reuse it in some other
+                     * open/dup call.
+                     */
+                    {
+                        ULONG ulMode = 0;
+                        rc2 = DosQueryFHState((HFILE)iFH, &ulMode);
+                        LIBC_ASSERTM(!rc2, "DosQueryFHState(%d) -> %u ulMode=%#lx\n", iFH, rc2, ulMode);
+                    }
+#endif
                     /* call pfnForkChild(). */
                     if (pFH->pOps && pFH->pOps->pfnForkChild)
                     {

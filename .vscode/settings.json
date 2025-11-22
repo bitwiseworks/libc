@@ -1,5 +1,6 @@
 {
   "cSpell.words": [
+    "__LIBC_PFHDIR",
     "_FMR_IGNINT",
     "_hcalloc",
     "_HEAPBADBEGIN",
@@ -27,6 +28,8 @@
     "DOSQUEUES",
     "Eberhard",
     "F_CLOSEM",
+    "FIL_QUERYEASIZE",
+    "FIL_QUERYEASIZEL",
     "fsem",
     "Himem",
     "knut",
@@ -35,6 +38,7 @@
     "LIBCFH",
     "LIBCLOG",
     "osmundsen",
+    "PCSZ",
     "PFNTHREAD",
     "PHFILE",
     "PLIBCFH",
