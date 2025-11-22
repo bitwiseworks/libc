@@ -18,7 +18,7 @@
 
 int __write(int handle, const void *buf, size_t cbToWrite)
 {
-    LIBCLOG_ENTER("fd=%d buf=%p cbToWrite=%zu\n", handle, buf, cbToWrite);
+    LIBCLOG_ENTER("fh=%d buf=%p cbToWrite=%zu\n", handle, buf, cbToWrite);
     PLIBCFH pFH;
     int     rc;
     ULONG   cbWritten;

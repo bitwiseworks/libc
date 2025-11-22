@@ -18,7 +18,7 @@
 
 int __read (int handle, void *buf, size_t cbToRead)
 {
-    LIBCLOG_ENTER("fd=%d buf=%p cbToRead=%zu\n", handle, buf, cbToRead);
+    LIBCLOG_ENTER("fh=%d buf=%p cbToRead=%zu\n", handle, buf, cbToRead);
     int     rc;
     PLIBCFH pFH;
     ULONG   cbRead;
