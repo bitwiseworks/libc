@@ -24,6 +24,7 @@
 #include <klibc/startup.h>
 #define __LIBC_LOG_GROUP    __LIBC_LOG_GRP_PROCESS
 #include <InnoTekLIBC/logstrict.h>
+#include <InnoTekLIBC/tcpip.h>
 #include "syscalls.h"
 
 
@@ -1154,11 +1155,35 @@ int __spawnve(struct _new_proc *np)
                                                 /*
                                                  * For stdin, we are the reader and the other end at the caller site may
                                                  * still be open (the caller does not know the actual child has gone
-                                                 * since we are still alive). Close our end to unblock the thread. Not
-                                                 * needed for stdout/stderr as the child is already dead and closed its
-                                                 * ends of pipes we read so the threads should have been unblocked.
+                                                 * since we are still alive). Unblock the fdMapper thread. Not needed
+                                                 * for stdout/stderr as the child is already dead and closed its ends of
+                                                 * pipes we read so the threads should have been unblocked.
                                                  */
-                                                close(savedStdFds[fd]);
+                                                int fh = savedStdFds[fd];
+                                                __LIBC_PFH pFH = __libc_FH(fh);
+                                                LIBC_ASSERTM(pFH, "No pFH for stdin fdMapper fh=%d\n", fh);
+                                                LIBC_ASSERTM(pFH->pOps, "No pFH->pOps for stdin fdMapper fh=%d\n", fh);
+                                                if (pFH && pFH->pOps)
+                                                {
+                                                    switch (pFH->pOps->enmType)
+                                                    {
+                                                        case enmFH_Socket43:
+                                                        case enmFH_Socket44:
+                                                            /*
+                                                             * Use shutdown() to cause read() to gracefully unblock with
+                                                             * 0 after getting done with the current I/O.
+                                                             */
+                                                            TCPNAME(imp_shutdown)(((PLIBCSOCKETFH)pFH)->iSocket, SHUT_RD);
+                                                            break;
+                                                        default:
+                                                            /*
+                                                             * Fall back to close() for other backends but this needs
+                                                             * checking if it will unblock the read() call in fdMapper.
+                                                             */
+                                                            LIBC_ASSERTM_FAILED("Unsupported FS backend type %d for stdin fdMapper fh=%d\n", pFH->pOps->enmType, fh);
+                                                            close(fh);
+                                                    }
+                                                }
                                             }
                                             FS_SAVE_LOAD();
                                             rc = DosWaitThread(&fdTids[fd], DCWW_WAIT);

@@ -156,7 +156,6 @@ static int TCPNAME(ops_Select)(int cFHs, struct fd_set *pRead, struct fd_set *pW
 static int TCPNAME(ops_ForkChild)(struct __libc_FileHandle *pFH, int fh, __LIBC_PFORKHANDLE pForkHandle, __LIBC_FORKOP enmOperation);
 
 static int TCPNAME(imp_soclose)(int s);
-static int TCPNAME(imp_so_cancel)(int s);
 #ifndef TCPV40HDRS
 static int TCPNAME(imp_ioctl)(int, int, char *);
 #endif
@@ -258,7 +257,6 @@ static int TCPNAME(ops_Close)(PLIBCFH pFH, int fh)
          * Please note that removesocketfromlist returns a boolean success indicator and probably no errno.
          */
         int iSavedTcpipErrno = TCPNAME(imp_sock_errno)();
-        TCPNAME(imp_so_cancel)(pSocketFH->iSocket);
         TCPNAME(imp_set_errno)(0);
         rc = !TCPNAME(imp_removesocketfromlist)(pSocketFH->iSocket);
         if (rc)
@@ -416,7 +414,6 @@ static int TCPNAME(ops_FileControl)(PLIBCFH pFH, int fh, int iRequest, int iArg,
     LIBCLOG_ENTER("pFH=%p:{.iSocket=%d} fh=%d iRequest=%#x iArg=%#x prc=%p\n",
                   (void *)pFH, ((PLIBCSOCKETFH)pFH)->iSocket, fh, iRequest, iArg, (void *)prc);
     int rc;
-
 
     /*
      * Service the request (very similar to __fcntl()!).
@@ -1178,7 +1175,7 @@ int TCPNAMEG(bsdselect)(int nfds, struct fd_set *readfds, struct fd_set *writefd
 # define ORD_SOCK_ERRNO                 20
 # define ORD_SET_ERRNO                  35
 # define ORD_SOCLOSE                    17
-# define ORD_SO_CANCEL                  18
+# define ORD_SHUTDOWN                   25
 # define ORD_IOCTL                      8
 # define ORD_OS2_IOCTL                  8
 # define ORD_RECV                       10
@@ -1190,7 +1187,7 @@ int TCPNAMEG(bsdselect)(int nfds, struct fd_set *readfds, struct fd_set *writefd
 # define ORD_SOCK_ERRNO                 20
 # define ORD_SET_ERRNO                  35
 # define ORD_SOCLOSE                    17
-# define ORD_SO_CANCEL                  18
+# define ORD_SHUTDOWN                   25
 # define ORD_IOCTL                      8
 # define ORD_OS2_IOCTL                  200
 # define ORD_RECV                       10
@@ -1272,13 +1269,13 @@ static int     TCPNAME(imp_soclose)(int s)
     LIBCLOG_MIX_RETURN_INT(rc);
 }
 
-static int     TCPNAME(imp_so_cancel)(int s)
+int     TCPNAME(imp_shutdown)(int s, int howto)
 {
     LIBCLOG_ENTER("iSocket=%d\n", s);
-    static int (*TCPCALL pfn)(int s);
-    if (!pfn && TCPNAME(get_imp)(ORD_SO_CANCEL, (void **)(void *)&pfn))
+    static int (*TCPCALL pfn)(int s, int howto);
+    if (!pfn && TCPNAME(get_imp)(ORD_SHUTDOWN, (void **)(void *)&pfn))
         LIBCLOG_ERROR_RETURN_INT(-1);
-    int rc = pfn(s);
+    int rc = pfn(s, howto);
     LIBCLOG_MIX_RETURN_INT(rc);
 }
 

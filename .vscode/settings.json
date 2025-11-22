@@ -33,8 +33,8 @@
     "fsem",
     "Himem",
     "knut",
-    "LIBC_ASSERTM",
     "LIBC",
+    "LIBC_ASSERTM",
     "LIBCFH",
     "LIBCLOG",
     "osmundsen",
@@ -42,10 +42,12 @@
     "PFNTHREAD",
     "PHFILE",
     "PLIBCFH",
+    "PLIBCSOCKETFH",
     "soclose",
     "spawnve",
     "spawnvp",
     "Systemberatung",
+    "TCPNAMEG",
     "TIMEBOMB",
     "USEDENTRY"
   ]

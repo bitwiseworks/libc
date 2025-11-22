@@ -286,6 +286,7 @@ int __libc_tcpipForkLoadModule(HMODULE hmodLoad, const char *pszDll);
 #ifdef IN_INNOTEK_LIBC
 int TCPNAME(imp_sock_errno)(void);
 void TCPNAME(imp_set_errno)(int);
+int TCPNAME(imp_shutdown)(int, int);
 #endif
 
 /**
