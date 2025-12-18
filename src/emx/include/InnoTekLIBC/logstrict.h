@@ -311,9 +311,11 @@
 #define __LIBC_LOG_GRP_PTHREAD      36
 /** Posix thread APIs. */
 #define __LIBC_LOG_GRP_DOSEX        37
+/** TLS APIs. */
+#define __LIBC_LOG_GRP_TLS          38
 
 /** @todo complete this */
-#define __LIBC_LOG_GRP_MAX          37
+#define __LIBC_LOG_GRP_MAX          38
 /** @} */
 
 

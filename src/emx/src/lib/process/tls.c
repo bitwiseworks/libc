@@ -32,7 +32,7 @@
 #include <sys/limits.h>
 #include <sys/smutex.h>
 #include <InnoTekLIBC/thread.h>
-#define __LIBC_LOG_GROUP __LIBC_LOG_GRP_THREAD
+#define __LIBC_LOG_GROUP __LIBC_LOG_GRP_TLS
 #include <InnoTekLIBC/logstrict.h>
 
 

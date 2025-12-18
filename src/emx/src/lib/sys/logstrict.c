@@ -978,7 +978,8 @@ static void *__libc_logDefault(void)
             { 1, "ICONV" },             /* 34 */
             { 1, "DLFCN" },             /* 35 */
             { 1, "PTHREAD" },           /* 36 */
-            { 1, "DOSEX" }              /* 37 */
+            { 1, "DOSEX" },             /* 37 */
+            { 1, "TLS" }                /* 38 */
         };
         static __LIBC_LOGGROUPS DefGrps =
         {
