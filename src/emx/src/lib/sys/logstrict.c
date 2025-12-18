@@ -923,6 +923,22 @@ const char *__libc_LogGetOrigin(void *pvInstance)
 }
 
 
+#ifdef DEBUG_LOGGING
+/**
+ * @internal
+ * Returns a file descriptor of the default log instance or -1 if log output
+ * goes to the console or if there is no default log instance.
+ */
+extern int __libc_logGetDefaultFD(void);
+int __libc_logGetDefaultFD(void)
+{
+    if (gpDefault && !__libc_logIsOutputToConsole(gpDefault))
+        return gpDefault->hFile;
+    return -1;
+}
+#endif
+
+
 /**
  * Get the default logger instance.
  * This call will open the default logger instance if required.
