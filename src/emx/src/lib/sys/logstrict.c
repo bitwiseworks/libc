@@ -2151,11 +2151,12 @@ static char * numtostr(char *psz, long lValue, unsigned int uiBase,
     /* write number - not good enough but it works */
     i = -1;
     psz += cchValue;
+    ul = (unsigned long)lValue;
     do
     {
-        psz[i--] = pszDigits[lValue % uiBase];
-        lValue /= uiBase;
-    } while (lValue > 0);
+        psz[i--] = pszDigits[ul % uiBase];
+        ul /= uiBase;
+    } while (ul > 0);
 
     /* width if NTSF_LEFT */
     if (fFlags & NTSF_LEFT)
@@ -2195,7 +2196,7 @@ static char * llnumtostr(char *psz, long long llValue, unsigned int uiBase,
 
     /* determin value length */
     cchValue = 0;
-    ull = (unsigned long long)((fFlags & NTSF_VALSIGNED) && llValue < 0L ? -llValue : llValue);
+    ull = (unsigned long long)((fFlags & NTSF_VALSIGNED) && llValue < 0LL ? -llValue : llValue);
     do
     {
         cchValue++;
@@ -2250,11 +2251,12 @@ static char * llnumtostr(char *psz, long long llValue, unsigned int uiBase,
     /* write number - not good enough but it works */
     i = -1;
     psz += cchValue;
+    ull = (unsigned long long)llValue;
     do
     {
-        psz[i--] = pszDigits[llValue % uiBase];
-        llValue /= uiBase;
-    } while (llValue > 0);
+        psz[i--] = pszDigits[ull % uiBase];
+        ull /= uiBase;
+    } while (ull > 0);
 
     /* width if NTSF_LEFT */
     if (fFlags & NTSF_LEFT)
