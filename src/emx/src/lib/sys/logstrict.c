@@ -65,6 +65,7 @@
 #include <InnoTekLIBC/thread.h>
 #include <InnoTekLIBC/fork.h>
 #include <InnoTekLIBC/errno.h>
+#include <klibc/startup.h>
 #include "backend.h"
 
 #define INCL_BASE
@@ -138,6 +139,30 @@ static inline int __libc_logIsOutputToConsole(__LIBC_PLOGINST pInst)
 {
     return    (pInst->fFlags & __LIBC_LOG_INTF_OUTPUT_MASK) == __LIBC_LOG_INTF_OUTPUT_STDOUT
            || (pInst->fFlags & __LIBC_LOG_INTF_OUTPUT_MASK) == __LIBC_LOG_INTF_OUTPUT_STDERR;
+}
+
+
+/**
+ * Compares chars from pcsz1 to chars from pcsz2.
+ *
+ * Returns NULL if pcsz1 is equal to pcsz2 or a pointer to the mismatching char
+ * in pcsz1.
+ */
+static const char *__strcmp(const char *pcsz1, const char *pcsz2)
+{
+    const char *pcszCur = pcsz1;
+
+    while (*pcszCur && *pcsz2)
+    {
+        if (*pcszCur != *pcsz2)
+            break;
+        ++pcszCur;
+        ++pcsz2;
+    }
+
+    if (!*pcszCur && !*pcsz2)
+        return NULL;
+    return pcszCur;
 }
 
 
@@ -484,6 +509,7 @@ static void *   __libc_logInit(__LIBC_PLOGINST pInst, const char *pszEnvVar, con
     char       *pszMsg;
     const char *pszEnv = NULL;
     int         fCurDir = 0;
+    ULONG       ulCp = -1;
     FS_VAR();
     FS_SAVE_LOAD();
 
@@ -648,6 +674,15 @@ static void *   __libc_logInit(__LIBC_PLOGINST pInst, const char *pszEnvVar, con
     }
 
     /*
+     * Get the process codepage.
+     */
+    {
+        ULONG aulCp[3] = {0}, cb;
+        if (!DosQueryCp(sizeof(aulCp), &aulCp[0], &cb))
+            ulCp = aulCp[0];
+    }
+
+    /*
      * Write log header.
      */
     pszMsg = __libc_logIsOutputToConsole(pInst) || (pInst->fFlags & __LIBC_LOG_INIT_NOHEADER) ? NULL : alloca(CCHTMPMSGBUFFER);
@@ -657,10 +692,9 @@ static void *   __libc_logInit(__LIBC_PLOGINST pInst, const char *pszEnvVar, con
         PPIB        pPib;
         DATETIME    dt;
         ULONG       ulTs;
-        const char *psz;
         ULONG       cb;
         int         cch;
-        int         i;
+        char        pszBuf[CCHMAXPATH + 1];
 
         /* The current time+date and basic process attributes. */
         DosGetInfoBlocks(&pTib, &pPib);
@@ -668,10 +702,10 @@ static void *   __libc_logInit(__LIBC_PLOGINST pInst, const char *pszEnvVar, con
         DosQuerySysInfo(QSV_MS_COUNT, QSV_MS_COUNT, &ulTs, sizeof(ulTs));
         cch = __libc_LogSNPrintf(pInst, pszMsg, CCHTMPMSGBUFFER,
                                  "Opened log at %04d-%02d-%02d %02d:%02d:%02d.%02d (%08lx ms since boot)\n"
-                                 "Process ID: %#x (%d) Parent PID: %#x (%d) Type: %d\n",
+                                 "Process ID: %#x (%d) Parent PID: %#x (%d) Type: %d Codepage: %d\n",
                                  dt.year, dt.month, dt.day, dt.hours, dt.minutes, dt.seconds, dt.hundredths, ulTs,
                                  (int)pPib->pib_ulpid, (unsigned)pPib->pib_ulpid, (int)pPib->pib_ulppid, (unsigned)pPib->pib_ulppid,
-                                 (int)pPib->pib_ultype);
+                                 (int)pPib->pib_ultype, ulCp);
         DosWrite(pInst->hFile, pszMsg, cch, &cb);
 
         /* The executable module. */
@@ -679,25 +713,35 @@ static void *   __libc_logInit(__LIBC_PLOGINST pInst, const char *pszEnvVar, con
                                  "Exe hmte  : %#x (",
                                  (unsigned)pPib->pib_hmte);
         DosWrite(pInst->hFile, pszMsg, cch, &cb);
-        if (DosQueryModuleName(pPib->pib_hmte, CCHTMPMSGBUFFER - 4, pszMsg))
-            pszMsg[0] = '\0';
-        cch = strlen(pszMsg);
-        pszMsg[cch++] = ')';
-        pszMsg[cch++] = '\n';
+        if (DosQueryModuleName(pPib->pib_hmte, sizeof(pszBuf), pszBuf))
+            pszBuf[0] = '\0';
+        cch = __libc_LogSNPrintf(pInst, pszMsg, CCHTMPMSGBUFFER, "%s)\n", pszBuf);
         DosWrite(pInst->hFile, pszMsg, cch, &cb);
 
         /* The raw arguments. */
-        psz = pPib->pib_pchcmd;
-        i = 0;
-        while (*psz)
+        const char *pszArg = pPib->pib_pchcmd;
+        int i = 0, fkLIBC = 0;
+        while (*pszArg)
         {
-            cch = __libc_LogSNPrintf(pInst, pszMsg, CCHTMPMSGBUFFER,
-                                     "Arg %-3d   : ", i++);
+            if (i == 1 && !__strcmp(pszArg, __KLIBC_ARG_SIGNATURE))
+                fkLIBC = 1;
+            if (fkLIBC)
+            {
+                if (i == 1)
+                    cch = __libc_LogSNPrintf (pInst, pszMsg, CCHTMPMSGBUFFER, "Arg %-3d   : kLIBC Args \"", i ++);
+                else
+                    cch = __libc_LogSNPrintf (pInst, pszMsg, CCHTMPMSGBUFFER, "Arg %-3d   : Flags 0x%02jX \"", i ++,
+                                              (unsigned char)*pszArg++);
+            }
+            else
+                cch = __libc_LogSNPrintf(pInst, pszMsg, CCHTMPMSGBUFFER, "Arg %-3d   : \"", i++);
             DosWrite(pInst->hFile, pszMsg, cch, &cb);
-            cch = strlen(psz);
-            DosWrite(pInst->hFile, psz, cch, &cb);
-            DosWrite(pInst->hFile, "\n", 1, &cb);
-            psz += cch + 1;
+            int cchArg = strlen(pszArg);
+            cch = __libc_LogSNPrintf(pInst, pszMsg, CCHTMPMSGBUFFER, "%s", pszArg);
+            DosWrite(pInst->hFile, pszMsg, cch, &cb);
+            cch = __libc_LogSNPrintf(pInst, pszMsg, CCHTMPMSGBUFFER, "\"%s (%d)\n", cch < cchArg ? "..." : "", cchArg);
+            DosWrite(pInst->hFile, pszMsg, cch, &cb);
+            pszArg += cchArg + 1;
         }
 
         /* The current drive and directory. */
@@ -705,16 +749,12 @@ static void *   __libc_logInit(__LIBC_PLOGINST pInst, const char *pszEnvVar, con
         ULONG fLogical = 0;
         if (!DosQueryCurrentDisk(&ulDisk, &fLogical))
         {
-            cch = __libc_LogSNPrintf(pInst, pszMsg, CCHTMPMSGBUFFER,
-                                     "Cur dir   : %c:\\",
-                                     (char)ulDisk + ('A' - 1));
+            cch = __libc_LogSNPrintf(pInst, pszMsg, CCHTMPMSGBUFFER, "Cur dir   : %c:\\", (char)ulDisk + ('A' - 1));
             DosWrite(pInst->hFile, pszMsg, cch, &cb);
-
-            ULONG cchDir = CCHTMPMSGBUFFER - 4;
-            if (DosQueryCurrentDir(ulDisk, (PSZ)pszMsg, &cchDir))
-                pszMsg[0] = '\0';
-            cch = strlen(pszMsg);
-            pszMsg[cch++] = '\n';
+            cb = sizeof(pszBuf);
+            if (DosQueryCurrentDir(ulDisk, (PBYTE)pszBuf, &cb))
+                pszBuf[0] = '\0';
+            cch = __libc_LogSNPrintf(pInst, pszMsg, CCHTMPMSGBUFFER, "%s\n", pszBuf);
             DosWrite(pInst->hFile, pszMsg, cch, &cb);
         }
 
@@ -728,19 +768,15 @@ static void *   __libc_logInit(__LIBC_PLOGINST pInst, const char *pszEnvVar, con
             szMod[0] = '\0';
             hmod = NULLHANDLE;
         }
-        cch = __libc_LogSNPrintf(pInst, pszMsg, CCHTMPMSGBUFFER,
-                                 "CRT Module: %s hmod=%#lx (",
-                                 szMod, hmod);
-        DosWrite(pInst->hFile, pszMsg, cch, &cb);
-
         if (    hmod == NULLHANDLE
-            ||  DosQueryModuleName(hmod, CCHTMPMSGBUFFER - 4, pszMsg))
-            pszMsg[0] = '\0';
-        cch = strlen(pszMsg);
-        pszMsg[cch++] = ')';
-        pszMsg[cch++] = '\n';
+            ||  DosQueryModuleName(hmod, sizeof(pszBuf), pszBuf))
+            pszBuf[0] = '\0';
+        cch = __libc_LogSNPrintf(pInst, pszMsg, CCHTMPMSGBUFFER,
+                                 "CRT Module: %s hmod=%#lx (%s)\n",
+                                 szMod, hmod, pszBuf);
         DosWrite(pInst->hFile, pszMsg, cch, &cb);
 
+        /* __libc_logInit address */
         cch = __libc_LogSNPrintf(pInst, pszMsg, CCHTMPMSGBUFFER,
                                  "__libc_logInit: addr %p iObj=%ld offObj=%#lx\n",
                                  (void *)__libc_logInit, iObj, offObj);
