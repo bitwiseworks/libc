@@ -454,14 +454,14 @@ void *__libc_LogInitEx(const char *pszOrigin, unsigned fFlags, __LIBC_PLOGGROUPS
     pInst->pGroups = pGroups;
 
     /*
-     * Call internal inititation worker.
+     * Call internal initiation worker.
      * (shared with the default logger init code)
      */
     pvRet = __libc_logInit(pInst, pszEnvVar, pszFilename);
     if (!pvRet)
     {
         free(pInst);                /* failure. */
-        errno = EACCES;                 /* good try, DosOpen probably failed. */
+        errno = EACCES;             /* good try, DosOpen probably failed. */
     }
 
     return pvRet;
@@ -469,7 +469,7 @@ void *__libc_LogInitEx(const char *pszOrigin, unsigned fFlags, __LIBC_PLOGGROUPS
 
 
 /**
- * Initates the logger instance, opening the specified file and such.
+ * Initiates the logger instance, opening the specified file and such.
  *
  * @returns Pointer to pInst on success.
  * @returns NULL on failure.
@@ -1419,29 +1419,22 @@ void     __libc_LogErrorLeave(unsigned uEnterTS, void *pvInstance, unsigned fGro
         cDepth = 0xff;
 
     /*
-     * Allocate logging buffer.
+     * Allocate logging buffer and format the message.
      */
     pszMsg = alloca(CCHTMPMSGBUFFER);
     if (!pszMsg)
         return;
 
-    /*
-     * First message is about where this error occured.
-     */
-    cch = __libc_LogSNPrintf(pInst, pszMsg, CCHTMPMSGBUFFER, "%08x %YT %02x %YG ErrL %04x %s (%d ms): %s(%d):\n",
+    va_start(args, pszFormat);
+    cch = __libc_logBuildMsg(pInst, pszMsg, pszFormat, args, "%08x %YT %02x %YG ErrL %04x %s (%d ms): %s(%d): ",
                              uTS, 0, cDepth, __LIBC_LOG_GETGROUP(fGroupAndFlags),
                              pThread ? pThread->iErrNo : 0xface, pszFunction, uTS - uEnterTS,
                              pszFile, uLine);
-    __libc_logWrite(pInst, fGroupAndFlags, pszMsg, cch, 0);
+    va_end(args);
 
     /*
-     * Second message is the one from the caller.
+     * Write the message.
      */
-    va_start(args, pszFormat);
-    cch = __libc_logBuildMsg(pInst, pszMsg, pszFormat, args, "%08x %YT %02x %YG ErrL %04x: ",
-                             uTS, 0, cDepth, __LIBC_LOG_GETGROUP(fGroupAndFlags),
-                             pThread ? pThread->iErrNo : 0xface);
-    va_end(args);
     __libc_logWrite(pInst, fGroupAndFlags, pszMsg, cch, 0);
 }
 
@@ -2169,7 +2162,6 @@ static char * numtostr(char *psz, long lValue, unsigned int uiBase,
         while (--cchWidth >= 0)
             *psz++ = ' ';
 
-
     return psz;
 }
 
@@ -2780,7 +2772,7 @@ int      __libc_LogSNPrintf(void *pvInstance, char *pszBuffer, size_t cchBuffer,
 
 
 /**
- * Procedure invoked by the parent for aligning the log file handle
+ * Procedure invoked by the child for aligning the log file handle
  * and semaphore handle with the parent ones.
  *
  * @returns 0 on success.
