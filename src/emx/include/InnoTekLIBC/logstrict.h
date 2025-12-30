@@ -26,9 +26,12 @@
 
 /** @defgroup   __libc_log      Debug Logging and Strict Checking Features
  *
- * The logging feature is not accessible unless DEBUG_LOGGING is #defined.
+ * The logging feature using LIBCLOG_* macros is not accessible (results in no
+ * code) unless DEBUG_LOGGING is #defined.
  *
- * The strict checking feature is not accessible unless __LIBC_STRICT is #defined.
+ * The strict checking feature using LIBC_ASSERT* macros is not accessible
+ * (results in no code) unless __LIBC_STRICT is #defined or *_STRICT versions of
+ * macros are used.
  *
  * The user of this feature must #define __LIBC_LOG_GROUP to a valid group
  * number before including this file.
@@ -325,11 +328,12 @@
  * @{ */
 
 /** Generic assertion.
- * @param expr  Boolean expression,
+ * @param expr  Boolean expression.
  */
-#ifdef __LIBC_STRICT
-#define LIBC_ASSERT(expr) ((expr) ? (void)0 \
+#define LIBC_ASSERT_STRICT(expr) ((expr) ? (void)0 \
     : __libc_LogAssert(__LIBC_LOG_INSTANCE, __LIBC_LOG_GROUP, __PRETTY_FUNCTION__, __FILE__, __LINE__, #expr, NULL))
+#ifdef __LIBC_STRICT
+#define LIBC_ASSERT(expr) LIBC_ASSERT_STRICT(expr)
 #else
 #define LIBC_ASSERT(expr) ((void)0)
 #endif
@@ -337,8 +341,9 @@
 /** Generic assertion failed.
  * (Yeah, this always fails.)
  */
+#define LIBC_ASSERT_FAILED_STRICT() __libc_LogAssert(__LIBC_LOG_INSTANCE, __LIBC_LOG_GROUP, __PRETTY_FUNCTION__, __FILE__, __LINE__, "0", NULL)
 #ifdef __LIBC_STRICT
-#define LIBC_ASSERT_FAILED() __libc_LogAssert(__LIBC_LOG_INSTANCE, __LIBC_LOG_GROUP, __PRETTY_FUNCTION__, __FILE__, __LINE__, "0", NULL)
+#define LIBC_ASSERT_FAILED() LIBC_ASSERT_FAILED_STRICT()
 #else
 #define LIBC_ASSERT_FAILED() ((void)0)
 #endif
@@ -347,10 +352,11 @@
  * @param pv    Pointer to buffer.
  * @param cb    Size of buffer.
  */
-#ifdef __LIBC_STRICT
-#define LIBC_ASSERT_MEM_R(pv, cb) (__libc_StrictMemoryR((pv), (cb)) ? (void)0 \
+#define LIBC_ASSERT_MEM_R_STRICT(pv, cb) (__libc_StrictMemoryR((pv), (cb)) ? (void)0 \
     : __libc_LogAssert(__LIBC_LOG_INSTANCE, __LIBC_LOG_GROUP, __PRETTY_FUNCTION__, __FILE__, __LINE__, #pv "; " #cb, \
                        "Memory buffer at %p of %d bytes isn't readable!\n", (pv), (cb)))
+#ifdef __LIBC_STRICT
+#define LIBC_ASSERT_MEM_R(pv, cb) LIBC_ASSERT_MEM_R_STRICT(pv, cb)
 #else
 #define LIBC_ASSERT_MEM_R(pv, cb) ((void)0)
 #endif
@@ -359,10 +365,11 @@
  * @param pv    Pointer to buffer.
  * @param cb    Size of buffer.
  */
-#ifdef __LIBC_STRICT
-#define LIBC_ASSERT_MEM_RW(pv, cb) (__libc_StrictMemoryRW((pv), (cb)) ? (void)0 \
+#define LIBC_ASSERT_MEM_RW_STRICT(pv, cb) (__libc_StrictMemoryRW((pv), (cb)) ? (void)0 \
     : __libc_LogAssert(__LIBC_LOG_INSTANCE, __LIBC_LOG_GROUP, __PRETTY_FUNCTION__, __FILE__, __LINE__, #pv "; " #cb, \
                        "Memory buffer at %p of %d bytes isn't readable and writable!\n", (pv), (cb)))
+#ifdef __LIBC_STRICT
+#define LIBC_ASSERT_MEM_RW(pv, cb) LIBC_ASSERT_MEM_RW_STRICT(pv, cb)
 #else
 #define LIBC_ASSERT_MEM_RW(pv, cb) ((void)0)
 #endif
@@ -370,22 +377,24 @@
 /** Assert that a zero terminated string is readable.
  * @param psz    Pointer to buffer.
  */
-#ifdef __LIBC_STRICT
-#define LIBC_ASSERT_STR(psz) (__libc_StrictStringR((psz), ~0) ? (void)0 \
+#define LIBC_ASSERT_STR_STRICT(psz) (__libc_StrictStringR((psz), ~0) ? (void)0 \
     : __libc_LogAssert(__LIBC_LOG_INSTANCE, __LIBC_LOG_GROUP, __PRETTY_FUNCTION__, __FILE__, __LINE__, #psz, \
                        "String at %p isn't readable!\n", (psz)))
+#ifdef __LIBC_STRICT
+#define LIBC_ASSERT_STR(psz) LIBC_ASSERT_STR_STRICT(psz)
 #else
 #define LIBC_ASSERT_STR(psz) ((void)0)
 #endif
 
-/** Assert that a zero terminated string with a maximum lenght is readable.
+/** Assert that a zero terminated string with a maximum length is readable.
  * @param psz       Pointer to buffer.
  * @param cchMax    Max string length.
  */
-#ifdef __LIBC_STRICT
-#define LIBC_ASSERT_NSTR(psz, cchMax) (__libc_StrictStringR((psz), cchMax) ? (void)0 \
+#define LIBC_ASSERT_NSTR_STRICT(psz, cchMax) (__libc_StrictStringR((psz), cchMax) ? (void)0 \
     : __libc_LogAssert(__LIBC_LOG_INSTANCE, __LIBC_LOG_GROUP, __PRETTY_FUNCTION__, __FILE__, __LINE__, #psz " " #cchMax, \
                        "String at %p of maximum %d bytes isn't readable!\n", (psz), (cchMax)))
+#ifdef __LIBC_STRICT
+#define LIBC_ASSERT_NSTR(psz, cchMax) LIBC_ASSERT_NSTR_STRICT(psz, cchMax)
 #else
 #define LIBC_ASSERT_NSTR(psz, cchMax) ((void)0)
 #endif
@@ -395,10 +404,11 @@
  * @param expr  Boolean expression,
  * @param ...   Custom error message.
  */
-#ifdef __LIBC_STRICT
-#define LIBC_ASSERTM(expr, ...) ((expr) ? (void)0 \
+#define LIBC_ASSERTM_STRICT(expr, ...) ((expr) ? (void)0 \
     : __libc_LogAssert(__LIBC_LOG_INSTANCE, __LIBC_LOG_GROUP, __PRETTY_FUNCTION__, __FILE__, __LINE__, #expr, \
                        __VA_ARGS__))
+#ifdef __LIBC_STRICT
+#define LIBC_ASSERTM(expr, ...) LIBC_ASSERTM_STRICT(expr, __VA_ARGS__)
 #else
 #define LIBC_ASSERTM(expr, ...) ((void)0)
 #endif
@@ -407,8 +417,9 @@
  * (Yeah, this always fails.)
  * @param ...   Custom error message.
  */
+#define LIBC_ASSERTM_FAILED_STRICT(...) __libc_LogAssert(__LIBC_LOG_INSTANCE, __LIBC_LOG_GROUP, __PRETTY_FUNCTION__, __FILE__, __LINE__, "0", __VA_ARGS__)
 #ifdef __LIBC_STRICT
-#define LIBC_ASSERTM_FAILED(...) __libc_LogAssert(__LIBC_LOG_INSTANCE, __LIBC_LOG_GROUP, __PRETTY_FUNCTION__, __FILE__, __LINE__, "0", __VA_ARGS__)
+#define LIBC_ASSERTM_FAILED(...) LIBC_ASSERTM_FAILED_STRICT(__VA_ARGS__)
 #else
 #define LIBC_ASSERTM_FAILED(...) ((void)0)
 #endif
@@ -417,10 +428,11 @@
  * @param pv    Pointer to buffer.
  * @param cb    Size of buffer.
  */
-#ifdef __LIBC_STRICT
-#define LIBC_ASSERTM_MEM_R(pv, cb, ...) (__libc_StrictMemoryR((pv), (cb)) ? (void)0 \
+#define LIBC_ASSERTM_MEM_R_STRICT(pv, cb, ...) (__libc_StrictMemoryR((pv), (cb)) ? (void)0 \
     : __libc_LogAssert(__LIBC_LOG_INSTANCE, __LIBC_LOG_GROUP, __PRETTY_FUNCTION__, __FILE__, __LINE__, #pv "; " #cb, \
                        __VA_ARGS__))
+#ifdef __LIBC_STRICT
+#define LIBC_ASSERTM_MEM_R(pv, cb, ...) LIBC_ASSERTM_MEM_R_STRICT(pv, cb, __VA_ARGS__)
 #else
 #define LIBC_ASSERTM_MEM_R(pv, cb, ...) ((void)0)
 #endif
@@ -429,10 +441,11 @@
  * @param pv    Pointer to buffer.
  * @param cb    Size of buffer.
  */
-#ifdef __LIBC_STRICT
-#define LIBC_ASSERTM_MEM_RW(pv, cb, ...) (__libc_StrictMemoryRW((pv), (cb)) ? (void)0 \
+#define LIBC_ASSERTM_MEM_RW_STRICT(pv, cb, ...) (__libc_StrictMemoryRW((pv), (cb)) ? (void)0 \
     : __libc_LogAssert(__LIBC_LOG_INSTANCE, __LIBC_LOG_GROUP, __PRETTY_FUNCTION__, __FILE__, __LINE__, #pv "; " #cb, \
                        __VA_ARGS__))
+#ifdef __LIBC_STRICT
+#define LIBC_ASSERTM_MEM_RW(pv, cb, ...) LIBC_ASSERTM_MEM_RW_STRICT(pv, cb, __VA_ARGS__)
 #else
 #define LIBC_ASSERTM_MEM_RW(pv, cb, ...) ((void)0)
 #endif
@@ -440,10 +453,11 @@
 /** Assert that a zero terminated string is readable, custom message
  * @param psz    Pointer to buffer.
  */
-#ifdef __LIBC_STRICT
-#define LIBC_ASSERTM_STR(psz, ...) (__libc_StrictStringR((psz), ~0) ? (void)0 \
+#define LIBC_ASSERTM_STR_STRICT(psz, ...) (__libc_StrictStringR((psz), ~0) ? (void)0 \
     : __libc_LogAssert(__LIBC_LOG_INSTANCE, __LIBC_LOG_GROUP, __PRETTY_FUNCTION__, __FILE__, __LINE__, #psz, \
                        __VA_ARGS__))
+#ifdef __LIBC_STRICT
+#define LIBC_ASSERTM_STR(psz, ...) LIBC_ASSERTM_STR_STRICT(psz, __VA_ARGS__)
 #else
 #define LIBC_ASSERTM_STR(psz, ...) ((void)0)
 #endif
@@ -452,10 +466,11 @@
  * @param psz       Pointer to buffer.
  * @param cchMax    Max string length.
  */
-#ifdef __LIBC_STRICT
-#define LIBC_ASSERTM_NSTR(psz, cchMax, ...) (__libc_StrictStringR((psz), cchMax) ? (void)0 \
+#define LIBC_ASSERTM_NSTR_STRICT(psz, cchMax, ...) (__libc_StrictStringR((psz), cchMax) ? (void)0 \
     : __libc_LogAssert(__LIBC_LOG_INSTANCE, __LIBC_LOG_GROUP, __PRETTY_FUNCTION__, __FILE__, __LINE__, #psz " " #cchMax, \
                        __VA_ARGS__))
+#ifdef __LIBC_STRICT
+#define LIBC_ASSERTM_NSTR(psz, cchMax, ...) LIBC_ASSERTM_NSTR_STRICT(psz, cchMax, __VA_ARGS__)
 #else
 #define LIBC_ASSERTM_NSTR(psz, cchMax, ...) ((void)0)
 #endif
