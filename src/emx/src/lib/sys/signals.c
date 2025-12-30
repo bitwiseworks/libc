@@ -2015,6 +2015,7 @@ static void signalTerminateAbnormal(int iSignalNo, void *pvXcptParams)
         __libc_Back_panic(__LIBC_PANIC_SIGNAL | __LIBC_PANIC_NO_SPM_TERM | __LIBC_PANIC_XCPTPARAMS, pvXcptParams, "Killed by unknown signal %d\n", iSignalNo);
     LIBCLOG_MSG("panic failed\n"); /* shuts up gcc */
     __asm__("int3");
+    __builtin_unreachable(); /* shuts up gcc */
 }
 
 

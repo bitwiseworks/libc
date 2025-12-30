@@ -1200,37 +1200,36 @@ int __spawnve(struct _new_proc *np)
                                 /*
                                  * Terminate the process.
                                  */
-                                int iStatus = SigInfo.si_status;
+                                int iStatus = SigInfo.si_status & 0xFF;
+                                int iExitCode = (SigInfo.si_status >> 8) & 0xFF;
                                 switch (SigInfo.si_code)
                                 {
                                     default:
                                         LIBC_ASSERTM_FAILED("Invalid si_code=%#x si_status=%#x\n", SigInfo.si_code, SigInfo.si_status);
                                     case CLD_EXITED:
                                         __libc_spmTerm(__LIBC_EXIT_REASON_EXIT, iStatus);
+                                        iExitCode = iStatus;
                                         break;
                                     case CLD_KILLED:
-                                        __libc_spmTerm(__LIBC_EXIT_REASON_SIGNAL_BASE + iStatus, 0);
-                                        iStatus = 127;
+                                        __libc_spmTerm(__LIBC_EXIT_REASON_SIGNAL_BASE + iStatus, iExitCode);
                                         break;
                                     case CLD_DUMPED:
                                         if (iStatus == SIGSEGV || iStatus > SIGRTMAX || iStatus <= 0)
-                                            __libc_spmTerm(__LIBC_EXIT_REASON_XCPT, 0);
+                                            __libc_spmTerm(__LIBC_EXIT_REASON_XCPT, iExitCode);
                                         else
-                                            __libc_spmTerm(__LIBC_EXIT_REASON_SIGNAL_BASE + iStatus, 0);
-                                        iStatus = 127;
+                                            __libc_spmTerm(__LIBC_EXIT_REASON_SIGNAL_BASE + iStatus, iExitCode);
                                         break;
                                     case CLD_TRAPPED:
                                         if (iStatus <= SIGRTMAX && iStatus > 0)
-                                            __libc_spmTerm(__LIBC_EXIT_REASON_SIGNAL_BASE + iStatus, 0);
+                                            __libc_spmTerm(__LIBC_EXIT_REASON_SIGNAL_BASE + iStatus, iExitCode);
                                         else
-                                            __libc_spmTerm(__LIBC_EXIT_REASON_TRAP, 0);
-                                        iStatus = 127;
+                                            __libc_spmTerm(__LIBC_EXIT_REASON_TRAP, iExitCode);
                                         break;
                                 }
 
                                 LIBCLOG_MSG("Calling DosExit(,0)\n");
                                 for (;;)
-                                    DosExit(EXIT_PROCESS, iStatus);
+                                    DosExit(EXIT_PROCESS, iExitCode);
                                 break; /* won't get here */
                             }
                         }

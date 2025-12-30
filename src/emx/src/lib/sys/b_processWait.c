@@ -480,7 +480,7 @@ static int waitChild(PWAITINFO pWait, int fNoWait, pid_t pidWait)
     {
         case TC_EXIT:
             pWait->uCode    = CLD_EXITED;
-            pWait->uStatus  = resc.codeResult;
+            pWait->uStatus  = resc.codeResult & 0xFF;
             break;
 
         case TC_HARDERROR:
@@ -505,6 +505,15 @@ static int waitChild(PWAITINFO pWait, int fNoWait, pid_t pidWait)
             break;
     }
 
+    if (resc.codeTerminate != TC_EXIT)
+    {
+        /*
+         * Add the exit code to the status so that callers (e.g. spawn*)
+         * could extract it.
+         */
+        pWait->uStatus |= (resc.codeResult & 0xFF) << 8;
+    }
+
     /*
      * Reap it as a LIBC process, that might give more detail
      * (and besides it's deadly important to do it!)
@@ -524,7 +533,7 @@ static int waitChild(PWAITINFO pWait, int fNoWait, pid_t pidWait)
         {
             case __LIBC_EXIT_REASON_EXIT:
                 pWait->uCode    = CLD_EXITED;
-                pWait->uStatus  = Notify.iExitCode;
+                pWait->uStatus  = Notify.iExitCode & 0xFF;
                 break;
 
             case __LIBC_EXIT_REASON_HARDERROR:
@@ -555,6 +564,15 @@ static int waitChild(PWAITINFO pWait, int fNoWait, pid_t pidWait)
             case __LIBC_EXIT_REASON_NONE:
                 LIBCLOG_MSG2("Unknown death reason %d\n", Notify.enmDeathReason);
                 break;
+        }
+
+        if (Notify.enmDeathReason != __LIBC_EXIT_REASON_EXIT)
+        {
+            /*
+             * Add the exit code to the status so that callers (e.g. spawn*)
+             * could extract it.
+             */
+            pWait->uStatus |= (Notify.iExitCode & 0xFF) << 8;
         }
     }
 
