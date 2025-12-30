@@ -38,6 +38,8 @@
 
 #define CHLOWER(ch)     ((ch) < 'A' || (ch) > 'Z' ? (ch) : (ch) + ('a' - 'A'))
 
+#define ISPRINTABLE(ch) (((ch) >= 0x20 && (ch) <= 0x7E) || (ch) >= 0x80)
+
 #define NTSF_CAPITAL    0x0001
 #define NTSF_LEFT       0x0002
 #define NTSF_ZEROPAD    0x0004
@@ -62,6 +64,7 @@
 #include <emx/umalloc.h>
 #include <setjmp.h>
 #include <machine/param.h>
+#include <uconv.h>
 #include <InnoTekLIBC/thread.h>
 #include <InnoTekLIBC/fork.h>
 #include <InnoTekLIBC/errno.h>
@@ -95,6 +98,10 @@ typedef struct __libc_logInstance
     unsigned                fFlags;
     /** Origin. */
     const char             *pszOrigin;
+    /** uconv from object. */
+    UconvObject             uconvFromObj;
+    /** uconv to object. */
+    UconvObject             uconvToObj;
 } __LIBC_LOGINST, *__LIBC_PLOGINST;
 
 /** Internal logger instance flags. */
@@ -683,6 +690,29 @@ static void *   __libc_logInit(__LIBC_PLOGINST pInst, const char *pszEnvVar, con
     }
 
     /*
+     * Setup the iconv object when appropriate.
+     */
+    if (ulCp != -1 && !__libc_logIsOutputToConsole(pInst) && (pInst->fFlags & __LIBC_LOG_INIT_UTF8))
+    {
+        UniChar cpName[48]; /* minimum size taken from iconv.c */
+        if (!UniMapCpToUcsCp(ulCp, cpName, sizeof(cpName)))
+        {
+            UconvObject uconvFromObj;
+            if (!UniCreateUconvObject(cpName, &uconvFromObj))
+            {
+                UconvObject uconvToObj;
+                if (!UniCreateUconvObject(UTF_8, &uconvToObj))
+                {
+                    pInst->uconvFromObj = uconvFromObj;
+                    pInst->uconvToObj = uconvToObj;
+                }
+                else
+                    UniFreeUconvObject(uconvFromObj);
+            }
+        }
+    }
+
+    /*
      * Write log header.
      */
     pszMsg = __libc_logIsOutputToConsole(pInst) || (pInst->fFlags & __LIBC_LOG_INIT_NOHEADER) ? NULL : alloca(CCHTMPMSGBUFFER);
@@ -701,8 +731,9 @@ static void *   __libc_logInit(__LIBC_PLOGINST pInst, const char *pszEnvVar, con
         DosGetDateTime(&dt);
         DosQuerySysInfo(QSV_MS_COUNT, QSV_MS_COUNT, &ulTs, sizeof(ulTs));
         cch = __libc_LogSNPrintf(pInst, pszMsg, CCHTMPMSGBUFFER,
-                                 "Opened log at %04d-%02d-%02d %02d:%02d:%02d.%02d (%08lx ms since boot)\n"
+                                 "Opened log%s at %04d-%02d-%02d %02d:%02d:%02d.%02d (%08lx ms since boot)\n"
                                  "Process ID: %#x (%d) Parent PID: %#x (%d) Type: %d Codepage: %d\n",
+                                 pInst->uconvFromObj ? " (utf-8)" : "",
                                  dt.year, dt.month, dt.day, dt.hours, dt.minutes, dt.seconds, dt.hundredths, ulTs,
                                  (int)pPib->pib_ulpid, (unsigned)pPib->pib_ulpid, (int)pPib->pib_ulppid, (unsigned)pPib->pib_ulppid,
                                  (int)pPib->pib_ultype, ulCp);
@@ -737,7 +768,7 @@ static void *   __libc_logInit(__LIBC_PLOGINST pInst, const char *pszEnvVar, con
                 cch = __libc_LogSNPrintf(pInst, pszMsg, CCHTMPMSGBUFFER, "Arg %-3d   : \"", i++);
             DosWrite(pInst->hFile, pszMsg, cch, &cb);
             int cchArg = strlen(pszArg);
-            cch = __libc_LogSNPrintf(pInst, pszMsg, CCHTMPMSGBUFFER, "%s", pszArg);
+            cch = __libc_LogSNPrintf(pInst, pszMsg, CCHTMPMSGBUFFER, "%hs", pszArg);
             DosWrite(pInst->hFile, pszMsg, cch, &cb);
             cch = __libc_LogSNPrintf(pInst, pszMsg, CCHTMPMSGBUFFER, "\"%s (%d)\n", cch < cchArg ? "..." : "", cchArg);
             DosWrite(pInst->hFile, pszMsg, cch, &cb);
@@ -1053,6 +1084,14 @@ static void *__libc_logDefault(void)
          * Init the groups (before the instance init to have enabled groups there).
          */
         __libc_LogGroupInit(&DefGrps, "LIBC_LOGGING");
+
+
+        /*
+         * Set the UTF-8 flag when asked.
+         */
+        const char *pszEnvUtf8 = NULL;
+        if (!__libc_scanenv("LIBC_LOGGING_UTF8", &pszEnvUtf8))
+            DefInst.fFlags |= __LIBC_LOG_INIT_UTF8;
 
         /*
          * Create the log instance.
@@ -2415,47 +2454,33 @@ static int      __libc_logVSNPrintfInt(__LIBC_PLOGINST pInst, char *pszBuffer, s
                     }
                 }
 
+                char ch;
+                int cchStr = 0;
+                char *pszStr = NULL;
+
                 /* type */
                 switch (*pszFormat++)
                 {
-                    /* char */
-                    case 'c':
+                    case 'c':   /* char */
                     {
-                        char ch;
-
-                        if (!(fFlags & NTSF_LEFT))
-                            while (--cchWidth > 0 && cchBuffer)
-                            {
-                                cchBuffer--;
-                                *pszBuffer++ = ' ';
-                                cch++;
-                            }
-
                         ch = (char)va_arg(args, int);
-                        if (!cchBuffer)
-                            break;
-
-                        cchBuffer--;
-                        *pszBuffer++ = ch;
-                        cch++;
-
-                        while (--cchWidth > 0 && cchBuffer)
-                        {
-                            cchBuffer--;
-                            *pszBuffer++ = ' ';
-                            cch++;
-                        }
-                        continue;
+                        cchStr = 1;
+                        pszStr = &ch;
+                        /* fallback to 's' case: the code is identical */
                     }
 
                     case 's':   /* string */
                     {
-                        int   cchStr;
-                        char *pszStr = va_arg(args, char*);
+                        int fNull = 0;
 
-                        if (pszStr < (char*)0x10000)
-                            pszStr = "<NULL>";
-                        cchStr = strnlen(pszStr, (unsigned)cchPrecision);
+                        if (!cchStr) /* not a fallback from 'c' case */
+                        {
+                            pszStr = va_arg(args, char*);
+                            if ((fNull = pszStr < (char*)0x10000))
+                                pszStr = "<NULL>";
+                            cchStr = strnlen(pszStr, (unsigned)cchPrecision);
+                        }
+
                         if (!(fFlags & NTSF_LEFT))
                             while (--cchWidth >= cchStr && cchBuffer)
                             {
@@ -2466,10 +2491,64 @@ static int      __libc_logVSNPrintfInt(__LIBC_PLOGINST pInst, char *pszBuffer, s
 
                         while (cchStr && cchBuffer)
                         {
-                            cchStr--;
-                            cchBuffer--;
-                            *pszBuffer++ = *pszStr++;
-                            cch++;
+                            int cchStrOk = 0;
+                            if (chArgSize == 'h')
+                                while (cchStr > cchStrOk && cchBuffer > cchStrOk && *pszStr != '\\' && ISPRINTABLE(pszStr[cchStrOk]))
+                                    cchStrOk++;
+                            else
+                                while (cchStr > cchStrOk && cchBuffer > cchStrOk)
+                                    cchStrOk++;
+                            if (cchStrOk)
+                            {
+                                int fUtf8Done = 0;
+                                if (!fNull && pInst && pInst->uconvFromObj)
+                                {
+                                    void *pStr = pszStr;
+                                    size_t szStr = cchStrOk;
+                                    UniChar *pUniStrBase = alloca (cchStrOk * sizeof(UniChar));
+                                    UniChar *pUniStr = pUniStrBase;
+                                    size_t szUniStr = cchStrOk;
+                                    size_t cSubst = 0;
+                                    if (!UniUconvToUcs(pInst->uconvFromObj, &pStr, &szStr, &pUniStr, &szUniStr, &cSubst))
+                                    {
+                                        pUniStr = pUniStrBase;
+                                        szUniStr = cchStrOk - szUniStr;
+                                        void *pStrOut = pszBuffer;
+                                        size_t szStrOut = cchBuffer;
+                                        size_t cSubst2 = 0;
+                                        if (!UniUconvFromUcs(pInst->uconvToObj, &pUniStr, &szUniStr, &pStrOut, &szStrOut, &cSubst2))
+                                        {
+                                            cchStr -= (char*)pStr - pszStr;
+                                            pszStr = pStr;
+                                            cch += (char*)pStrOut - pszBuffer;
+                                            cchBuffer = szStrOut;
+                                            pszBuffer = pStrOut;
+                                            fUtf8Done = 1;
+                                        }
+                                    }
+                                    /* Fallback to no converison on errors */
+                                }
+                                if (!fUtf8Done)
+                                {
+                                    cchStr -= cchStrOk;
+                                    cchBuffer -= cchStrOk;
+                                    memcpy(pszBuffer, pszStr, cchStrOk);
+                                    pszBuffer += cchStrOk;
+                                    pszStr += cchStrOk;
+                                    cch += cchStrOk;
+                                }
+                            }
+                            if (chArgSize == 'h' && cchStr)
+                            {
+                                if (cchBuffer < 4)
+                                    break;
+                                cchStr--;
+                                cchBuffer -= 4;
+                                memcpy(pszBuffer, "\\x", 2);
+                                pszBuffer += 2;
+                                pszBuffer = numtostr(pszBuffer, (unsigned char)*pszStr++, 16, 2, 0, NTSF_CAPITAL | NTSF_ZEROPAD);
+                                cch += 4;
+                            }
                         }
 
                         while (--cchWidth >= cchStr && cchBuffer)

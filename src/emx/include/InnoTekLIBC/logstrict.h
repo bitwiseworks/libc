@@ -205,6 +205,8 @@
 #define __LIBC_LOG_INIT_NOHEADER    0x00000001
 /** Do not write the log entry column headers to the log header. */
 #define __LIBC_LOG_INIT_NOLEGEND    0x00000002
+/** Use UTF-8 encoding in the log file. */
+#define __LIBC_LOG_INIT_UTF8        0x00000004
 /** @} */
 
 
