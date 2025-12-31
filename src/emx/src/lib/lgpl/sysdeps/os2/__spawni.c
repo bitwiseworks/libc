@@ -355,9 +355,9 @@ int __spawni(
     if (!rc)
     {
         if (use_path)
-            pidChild = spawnve(P_NOWAIT, path, argv, envp);
-        else
             pidChild = spawnvpe(P_NOWAIT, path, argv, envp);
+        else
+            pidChild = spawnve(P_NOWAIT, path, argv, envp);
         if (pidChild >= 0)
         {
             #if 0
