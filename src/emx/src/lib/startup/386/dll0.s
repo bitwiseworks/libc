@@ -103,7 +103,7 @@ do_init_not_forking:
     /* _DLL_InitTerm failed, undo the module registration. */
 #if !defined(NOFORK) && !defined(NOUNIX)
     pushl   $ForkModule
-    call    ___libc_ForkRegisterModule
+    call    ___libc_ForkDeregisterModule
     addl    $4, %esp
 #endif
     /* jmp     do_return_failure; - fall thru */
@@ -115,7 +115,7 @@ do_return_success:
     xorl    %eax, %eax
     inc     %al
     ret
-                 
+
 
     /*
      * DLL Termination.
