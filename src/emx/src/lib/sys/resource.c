@@ -129,7 +129,7 @@ int	_STD(getrlimit)(int iResId, struct rlimit * pLimit)
             ULONG   cbPrivateHigh;
             if (DosQuerySysInfo(QSV_MAXPRMEM, QSV_MAXPRMEM, &cbPrivateLow, sizeof(cbPrivateLow)))
                 cbPrivateLow = 64*1024*1024; /* 64MB is always secured by OS/2. */
-            if (DosQuerySysInfo(QSV_MAXPRMEM, QSV_MAXPRMEM, &cbPrivateHigh, sizeof(cbPrivateHigh)))
+            if (DosQuerySysInfo(QSV_MAXHPRMEM, QSV_MAXHPRMEM, &cbPrivateHigh, sizeof(cbPrivateHigh)))
                 cbPrivateHigh = 0;
             pLimit->rlim_cur = cbPrivateLow + cbPrivateHigh;
             pLimit->rlim_max = pLimit->rlim_cur;
