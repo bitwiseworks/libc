@@ -19,10 +19,38 @@
 #include <spawn.h>
 #include <stdlib.h>
 
-/* Initialize data structure for file attribute for `spawn' call.  */
+#include "spawn_int.h"
+
+ /* Deallocate the file actions.  */
 int
 posix_spawn_file_actions_destroy (posix_spawn_file_actions_t *file_actions)
 {
+  /* Free the paths in the open actions.  */
+  for (int i = 0; i < file_actions->__used; ++i)
+    {
+      struct __spawn_action *sa = &file_actions->__actions[i];
+      switch (sa->tag)
+        {
+        case spawn_do_open:
+          free (sa->action.open_action.path);
+          break;
+#ifndef __EMX__ /* TODO: We don't implement this yet */
+        case spawn_do_chdir:
+          free (sa->action.chdir_action.path);
+          break;
+#endif
+        case spawn_do_close:
+        case spawn_do_dup2:
+#ifndef __EMX__ /* TODO: We don't implement this yet */
+        case spawn_do_fchdir:
+        case spawn_do_closefrom:
+        case spawn_do_tcsetpgrp:
+#endif
+          /* No cleanup required.  */
+          break;
+        }
+    }
+
   /* Free the memory allocated.  */
   free (file_actions->__actions);
   return 0;
