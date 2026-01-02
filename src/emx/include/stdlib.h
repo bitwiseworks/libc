@@ -187,7 +187,7 @@ double	 erand48(unsigned short[3]);
 /* char	*gcvt(double, int, int * __restrict, int * __restrict); */
 int	 getsubopt(char **, char *const *, char **);
 /** @todo int	 grantpt(int); */
-char	*initstate(unsigned long /* XSI requires u_int */, char *, long);
+char	*initstate(unsigned, char *, long);
 long	 jrand48(unsigned short[3]);
 /* char	*l64a(long); */
 void	 lcong48(unsigned short[7]);
@@ -204,7 +204,7 @@ long	 mrand48(void);
 long	 nrand48(unsigned short[3]);
 /** @todo int	 posix_openpt(int); */
 /** @todo char	*ptsname(int); */
-int	 putenv(const char *);
+int	 putenv(char *);
 long	 random(void);
 char	*realpath(const char *, char resolved_path[]);
 unsigned short
@@ -215,7 +215,7 @@ unsigned short
 #endif
 char	*setstate(/* const */ char *);
 void	 srand48(long);
-void	 srandom(unsigned long);
+void	 srandom(unsigned);
 /** @todo int	 unlockpt(int); */
 #endif /* __XSI_VISIBLE */
 

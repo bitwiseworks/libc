@@ -106,12 +106,12 @@ _STD(iconv_open) (const char *cp_to, const char *cp_from)
                         /* Do not treat 0x7f as a control character
                            (don't understand what it exactly means but without it MBCS prefix
                            character detection sometimes could fail (when 0x7f is a prefix)).
-                           
+
                            And don't treat the string as a path (the docs also don't explain
                            what it exactly means, but I'm pretty sure converted texts will
-                           mostly not be paths). 
-                           Ticket #182: This breaks samba with Korean CP, WON and backward 
-                           slash seems to be mapped to the same ASCII character.  Better 
+                           mostly not be paths).
+                           Ticket #182: This breaks samba with Korean CP, WON and backward
+                           slash seems to be mapped to the same ASCII character.  Better
                            assume the input is PATHs. */
                         uconv_attribute_t   attr;
                         UniQueryUconvObject(conv->from, &attr, sizeof (attr), NULL, NULL, NULL);
@@ -154,8 +154,8 @@ _STD(iconv_open) (const char *cp_to, const char *cp_from)
 
 size_t
 _STD(iconv) (iconv_t conv,
-             const char **in, size_t *in_left,
-             char **out, size_t *out_left)
+             char ** __restrict in, size_t * __restrict in_left,
+             char ** __restrict out, size_t * __restrict out_left)
 {
   int       rc;
   size_t    sl;

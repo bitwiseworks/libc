@@ -271,7 +271,7 @@ static inline uint32_t good_rand (x)
  */
 void
 _STD(srandom)(x)
-	unsigned long x;
+	unsigned x;
 {
 	int i, lim;
 
@@ -359,7 +359,7 @@ srandomdev()
  */
 char *
 _STD(initstate)(seed, arg_state, n)
-	unsigned long seed;		/* seed for R.N.G. */
+	unsigned seed;		/* seed for R.N.G. */
 	char *arg_state;		/* pointer to state array */
 	long n;				/* # bytes of state info */
 {

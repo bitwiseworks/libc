@@ -918,7 +918,7 @@ _nl_find_msg (domain_file, domainbinding, msgid, lengthp)
 
 	      outleft = freemem_size - sizeof (size_t);
 	      if (iconv (domain->conv,
-			 (ICONV_CONST char **) &inptr, &inleft,
+			 (char **) &inptr, &inleft,
 			 &outptr, &outleft)
 		  != (size_t) (-1))
 		{

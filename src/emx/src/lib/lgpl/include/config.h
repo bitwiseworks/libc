@@ -89,8 +89,6 @@
 #define LIBDIR              "/@unixroot/usr/lib"
 #define LOCALE_ALIAS_PATH   LOCALEDIR
 
-#define ICONV_CONST const
-
 #if 0
 # define INTUSE(name)                   __libc_internal_##name
 # define INTDEF(name)                   strong_alias (name, __libc_internal_##name)

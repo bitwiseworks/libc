@@ -9,7 +9,7 @@
 #define __LIBC_LOG_GROUP  __LIBC_LOG_GRP_ENV
 #include <InnoTekLIBC/logstrict.h>
 
-int _STD(putenv)(const char *string)
+int _STD(putenv)(char *string)
 {
     LIBCLOG_ENTER("string=%p:{%s}\n", string, string);
     char *s, **p;
@@ -70,13 +70,13 @@ int _STD(putenv)(const char *string)
                 LIBCLOG_ERROR_RETURN_INT(-1);
             environ = p;
         }
-        environ[env_size + 0] = (char *)string;
+        environ[env_size + 0] = string;
         environ[env_size + 1] = NULL;
     }
     else
     {
         LIBCLOG_MSG("replacing '%s' with '%s'\n", *p, string);
-        *p = (char *)string;
+        *p = string;
     }
 
     _tzset_flag = 0;                    /* Call tzset() */
