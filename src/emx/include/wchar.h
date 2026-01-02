@@ -217,6 +217,8 @@ int	wcwidth(wchar_t);
 size_t  mbsnrtowcs(wchar_t * __restrict, const char * __restrict * __restrict, size_t,
       size_t, mbstate_t * __restrict);
 wchar_t *wcsdup(const wchar_t *);
+int	wcscasecmp(const wchar_t *, const wchar_t *);
+int	wcsncasecmp(const wchar_t *, const wchar_t *, size_t n);
 size_t  wcsnrtombs(char * __restrict, const wchar_t * __restrict * __restrict, size_t,
       size_t, mbstate_t * __restrict);
 #endif

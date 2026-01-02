@@ -2046,3 +2046,5 @@ EXPORTS
     "___libc_FHCloseRange" @2029
     "__std_closefrom" @2030
     "__std_close_range" @2031
+    "__std_wcscasecmp" @2032
+    "__std_wcsncasecmp" @2033
