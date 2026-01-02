@@ -34,5 +34,5 @@ void _um_abort(const char *pszMsg, ...)
     va_start(args, pszMsg);
     __libc_Back_panicV(0, NULL, pszMsg, args);
     va_end(args);
+    __builtin_unreachable(); /* shut up gcc */
 }
-

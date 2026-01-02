@@ -38,6 +38,8 @@
 #include <sys/ioctl.h>
 #include <emx/io.h>
 #include <InnoTekLIBC/backend.h>
+#include "syscalls.h"
+
 #define __LIBC_LOG_GROUP __LIBC_LOG_GRP_IO
 #include <InnoTekLIBC/logstrict.h>
 

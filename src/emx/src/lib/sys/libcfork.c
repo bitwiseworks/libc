@@ -2202,7 +2202,7 @@ int forkPrmFlush(__LIBC_PFORKHANDLE pForkHandle)
  *                      __LIBC_FORK_CTX_BOTH. May be ORed with
  *                      __LIBC_FORK_CTX_FLAGS_LAST to add the callback to
  *                      the end of the list so that it will be called after
- *                      all other registered callbacks. 
+ *                      all other registered callbacks.
  *
  * @remark  Use with care, the memory used to remember these is taken from the
  *          fork buffer.
@@ -3230,6 +3230,7 @@ void                 forkChlFatalError(__LIBC_PFORKHANDLE pForkHandle, int rc, v
      * Exit process.
      */
     __libc_Back_panic(__LIBC_PANIC_NO_SPM_TERM, pvCtx, "LIBC fork: Child aborting fork()! rc=%x\n", rc);
+    __builtin_unreachable(); /* shut up gcc */
 }
 
 
