@@ -119,7 +119,7 @@ FILE *_STD(freopen) (const char *fname, const char *mode, FILE *stream)
                       /* flush it and set the new mode */
                       fflush(stream);
                       if (!fcntl(fileno(stream), F_SETFL, omode))
-                        stream = stream;
+                        result = stream;
                     }
                   else
                     errno = EBADF; /* doesn't support the mode. */
