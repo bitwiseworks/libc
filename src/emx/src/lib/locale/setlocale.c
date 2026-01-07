@@ -448,63 +448,66 @@ static int localeCollateDo(__LIBC_PLOCALECOLLATE pCollate, UconvObject uobj, Loc
         pCollate->lobj          = lobj;
         pCollate->uobj          = uobj;
     }
-    else
+    /*
+        * In SBCS we query the weight of every character and use the
+        * weights directly, without the need to invoke the Unicode API.
+        *
+        * NOTE: Also do this for 1-byte MBCS characters since strcoll relies on
+        * that for optimisation (e.g. strings containing only 1-byte chars).
+        */
+    struct __collate_weight     aCW[256];
+    int                         i, c;
+
+    /* Initialize character weights. */
+    for (i = 0; i < 256; i++)
     {
-        /*
-         * In SBCS we query the weight of every character and use the
-         * weights directly, without the need to invoke the Unicode API.
-         */
-        struct __collate_weight     aCW[256];
-        int                         i, c;
-
-        /* Initialize character weights. */
-        for (i = 0; i < 256; i++)
+        UniChar ucs[2];
+        if (!__libc_ucs2To(uobj, (unsigned char *)&i, 1, &ucs[0]))
         {
-            UniChar ucs[2];
-            if (!__libc_ucs2To(uobj, (unsigned char *)&i, 1, &ucs[0]))
-            {
-                LIBCLOG_ERROR2("__libc_ucs2To failed for char %d\n", i);
-                ucs[0] = (UniChar)i;
-            }
-            ucs[1] = '\0';
+            LIBCLOG_ERROR2("__libc_ucs2To failed for char %d\n", i);
+            ucs[0] = (UniChar)i;
+        }
+        ucs[1] = '\0';
 
-            aCW[i].code = i;
-            aCW[i].len  = UniStrxfrm(lobj, aCW[i].ucsWeight, &ucs[0], sizeof(aCW[i].ucsWeight) / sizeof(aCW[i].ucsWeight[0]));
-            if (aCW[i].len >= sizeof(aCW[i].ucsWeight) / sizeof(aCW[i].ucsWeight[0]))
-            {
-                LIBC_ASSERTM_FAILED("This cannot happen... :-) i=%d len=%d \n", i, aCW[i].len);
-                aCW[i].len = sizeof(aCW[i].ucsWeight) / sizeof(aCW[i].ucsWeight[0]);
-            }
-
-            /* Workaround for bug / undocumented UniStrxfrm feature. See strxfrm.c & mozilla sources. */
-            aCW[i].len = MIN(aCW[i].len * 2, sizeof(aCW[i].ucsWeight) / sizeof(aCW[i].ucsWeight[0]));
-            while (!aCW[i].ucsWeight[aCW[i].len - 1])
-                aCW[i].len--;
+        aCW[i].code = i;
+        aCW[i].len  = UniStrxfrm(lobj, aCW[i].ucsWeight, &ucs[0], sizeof(aCW[i].ucsWeight) / sizeof(aCW[i].ucsWeight[0]));
+        if (aCW[i].len >= sizeof(aCW[i].ucsWeight) / sizeof(aCW[i].ucsWeight[0]))
+        {
+            LIBC_ASSERTM_FAILED("This cannot happen... :-) i=%d len=%d \n", i, aCW[i].len);
+            aCW[i].len = sizeof(aCW[i].ucsWeight) / sizeof(aCW[i].ucsWeight[0]);
         }
 
-        /*
-         * Do bubble sorting since qsort() doesn't guarantee that the order
-         * of equal elements stays the same.
-         */
-        c = 256 - 1;
-        do
-        {
-            int j = 0;
-            for (i = 0; i < c; i++)
-                if (UniStrncmp(aCW[i].ucsWeight, aCW[i + 1].ucsWeight, MIN(aCW[i].len, aCW[i + 1].len)) > 0)
-                {
-                    _memswap(&aCW[i], &aCW[i + 1], sizeof(aCW[i]));
-                    j = i;
-                }
-            c = j;
-        } while (c);
+        /* Workaround for bug / undocumented UniStrxfrm feature. See strxfrm.c & mozilla sources. */
+        aCW[i].len = MIN(aCW[i].len * 2, sizeof(aCW[i].ucsWeight) / sizeof(aCW[i].ucsWeight[0]));
+        while (!aCW[i].ucsWeight[aCW[i].len - 1])
+            aCW[i].len--;
+    }
 
-        /*
-         * Store the result.
-         */
-        for (i = 0; i < 256; i++)
-            pCollate->auchWeight[aCW[i].code] = i;
+    /*
+        * Do bubble sorting since qsort() doesn't guarantee that the order
+        * of equal elements stays the same.
+        */
+    c = 256 - 1;
+    do
+    {
+        int j = 0;
+        for (i = 0; i < c; i++)
+            if (UniStrncmp(aCW[i].ucsWeight, aCW[i + 1].ucsWeight, MIN(aCW[i].len, aCW[i + 1].len)) > 0)
+            {
+                _memswap(&aCW[i], &aCW[i + 1], sizeof(aCW[i]));
+                j = i;
+            }
+        c = j;
+    } while (c);
 
+    /*
+        * Store the result.
+        */
+    for (i = 0; i < 256; i++)
+        pCollate->auchWeight[aCW[i].code] = i;
+
+    if (!pCollate->mbcs)
+    {
         /* cleanup */
         UniFreeUconvObject(uobj);
         UniFreeLocaleObject(lobj);
