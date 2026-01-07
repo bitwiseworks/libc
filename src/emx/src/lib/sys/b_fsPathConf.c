@@ -50,7 +50,7 @@ int __libc_Back_fsPathConf(const char *pszPath, int iName, long *plValue)
      * function.
      */
     char szNativePath[PATH_MAX];
-    int rc = __libc_back_fsResolve(pszPath, BACKFS_FLAGS_RESOLVE_FULL, &szNativePath[0], NULL);
+    int rc = __libc_back_fsResolve(pszPath, BACKFS_FLAGS_RESOLVE_FULL | BACKFS_FLAGS_RESOLVE_DIR_MAYBE, &szNativePath[0], NULL);
     if (!rc)
     {
         __LIBC_PFSINFO pFsInfo = __libc_back_fsInfoObjByPath(szNativePath);
