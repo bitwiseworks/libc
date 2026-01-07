@@ -25,8 +25,8 @@ _STD(wmemcmp):
         jecxz   Ldone
         repe
         cmpsw
-        movw    -1(%edi), %ax
-        movzwl  -1(%esi), %ecx
+        movw    -1*2(%edi), %ax
+        movzwl  -1*2(%esi), %ecx
         subl    %ecx, %eax
 Ldone:  popl    %edi
         popl    %esi
