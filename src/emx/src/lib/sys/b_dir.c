@@ -437,6 +437,7 @@ static int dirOpen(const char *pszNativePath, unsigned fLibc, int *pfh, __LIBC_P
                 rc = __libc_FHAllocate(*pfh, fLibc, sizeof(__LIBC_FHDIR), &gDirOps, &pFH, pfh);
                 if (!rc)
                 {
+                    pFH->Dev            = __libc_back_fsPathCalcInodeAndDev(Tmp.Core.pszNativePath, &pFH->Inode);
                     pFH->pFsInfo        = __libc_back_fsInfoObjByDev(pFH->Dev);
                     pFH->pszNativePath  = Tmp.Core.pszNativePath;
 
