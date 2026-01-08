@@ -29,7 +29,7 @@ int __dup2(int fh, int fhNew)
     if (    fhNew < 0
         ||  !(pFH = __libc_FH(fh)))
     {
-        errno = EBADF;
+        errno = EBADF; /* Note: Per POSIX specs */
         LIBCLOG_ERROR_RETURN_INT(-1);
     }
 
@@ -62,7 +62,7 @@ int __dup2(int fh, int fhNew)
     rc = __libc_FHEnsureHandles(fhNew);
     if (rc)
     {
-        _sys_set_errno(rc);
+        errno = EBADF; /* Note: Per POSIX specs */
         LIBCLOG_ERROR_RETURN_INT(-1);
     }
 
