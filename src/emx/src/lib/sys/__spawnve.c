@@ -172,18 +172,15 @@ static void doInheritDone(void)
 static int resolveInterpreter(const char* pszInterpreter, char* szPathBuf)
 {
     char *psz;
-    int rc = __libc_back_fsResolve(pszInterpreter, BACKFS_FLAGS_RESOLVE_FULL, szPathBuf, NULL);
-    if (!rc || rc == -ENOENT)
-    {
-        /* Go through _path2 even on success to filter out directories */
-        char szPath[PATH_MAX];
-        if (   _path2(pszInterpreter, ".exe", szPath, sizeof(szPath)) == 0
-            || (   (psz = _getname(pszInterpreter)) != pszInterpreter
-                && _path2(psz, ".exe", szPath, sizeof(szPath)) == 0) )
-            rc = __libc_back_fsResolve(szPath, BACKFS_FLAGS_RESOLVE_FULL, szPathBuf, NULL);
-        if (rc)
-            LIBCLOG_MSG2("Failed to find interpreter '%s'! szPath='%s'\n", pszInterpreter, szPath);
-    }
+    int rc = -ENOENT;
+    *szPathBuf = '\0'; /* by convention with __libc_back_fsResolve on failure */
+    char szPath[PATH_MAX];
+    if (   _path2(pszInterpreter, ".exe", szPath, sizeof(szPath)) == 0
+        || (   (psz = _getname(pszInterpreter)) != pszInterpreter
+            && _path2(psz, ".exe", szPath, sizeof(szPath)) == 0) )
+        rc = __libc_back_fsResolve(szPath, BACKFS_FLAGS_RESOLVE_FULL, szPathBuf, NULL);
+    if (rc)
+        LIBCLOG_MSG2("Failed to find interpreter '%s'! szPath='%s'\n", pszInterpreter, szPath);
 
     return rc;
 }
