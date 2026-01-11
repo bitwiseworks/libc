@@ -1,5 +1,42 @@
 # History of changes for LIBC Next
 
+#### Version 0.1.14 (2026-01-11)
+
+* exceptions: Add support for EXCEPTQ_DEBUG_EXCEPTION [#148].
+* exceptions: Fix moving EXCEPTQ reports triggerd more often than once a second [#148].
+* exceptions: Add __libc_debug_report to force EXCEPTQ debug exception [#148].
+* exceptions: Add __libc_debug_report_n convenience macro [#148].
+* umalloc: Release heap lock on assert [#130].
+* Enable non-POSIX hton*, gethostid, gethostname in BSD mode [#135].
+* Add arc4random_buf [#151].
+* __spawnve: Properly handle shebang lines in non-kLIBC mode [#152].
+* __spawnve: Replace non-standard stdio handles with pipes for non-kLIBC processes [#150].
+* __spawnve: Fix incorrect EBADF instead of ENOEXEC [#150].
+* fcntl: Support F_CLOSEM and F_MAXFD commands [#153].
+* tcpip: Call so_cancel when closing OS/2 socket [#150].
+* Add closefrom and close_range [#153].
+* fs: Support F_[G|S]ETF[D|L] in Directory Access backend [#154].
+* logging: Add TLS log group.
+* logstrict: Do not split ErrL messages.
+* logstrict: Fix printing unsigned [long] long with high bit set.
+* logstrict: Improve log header (codepage, kLIBC args).
+* logstrict: Add UTF-8 support for log files, "%hc" and "%hs" format specifiers.
+* logstrict: Add *_STRICT versions of LIBC_ASSERT_* macros.
+* wait[pid|3|4]: Preserve child exit code on abnormal termination by signals [#136].
+* __spawni: Fix order of posix_spawn[p] calls based on use_path [#144].
+* getrlimit: Properly report high memory [#143].
+* fork: Deregister DLL on init failure instead of registering it again [#140].
+* posix_spawn_file_action_addopen: Make copy of path [#146].
+* Add wcscasecmp and wcsncasecmp [#149].
+* Make putenv, initstate, srandom, iconv POSIX compatible [#142].
+* freopen: Fix returning NULL on success w/o fname [#160].
+* exec/spawn: Do not accept dirs on interpreter probes [#166].
+* wmemcmp: Fix one-off typo in returned value [#168].
+* strcoll: Fix 1-byte char comparison in MBCS mode [#167].
+* pathconf: Accept paths with trailing slashes [#162].
+* open(dir): Fix Inode/Dev assignment [#161].
+* dup2: Return EBADF if target fd is out of range [#171].
+
 #### Version 0.1.13 (2024-08-03)
 
 * sys/timeb.h: Sync time_t typedef with the rest via __time_t [#137].
