@@ -43,6 +43,7 @@ typedef	__pid_t pid_t;
 #define P_UNRELATED  0x40000
 #define P_DEBUGDESC  0x80000
 #define P_NOUNIXARGV 0x100000
+#define P_NODEFEXT   0x200000
 
 #endif
 

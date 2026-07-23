@@ -304,7 +304,8 @@ int __spawnve(struct _new_proc *np)
      */
     char *pszPgmName = (char *)np->fname_off;
     size_t cchFname = strlen((char *)np->fname_off);
-    _defext(pszPgmName, "exe");
+    if (! (ulMode & P_NODEFEXT))
+        _defext(pszPgmName, "exe");
     char szNativePath[PATH_MAX];
     int rc = __libc_back_fsResolve(pszPgmName, BACKFS_FLAGS_RESOLVE_FULL, &szNativePath[0], NULL);
     if (rc)
