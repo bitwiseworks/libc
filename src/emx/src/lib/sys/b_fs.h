@@ -258,15 +258,17 @@ void __libc_back_fsMutexRelease(void);
  * Updates the global unix root stuff.
  * Assumes caller have locked the fs stuff.
  *
+ * @returns 0 on success.
+ * @returns Negative errno on failure.
  * @param   pszUnixRoot     The new unix root. Fully resolved and existing.
  */
-void __libc_back_fsUpdateUnixRoot(const char *pszUnixRoot);
+int __libc_back_fsUpdateUnixRoot(const char *pszUnixRoot);
 
 /**
  * Resolves and verifies the user path to a native path.
  *
  * @returns 0 on success.
- * @returns Negative error code (errno.h) on failiure.
+ * @returns Negative error code (errno.h) on failure.
  * @param   pszUserPath     The user path.
  * @parm    fFlags          Flags controlling the operation of the function.
  *                          See the BACKFS_FLAGS_* defines.

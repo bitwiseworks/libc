@@ -66,11 +66,12 @@ int __libc_Back_fsDirChangeRoot(const char *pszNewRoot)
         /*
          * Replace the current unix root.
          */
-        int cch = strlen(&szNativePath[0]);
-        memcpy(__libc_gszUnixRoot, &szNativePath[0], cch + 1);
-        __libc_gcchUnixRoot = cch;
-        __libc_gfNoUnix     = 0;
-        __libc_gfInUnixTree = 0; /** @todo logic for correct __libc_gfInUnixTree update in chroot() operation. */
+        rc = __libc_back_fsUpdateUnixRoot(&szNativePath[0]);
+        if (!rc)
+        {
+            __libc_gfNoUnix     = 0;
+            __libc_gfInUnixTree = 0; /** @todo logic for correct __libc_gfInUnixTree update in chroot() operation. */
+        }
     }
 
     __libc_back_fsMutexRelease();

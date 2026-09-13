@@ -785,16 +785,34 @@ int __libc_back_fsSymlinkWrite(const char *pszTarget, const char *pszSymlink)
  * Updates the global unix root stuff.
  * Assumes caller have locked the fs stuff.
  *
+ * @returns 0 on success.
+ * @returns Negative errno on failure.
  * @param   pszUnixRoot     The new unix root. Fully resolved and existing.
  */
-void __libc_back_fsUpdateUnixRoot(const char *pszUnixRoot)
+int __libc_back_fsUpdateUnixRoot(const char *pszUnixRoot)
 {
+    const char*pszToOld = gUnixRootRewriteRule.pszTo;
+    unsigned cchToOld = gUnixRootRewriteRule.cchTo;
+
     gUnixRootRewriteRule.pszTo = "/";
     gUnixRootRewriteRule.cchTo = 1;
+
+    /*
+     * A zero target length means startup code did not register the rule - no
+     * UNIXROOT and not a child inheriting official unix root from its parent.
+     * Register it to be consistent with chrooted children we may start.
+     */
+    if (!cchToOld && __libc_PathRewriteAdd(&gUnixRootRewriteRule, 1))
+    {
+        gUnixRootRewriteRule.pszTo = pszToOld;
+        gUnixRootRewriteRule.cchTo = cchToOld;
+        return -errno;
+    }
 
     int cch = strlen(pszUnixRoot);
     memcpy(__libc_gszUnixRoot, pszUnixRoot, cch + 1);
     __libc_gcchUnixRoot = cch;
+    return 0;
 }
 
 
