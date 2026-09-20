@@ -44,16 +44,42 @@
  * within pszNewRoot, getcwd() will remain unchanged. Change the cwd using a
  * path relative to "/" to make sure the process is inside the new root.
  *
- * On OS/2 chroot() is used to create an unix apartment. We don't use the term
- * jail or prison since the prison guards have been on vacation since the
- * late '80 and there are locks in the doors (metaphorically speaking, of course).
+ * On OS/2 chroot() is used to create the Unix apartment. We don't use the term
+ * jail or prison since the prison guards have been on vacation since the late
+ * '80 and there are locks in the doors (metaphorically speaking, of course).
  *
- * The Unix compartment is entered by the "/". It can be left by any driveletter.
- * The Unix compartment is inherited by child processes.
+ * The Unix apartment is entered by the "/". It can be left by any driveletter.
+ * The Unix apartment is inherited by child processes.
+ *
+ * After a successful creation, the Unix apartment can be destroyed (and left)
+ * by passing NULL in pszNewRoot, restoring the process to a state it had before
+ * the first chroot() call. Note that this is an OS/2-specific extension and it
+ * is not portable (on Unix systems, doing so will normally result in EFAULT).
+ *
+ * Another OS/2 extension allows to set up a permanent pseudo-Unix apartment for
+ * process by setting the UNIXROOT environment variable to a full directory path
+ * including the drive letter before starting it up. This directory will serve
+ * as virtual "/@unixroot" tree in all path-related operations, acting as a
+ * built-in path rewrite rule. This pseudo-apartment cannot be entered or left:
+ * "/" always keeps the native OS/2 meaning (the root of the current drive), and
+ * getcwd() always returns full native paths. However, if UNIXROOT_CHROOTED is
+ * also set at start-up, the pseudo-apartment is upgraded to the normal Unix
+ * apartment as if chroot(getenv(UNIXROOT)) were called.
+ *
+ * In pseudo Unix-apartment mode, calling chroot() will replace the pseudo
+ * Unix-apartment with the normal one that will act as described above. But if
+ * pszNewRoot resolves to UNIXROOT, the call is equivalent to chroot(NULL) and
+ * will restore the process state as described above. This special handling
+ * allows to cancel the chroot() effect the Unix way via chroot("."), provided
+ * that there was a chdir("/@unixroot") call (similar to chdir("/") on Unix)
+ * before the first chroot().
+ *
+ * Note that in normal Unix apartment mode, the virtual "/@unixroot" tree is
+ * always mapped to "/", regardless of UNIXROOT or UNIXROOT_CHROOTED presence.
  *
  * @returns 0 on success.
  * @returns -1 and errno on failure.
- * @param   pszNewRoot  Pointer to the new unix root directory
+ * @param   pszNewRoot  Pointer to the new unix root directory or NULL
  */
 int	 _STD(chroot)(const char *pszNewRoot)
 {

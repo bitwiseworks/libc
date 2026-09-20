@@ -214,9 +214,12 @@ int __libc_Back_fsDriveDefaultGet(char *pchDrive);
 /**
  * Sets or change the unixroot of the current process.
  *
+ * Passing NULL will restore the process to the state it had at start-up (before
+ * the first __libc_Back_fsDirChangeRoot call).
+ *
  * @returns 0 on success.
  * @returns Negative error code (errno.h) on failure.
- * @param   pszNewRoot  The new root.
+ * @param   pszNewRoot  The new root or NULL.
  */
 int __libc_Back_fsDirChangeRoot(const char *pszNewRoot);
 

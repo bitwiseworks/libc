@@ -260,7 +260,7 @@ void __libc_back_fsMutexRelease(void);
  *
  * @returns 0 on success.
  * @returns Negative errno on failure.
- * @param   pszUnixRoot     The new unix root. Fully resolved and existing.
+ * @param   pszUnixRoot     The new unix root. Fully resolved and existing, or NULL.
  */
 int __libc_back_fsUpdateUnixRoot(const char *pszUnixRoot);
 

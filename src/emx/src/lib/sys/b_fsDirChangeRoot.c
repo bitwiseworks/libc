@@ -41,9 +41,12 @@
 /**
  * Sets or change the unixroot of the current process.
  *
+ * Passing NULL will restore the process to the state it had at start-up (before
+ * the first __libc_Back_fsDirChangeRoot call).
+ *
  * @returns 0 on success.
  * @returns -1 and errno on failure.
- * @param   pszNewRoot  The new root.
+ * @param   pszNewRoot  The new root or NULL.
  */
 int __libc_Back_fsDirChangeRoot(const char *pszNewRoot)
 {
@@ -56,21 +59,26 @@ int __libc_Back_fsDirChangeRoot(const char *pszNewRoot)
     if (rc)
         LIBCLOG_ERROR_RETURN_INT(rc);
 
-    /*
-     * Resolve the path to a native path and verifying it in the process.
-     */
-    char szNativePath[PATH_MAX];
-    rc = __libc_back_fsResolve(pszNewRoot, BACKFS_FLAGS_RESOLVE_FULL | BACKFS_FLAGS_RESOLVE_DIR, &szNativePath[0], NULL);
-    if (!rc)
+    if (pszNewRoot == NULL)
     {
         /*
-         * Replace the current unix root.
+         * Restore the unixroot state (escape chroot).
          */
-        rc = __libc_back_fsUpdateUnixRoot(&szNativePath[0]);
+        rc = __libc_back_fsUpdateUnixRoot(NULL);
+    }
+    else
+    {
+        /*
+        * Resolve the path to a native path and verifying it in the process.
+        */
+        char szNativePath[PATH_MAX];
+        rc = __libc_back_fsResolve(pszNewRoot, BACKFS_FLAGS_RESOLVE_FULL | BACKFS_FLAGS_RESOLVE_DIR, &szNativePath[0], NULL);
         if (!rc)
         {
-            __libc_gfNoUnix     = 0;
-            __libc_gfInUnixTree = 0; /** @todo logic for correct __libc_gfInUnixTree update in chroot() operation. */
+            /*
+            * Replace the current unix root.
+            */
+            rc = __libc_back_fsUpdateUnixRoot(&szNativePath[0]);
         }
     }
 

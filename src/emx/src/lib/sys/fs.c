@@ -68,6 +68,9 @@
  * __libc_gfsUMask and the API pointers are not protected by this semaphore. */
 static _fmutex __libc_gmtxFS;
 
+/** __libc_gfNoUnix value at init time. */
+static int __libc_gfNoUnixInit = 0;
+
 /** Indicator whether or not we're in the unix tree. */
 int     __libc_gfInUnixTree = 0;
 /** Length of the unix root if the unix root is official. */
@@ -238,8 +241,116 @@ static uint32_t djb2(const char *str);
 #endif
 static uint32_t sdbm(const char *str);
 
+static int fsParseUNIXROOT(char *pszUnixRoot)
+{
+    LIBCLOG_ENTER("\n");
+
+    const char *psz = getenv("UNIXROOT");
+    if (   psz
+        && ((psz[0] >= 'A' && psz[0] <= 'Z') || (psz[0] >= 'a' && psz[0] <= 'z'))
+        && psz[1] == ':'
+        && (psz[2] == '\\' || psz[2] == '/' || psz[2] == '\0')
+        )
+    {
+        int cch = strlen(psz);
+        if (cch >= PATH_MAX - 32)
+        {
+            LIBC_ASSERTM_FAILED("The UNIXROOT environment variable is too long! cch=%d maxlength=%d\n", cch, PATH_MAX - 32);
+            LIBCLOG_RETURN_INT(-1);
+        }
+
+        /* Reject components ending in a dot, including . and .. */
+        int fIsValid = 1;
+        if (cch > 3)
+        {
+            const char *psz2 = psz + 3;
+            while (*psz2 && fIsValid)
+            {
+                char ch = *psz2++;
+                if (ch == '.' && (*psz2 == '\0' || *psz2 == '/' || *psz2 == '\\'))
+                    fIsValid = 0;
+            }
+        }
+
+        if (fIsValid)
+        {
+            LIBCLOG_MSG("Unofficial unixroot=%s\n", psz);
+
+            memcpy(&pszUnixRoot[0], psz, cch + 1);
+
+            /* Clean it up a tiny little bit. */
+            if (pszUnixRoot[0] >= 'a')
+                pszUnixRoot[0] -= 'a' - 'A';
+
+            if (cch == 2)
+            {
+                pszUnixRoot[cch++] = '/';
+                pszUnixRoot[cch] = '\0';
+            }
+            else
+            {
+                /* Condense and convert separators */
+                const char *pszSrc = &pszUnixRoot[2];
+                char *pszDst = &pszUnixRoot[2];
+                while (*pszSrc)
+                {
+                    if (*pszSrc == '/' || *pszSrc == '\\')
+                    {
+                        *pszDst++ = '/';
+                        do
+                            pszSrc++;
+                        while (*pszSrc == '/' || *pszSrc == '\\');
+                    }
+                    else
+                        *pszDst++ = *pszSrc++;
+                }
+                *pszDst = '\0';
+                cch = pszDst - pszUnixRoot;
+
+                if (cch > 3 && pszUnixRoot[cch - 1] == '/')
+                    pszUnixRoot[--cch] = '\0';
+            }
+
+            LIBCLOG_RETURN_INT(cch);
+        }
+    }
+    if (psz)
+        LIBCLOG_MSG("Invalid UNIXROOT=\"%s\" - must start with drive letter and be absolute (no . or ..).\n", psz);
+
+    LIBCLOG_RETURN_INT(0);
+}
+
+static int fsIsCurDirInUnixTree(void)
+{
+    ULONG ulDisk, ulIgnored;
+    int rc = DosQueryCurrentDisk(&ulDisk, &ulIgnored);
+    if (   rc == NO_ERROR
+        && ulDisk + 'A' - 1 == __libc_gszUnixRoot[0])
+    {
+        if (__libc_gcchUnixRoot == 3)
+            return 1;
+        else
+        {
+            char szCurDir[PATH_MAX];
+            ULONG cbCurDir = sizeof(szCurDir);
+            rc = DosQueryCurrentDir(0, (PSZ)&szCurDir[0], &cbCurDir);
+            if (rc == NO_ERROR)
+            {
+                for (int i = 0; i < cbCurDir; ++i)
+                    if (szCurDir[i] == '\\')
+                        szCurDir[i] = '/';
+                return __libc_gcchUnixRoot <= cbCurDir + 3
+                    && memicmp(&__libc_gszUnixRoot[3], szCurDir, __libc_gcchUnixRoot - 3) == 0
+                    && (   __libc_gcchUnixRoot == cbCurDir + 3
+                        || szCurDir[__libc_gcchUnixRoot - 3] == '/');
+            }
+        }
+    }
+    return 0;
+}
 
 #ifndef STANDALONE_TEST
+
 /**
  * Init the file system stuff.
  *
@@ -264,6 +375,8 @@ int __libc_back_fsInit(void)
     int rc = _fmutex_create2(&__libc_gmtxFS, 0, "LIBC SYS FS Mutex");
     if (rc)
         LIBCLOG_RETURN_INT(-1);
+
+    __libc_gfNoUnixInit = __libc_gfNoUnix;
 
     /*
      * Inherit File System Data from parent.
@@ -314,81 +427,34 @@ int __libc_back_fsInit(void)
             /*
              * Setup unofficial unixroot.
              */
-            const char *psz = getenv("UNIXROOT");
-            if (   psz
-                && ((psz[0] >= 'A' && psz[0] <= 'Z') || (psz[0] >= 'a' && psz[0] <= 'z'))
-                && psz[1] == ':'
-                && (psz[2] == '\\' || psz[2] == '/' || psz[2] == '\0')
-                )
+            int cch = fsParseUNIXROOT(&__libc_gszUnixRoot[0]);
+            if (cch < 0)
+                LIBCLOG_RETURN_INT(-1);
+            if (cch)
             {
-                LIBCLOG_MSG("Unofficial unixroot=%s\n", psz);
-                size_t cch = strlen(psz);
-                if (cch >= PATH_MAX - 32)
-                {
-                    LIBC_ASSERTM_FAILED("The UNIXROOT environment variable is too long! cch=%d maxlength=%d\n", cch, PATH_MAX - 32);
-                    LIBCLOG_RETURN_INT(-1);
-                }
-                memcpy(&__libc_gszUnixRoot[0], psz, cch + 1);
-
-                /* Clean it up a tiny little bit. */
-                if (__libc_gszUnixRoot[0] >= 'a')
-                    __libc_gszUnixRoot[0] -= 'a' - 'A';
-
-                if (cch == 2)
-                {
-                    __libc_gszUnixRoot[cch++] = '/';
-                    __libc_gszUnixRoot[cch] = '\0';
-                }
-                else
-                {
-                    size_t off = cch;
-                    while (off-- > 0)
-                        if (__libc_gszUnixRoot[off] == '\\')
-                            __libc_gszUnixRoot[off] = '/';
-
-                    while (cch > 3 && __libc_gszUnixRoot[cch - 1] == '/')
-                        __libc_gszUnixRoot[--cch] = '\0';
-                }
-
-                /* Register the rewrite rule. */
-                gUnixRootRewriteRule.cchTo = cch;
-                if (__libc_PathRewriteAdd(&gUnixRootRewriteRule, 1))
-                    LIBCLOG_RETURN_INT(-1);
-
                 /* Should we pretend chroot($UNIXROOT) + chdir()? */
-                psz = getenv("UNIXROOT_CHROOTED");
+                const char *psz = getenv("UNIXROOT_CHROOTED");
                 if (psz && *psz != '\0')
                 {
                     __libc_gcchUnixRoot = cch;
 
-                    if (!getenv("UNIXROOT_OUTSIDE"))
-                    {
-                        ULONG ulDisk, ulIgnored;
-                        rc = DosQueryCurrentDisk(&ulDisk, &ulIgnored);
-                        if (   rc == NO_ERROR
-                            && ulDisk + 'A' - 1 == __libc_gszUnixRoot[0])
-                        {
-                            if (cch == 3)
-                                __libc_gfInUnixTree = 1;
-                            else
-                            {
-                                char szCurDir[PATH_MAX];
-                                ULONG cbCurDir = sizeof(szCurDir);
-                                rc = DosQueryCurrentDir(0, (PSZ)&szCurDir[0], &cbCurDir);
-                                __libc_gfInUnixTree = rc == NO_ERROR
-                                                   && cch <= cbCurDir + 3
-                                                   && memicmp(&__libc_gszUnixRoot[3], szCurDir, cch - 3) == 0
-                                                   && (   cch == cbCurDir + 3
-                                                       || szCurDir[cch - 3] == '\\');
-                            }
+                    gUnixRootRewriteRule.pszTo = "/";
+                    gUnixRootRewriteRule.cchTo = 1;
 
-                        }
-                    }
+                    if (!(psz = getenv("UNIXROOT_OUTSIDE")) || *psz == '\0')
+                        __libc_gfInUnixTree = fsIsCurDirInUnixTree();
                     LIBCLOG_MSG(__libc_gfInUnixTree ? "Inside unixroot chroot.\n" : "Outside unixroot chroot.\n");
                 }
+                else
+                {
+                    /* gUnixRootRewriteRule.pszTo is already __libc_gszUnixRoot */
+                    gUnixRootRewriteRule.cchTo = cch;
+                }
+
+                /* Register the rewrite rule. */
+                if (__libc_PathRewriteAdd(&gUnixRootRewriteRule, 1))
+                    LIBCLOG_RETURN_INT(-1);
             }
-            else if (psz)
-                LIBCLOG_MSG("Invalid UNIXROOT=\"%s\" - must start with drive letter and root slash.\n", psz);
         }
     }
 
@@ -787,18 +853,89 @@ int __libc_back_fsSymlinkWrite(const char *pszTarget, const char *pszSymlink)
  *
  * @returns 0 on success.
  * @returns Negative errno on failure.
- * @param   pszUnixRoot     The new unix root. Fully resolved and existing.
+ * @param   pszUnixRoot     The new unix root. Fully resolved and existing, or NULL.
  */
 int __libc_back_fsUpdateUnixRoot(const char *pszUnixRoot)
 {
+    LIBCLOG_ENTER("pszUnixRoot=%p:{%s}\n", (void *)pszUnixRoot, pszUnixRoot);
+
+    int cchUnixRoot = pszUnixRoot ? strlen(pszUnixRoot) : -1;
+    int fUnixRootMode = 0; /* Start with official unixroot mode */
+    char szUnixRoot[PATH_MAX];
+
+    if (!__libc_gfNoUnixInit)
+    {
+        /*
+         * Check for unofficial unixroot.
+         */
+        int cch = fsParseUNIXROOT(&szUnixRoot[0]);
+        if (cch > 0)
+        {
+            if (pszUnixRoot)
+            {
+                char szNativePath[PATH_MAX];
+                int rc = __libc_back_fsResolve(&szUnixRoot[0], BACKFS_FLAGS_RESOLVE_FULL | BACKFS_FLAGS_RESOLVE_DIR, &szNativePath[0], NULL);
+                if (rc)
+                    LIBCLOG_RETURN_INT(rc);
+                cch = strlen(szNativePath);
+                if (cchUnixRoot == cch && !memcmp(pszUnixRoot, &szNativePath[0], cch + 1))
+                    fUnixRootMode = 1; /* unofficial unixroot */
+            }
+            else
+            {
+                pszUnixRoot = szUnixRoot;
+                cchUnixRoot = cch;
+                fUnixRootMode = 1; /* unofficial unixroot */
+            }
+            if (fUnixRootMode)
+            {
+                /* See __libc_back_fsInit */
+                const char *psz = getenv("UNIXROOT_CHROOTED");
+                if (psz && *psz != '\0')
+                {
+                    fUnixRootMode = 2; /* + chrooted */
+                    if ((psz = getenv("UNIXROOT_OUTSIDE")) && *psz != '\0')
+                        fUnixRootMode = 3; /* + outside */
+                }
+            }
+        }
+    }
+
     const char*pszToOld = gUnixRootRewriteRule.pszTo;
     unsigned cchToOld = gUnixRootRewriteRule.cchTo;
 
-    gUnixRootRewriteRule.pszTo = "/";
-    gUnixRootRewriteRule.cchTo = 1;
+    if (!fUnixRootMode && cchUnixRoot < 0)
+    {
+        /* Restore no unixroot state (see below for cchToOld meaning) */
+        if (cchToOld)
+        {
+            if (__libc_PathRewriteRemove(&gUnixRootRewriteRule, 1))
+                LIBCLOG_RETURN_INT(-errno);
+            gUnixRootRewriteRule.pszTo = __libc_gszUnixRoot;
+            gUnixRootRewriteRule.cchTo = 0;
+        }
+        *__libc_gszUnixRoot = '\0';
+        __libc_gcchUnixRoot = 0;
+        __libc_gfNoUnix = __libc_gfNoUnixInit;
+        __libc_gfInUnixTree = 0;
+        LIBCLOG_RETURN_INT(0);
+    }
+
+    if (fUnixRootMode == 1)
+    {
+        /* Restore unofficial unixroot mode */
+        gUnixRootRewriteRule.pszTo = pszUnixRoot; /* temporary, for validation */
+        gUnixRootRewriteRule.cchTo = cchUnixRoot;
+    }
+    else
+    {
+        /* Ensure official unixroot mode. */
+        gUnixRootRewriteRule.pszTo = "/";
+        gUnixRootRewriteRule.cchTo = 1;
+    }
 
     /*
-     * A zero target length means startup code did not register the rule - no
+     * A zero cchToOld means startup code did not register the rule - no
      * UNIXROOT and not a child inheriting official unix root from its parent.
      * Register it to be consistent with chrooted children we may start.
      */
@@ -806,13 +943,26 @@ int __libc_back_fsUpdateUnixRoot(const char *pszUnixRoot)
     {
         gUnixRootRewriteRule.pszTo = pszToOld;
         gUnixRootRewriteRule.cchTo = cchToOld;
-        return -errno;
+        LIBCLOG_RETURN_INT(-errno);
     }
 
-    int cch = strlen(pszUnixRoot);
-    memcpy(__libc_gszUnixRoot, pszUnixRoot, cch + 1);
-    __libc_gcchUnixRoot = cch;
-    return 0;
+    memcpy(__libc_gszUnixRoot, pszUnixRoot, cchUnixRoot + 1);
+    __libc_gcchUnixRoot = fUnixRootMode == 1 ? 0 : cchUnixRoot;
+
+    /* Replace the rewrite target with the persistent location */
+    if (fUnixRootMode == 1)
+        gUnixRootRewriteRule.pszTo = __libc_gszUnixRoot;
+
+    __libc_gfNoUnix = 0;
+    if (fUnixRootMode == 0 || fUnixRootMode == 2)
+    {
+        __libc_gfInUnixTree = fsIsCurDirInUnixTree();
+        LIBCLOG_MSG(__libc_gfInUnixTree ? "Inside unixroot chroot.\n" : "Outside unixroot chroot.\n");
+    }
+    else
+        __libc_gfInUnixTree = 0;
+
+    LIBCLOG_RETURN_INT(0);
 }
 
 
