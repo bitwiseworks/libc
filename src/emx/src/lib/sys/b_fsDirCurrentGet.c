@@ -114,23 +114,34 @@ int __libc_back_fsDirCurrentGet(char *pszPath, size_t cchPath, char chDrive, int
             char *pszSrc;
             if (!chDrive && __libc_gfInUnixTree)
             {
-                pszSrc = &szNativePath[__libc_gcchUnixRoot];
-                if (*pszSrc == '\0')
-                {
-                    pszSrc[0] = '/';
-                    pszSrc[1] = '\0';
-                }
                 slashify(&szNativePath[2]);
 
                 /*
                  * Check if someone have messed with the current directory...
                  */
-                if (memicmp(&szNativePath[0], __libc_gszUnixRoot, __libc_gcchUnixRoot))
+                if (   memicmp(&szNativePath[0], __libc_gszUnixRoot, __libc_gcchUnixRoot)
+                    || (   __libc_gcchUnixRoot > 3
+                        && szNativePath[__libc_gcchUnixRoot] != '\0'
+                        && szNativePath[__libc_gcchUnixRoot] != '/'))
                 {
                     LIBC_ASSERTM_FAILED("Current directory has been changed while in unixroot! unixroot=%s curdir=%s\n",
                                         __libc_gszUnixRoot, &szNativePath[0]);
                     __libc_gfInUnixTree = 0;
                     pszSrc = &szNativePath[0];
+                }
+                else
+                {
+                    pszSrc = &szNativePath[__libc_gcchUnixRoot];
+                    if (__libc_gcchUnixRoot > 3)
+                    {
+                        if (*pszSrc == '\0')
+                        {
+                            pszSrc[0] = '/';
+                            pszSrc[1] = '\0';
+                        }
+                    }
+                    else
+                        --pszSrc; /* Keep the root slash for X:/ cases */
                 }
             }
             else
@@ -146,7 +157,7 @@ int __libc_back_fsDirCurrentGet(char *pszPath, size_t cchPath, char chDrive, int
             /*
              * Copy the result.
              */
-            if (fFlags && pszSrc[1] == ':')
+            if ((fFlags & __LIBC_BACK_FSCWD_NO_DRIVE) && pszSrc[1] == ':')
                 pszSrc += 2;            /* drive */
             if ((fFlags & __LIBC_BACK_FSCWD_NO_ROOT_SLASH) && pszSrc[1])
                 pszSrc++;           /* root slash */
