@@ -82,13 +82,18 @@ int __libc_Back_fsPathResolve(const char *pszPath, char *pszBuf, size_t cchBuf, 
             && *pszSrc)
         {
             pszSrc += __libc_gcchUnixRoot;
+            if (*pszSrc == '\0')
+            {
+                pszSrc[0] = '/';
+                pszSrc[1] = '\0';
+            }
             LIBC_ASSERTM(*pszSrc == '/', "bogus fInUnixTree flag! pszSrc='%s' whole thing is '%s'\n", pszSrc, szNativePath);
         }
         __libc_back_fsMutexRelease();
 
         int cch = strlen(pszSrc) + 1;
-        if (cch < cchBuf)
-            memcpy(pszBuf, pszSrc, cchBuf);
+        if (cch <= cchBuf)
+            memcpy(pszBuf, pszSrc, cch);
         else if (!rc)
             rc = -ERANGE;
     }
@@ -105,6 +110,11 @@ int __libc_Back_fsPathResolve(const char *pszPath, char *pszBuf, size_t cchBuf, 
                 && pszBuf)
             {
                 memmove(pszBuf, pszBuf + __libc_gcchUnixRoot, strlen(pszBuf) - __libc_gcchUnixRoot + 1);
+                if (*pszBuf == '\0')
+                {
+                    pszBuf[0] = '/';
+                    pszBuf[1] = '\0';
+                }
                 LIBC_ASSERTM(*pszBuf== '/', "bogus fInUnixTree flag! pszBuf='%s'\n", pszBuf);
             }
         }
