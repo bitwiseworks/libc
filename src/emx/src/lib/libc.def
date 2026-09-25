@@ -2048,3 +2048,6 @@ EXPORTS
     "__std_close_range" @2031
     "__std_wcscasecmp" @2032
     "__std_wcsncasecmp" @2033
+
+    ; LIBC Next 0.1.15
+    "___libcn_version" @2034

@@ -9,11 +9,18 @@ VL = 14
 
 # NOTE: Our versioning rules:
 #
-# - VH++ each time backward ABI compatibility breaks. Note that
-#   __LIBCN__ in features.h must be always updated together with VH.
-# - VM++ each time public any API is changed. Note that
-#   __LIBCN_MINOR__ in features.h must be always updated together with VM.
-# - VL++ with each public release.
+# - VH++ when backward binary compatibility is broken. This normally
+#   requires a new LIBCn DLL name. __LIBCN__ in features.h must be
+#   updated together with VH.
+#
+# - VM++ when backward source/API compatibility is broken or the public
+#   interface undergoes a significant revision while binary compatibility
+#   is retained. __LIBCN_MINOR__ in features.h must be updated together
+#   with VM.
+#
+# - VL++ with every public release (this covers rackward-compatible additions to
+#   the public API, compatible extensions of existing APIs). __LIBCN_BUILD__
+#   in features.h must be updated together with VL.
 
 # The name of this package
 PACKAGE = GNU C for OS/2 runtime and tools

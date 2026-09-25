@@ -205,9 +205,10 @@ endif
 
 # LIBC .def file
 $(LIBC.DEF): $(LIBC.LIBS) src/lib/libc.def version.smak include/features.h
-	@$(call ECHO,Checking __LIBCN__/__LIBCN_MINOR__ macros...)
+	@$(call ECHO,Checking __LIBCN__/__LIBCN_MINOR__/__LIBCN_BUILD__ macros...)
 	@grep -E "^[[:space:]]*#define[[:space:]]+__LIBCN__[[:space:]]+$(VH)[[:space:]]*$$" include/features.h
 	@grep -E "^[[:space:]]*#define[[:space:]]+__LIBCN_MINOR__[[:space:]]+$(VM)[[:space:]]*$$" include/features.h
+	@grep -E "^[[:space:]]*#define[[:space:]]+__LIBCN_BUILD__[[:space:]]+$(VL)[[:space:]]*$$" include/features.h
 	$(call RM,$@)
 	@$(call FECHO,$@,LIBRARY libcn$(VH) INITINSTANCE TERMINSTANCE)
 	@$(call FECHO,$@,DESCRIPTION \"$(BUILD_BLDLEVEL)LIBC Next $(VERSION_DETAILS)\")
@@ -222,14 +223,16 @@ $(LIBC.DEF): $(LIBC.LIBS) src/lib/libc.def version.smak include/features.h
 
 # LIBC import libraries with dllinit, libsocket and libsyslog.
 # (It's stuff which belongs to libc, but for historical reasons isn't physically in the .dll yet.)
-$(filter %.lib,$(LIBC.IMPLIB) $(LIBC.IMPLIB.TCPIPV4)): $(LIBC.DEF) $.omf/src/lib/startup/dllinit.obj \
+$(filter %.lib,$(LIBC.IMPLIB) $(LIBC.IMPLIB.TCPIPV4)): $(LIBC.DEF) \
+		$.omf/src/lib/startup/dllinit.obj $.omf/libc_implib.lib \
 		$.omf/libsocket.lib $.omf/tcpipv4/libsocket.lib \
 		$.omf/libsyslog.lib $.omf/tcpipv4/libsyslog.lib
 	$(call RM,$@)
 	$(IMPLIB) -o $@ $<
-	$(AR) r $@ $(filter %.obj,$^) $(dir $@)libsocket.lib $(dir $@)libsyslog.lib
+	$(AR) r $@ $(filter %.obj,$^) $(filter %implib.lib,$^) $(dir $@)libsocket.lib $(dir $@)libsyslog.lib
 
-$(filter   %.a,$(LIBC.IMPLIB) $(LIBC.IMPLIB.TCPIPV4)): $(LIBC.DEF) $.aout/src/lib/startup/dllinit.o  \
+$(filter   %.a,$(LIBC.IMPLIB) $(LIBC.IMPLIB.TCPIPV4)): $(LIBC.DEF) \
+		$.aout/src/lib/startup/dllinit.o $.aout/libc_implib.a \
 		$.aout/libsocket.a  $.aout/tcpipv4/libsocket.a \
 		$.aout/libsyslog.a  $.aout/tcpipv4/libsyslog.a
 	$(call RM,$@)
@@ -237,6 +240,7 @@ $(filter   %.a,$(LIBC.IMPLIB) $(LIBC.IMPLIB.TCPIPV4)): $(LIBC.DEF) $.aout/src/li
 	echo "CREATE $@.tmp.a" > $@.ar-script
 	echo "VERBOSE" >> $@.ar-script
 	echo "ADDMOD $(filter %.o,$^)" >> $@.ar-script
+	echo "ADDLIB $(filter %implib.a,$^)" >> $@.ar-script
 	echo "ADDLIB $@.imp.a" >> $@.ar-script
 	echo "ADDLIB $(dir $@)libsocket.a" >> $@.ar-script
 	echo "ADDLIB $(dir $@)libsyslog.a" >> $@.ar-script

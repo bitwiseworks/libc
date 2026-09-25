@@ -349,9 +349,15 @@
    these macros to test for features in specific releases.  */
 #define __LIBCN__ 0
 #define __LIBCN_MINOR__ 1
+#define __LIBCN_BUILD__ 14
 
 #define __LIBCN_PREREQ(maj, min) \
-	((__LIBCN__ << 16) + __LIBCN_MINOR__ >= ((maj) << 16) + (min))
+   (__LIBCN__ > (maj) || (__LIBCN__ == (maj) && __LIBCN_MINOR__ >= (min)))
+
+#define __LIBCN_PREREQ_FULL(maj, min, build) \
+   (__LIBCN__ > (maj) || (__LIBCN__ == (maj) && \
+      (__LIBCN_MINOR__ > (min) || \
+         (__LIBCN_MINOR__ == (min) && __LIBCN_BUILD__ >= (build)))))
 
 /* This is here only because every header file already includes this one.  */
 #ifndef __ASSEMBLER__

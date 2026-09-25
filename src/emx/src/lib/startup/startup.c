@@ -34,6 +34,8 @@
 #include <stdio.h>
 #include <sys/builtin.h>
 #include <emx/startup.h>
+#include <features.h>
+#include <libcn/version.h>
 #define __LIBC_LOG_GROUP    __LIBC_LOG_GRP_INITTERM
 #include <InnoTekLIBC/logstrict.h>
 
@@ -41,6 +43,15 @@
 /*******************************************************************************
 *   Global Variables                                                           *
 *******************************************************************************/
+/** The version of this LIBC Next DLL. */
+const struct __libcn_version __libcn_version =
+{
+    sizeof(struct __libcn_version),
+    __LIBCN__,
+    __LIBCN_MINOR__,
+    __LIBCN_BUILD__
+};
+
 /** The balance between _CRT_init and _CRT_term calls. */
 static volatile int32_t gcCRTReferences = 0;
 

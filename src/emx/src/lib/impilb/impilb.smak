@@ -1,0 +1,8 @@
+.MODULE := libc_implib
+.MDESC  := Static helpers for the dynamic LIBC import library
+
+.TARGET := libc_implib.a
+.TKIND  := aout
+.TSRC   := $(wildcard src/lib/impilb/*.c)
+.TCF    := -Isrc/lib/sys
+include mklib.smak

@@ -61,3 +61,7 @@ $(INS)include/InnoTekLIBC/%.h: include/InnoTekLIBC/%.h
 INS.FILES += $(addprefix $(INS), $(wildcard include/klibc/*.h))
 $(INS)include/klibc/%.h: include/klibc/%.h
 	$(call CP,$<,$@)	
+
+INS.FILES += $(addprefix $(INS), $(wildcard include/libcn/*.h))
+$(INS)include/libcn/%.h: include/libcn/%.h
+	$(call CP,$<,$@)
