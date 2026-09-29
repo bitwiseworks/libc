@@ -88,6 +88,18 @@ int  __libc_Back_ldrOpen(const char *pszLibrary, int fFlags, void **ppvModule, c
     {
         HMODULE hmod;
         FS_VAR_SAVE_LOAD();
+#ifdef DEBUG_LOGGING
+        /*
+         * Avoid DosLoadModuleEx for lazy imports resolver's dlopen inside the
+         * default log instance init as early as in __libc_ForkRegisterModule -
+         * it's way too early for DosEx machinery, especially in the forked
+         * child. See #193.
+         */
+        extern int __libc_logIsDefaultInitializing(void); /* defined in logstrict.c */
+        if (__libc_logIsDefaultInitializing())
+            rc = DosLoadModule((PSZ)pszError, cchError, (PCSZ)pszNativePath, &hmod);
+        else
+#endif
         rc = DosLoadModuleEx((PSZ)pszError, cchError, (PCSZ)pszNativePath, &hmod);
         FS_RESTORE();
         if (!rc)

@@ -128,6 +128,10 @@ static const char       gszHexDigitsUpper[17] = "0123456789ABCDEF";
 /** Pointer to default logger instance. */
 static __LIBC_PLOGINST  gpDefault;
 
+#ifdef DEBUG_LOGGING
+/** Default instance is being initialised */
+static int gfDefaultInitializing;
+#endif
 
 /*******************************************************************************
 *   Internal Functions                                                         *
@@ -690,7 +694,11 @@ static void *   __libc_logInit(__LIBC_PLOGINST pInst, const char *pszEnvVar, con
     }
 
     /*
-     * Setup the iconv object when appropriate.
+     * Setup the iconv object when appropriate. Note: this normally involves
+     * DosLoadModuleEx since UCONV.DLL with Uni* API is lazy-imported. For the
+     * default log instance used by the log-enabled LIBC DLL itself it's not
+     * safe (see #193), but dlopen will respect our gfDefaultInitializing
+     * flag and fall back to DosLoadModule.
      */
     if (ulCp != -1 && !__libc_logIsOutputToConsole(pInst) && (pInst->fFlags & __LIBC_LOG_INIT_UTF8))
     {
@@ -1003,6 +1011,16 @@ int __libc_logGetDefaultFD(void)
         return gpDefault->hFile;
     return -1;
 }
+
+/**
+ * @internal
+ * Returns 1 if the default log instance is being initialized, 0 otherwise.
+ */
+extern int __libc_logIsDefaultInitializing(void);
+int __libc_logIsDefaultInitializing(void)
+{
+    return gfDefaultInitializing;
+}
 #endif
 
 
@@ -1080,11 +1098,14 @@ static void *__libc_logDefault(void)
         };
         fAlreadyTried = 1;
 
+#ifdef DEBUG_LOGGING
+        gfDefaultInitializing = 1;
+#endif
+
         /*
          * Init the groups (before the instance init to have enabled groups there).
          */
         __libc_LogGroupInit(&DefGrps, "LIBC_LOGGING");
-
 
         /*
          * Set the UTF-8 flag when asked.
@@ -1098,6 +1119,10 @@ static void *__libc_logDefault(void)
          */
         if (__libc_logInit(&DefInst, "LIBC_LOGGING_OUTPUT", NULL))
             gpDefault = &DefInst;
+
+#ifdef DEBUG_LOGGING
+        gfDefaultInitializing = 0;
+#endif
     }
 
     return gpDefault;
