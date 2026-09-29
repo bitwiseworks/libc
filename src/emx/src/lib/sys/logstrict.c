@@ -595,11 +595,12 @@ static void *   __libc_logInit(__LIBC_PLOGINST pInst, const char *pszEnvVar, con
         else
         {
             /*
-             * We don't query QSV_TIME_HIGH as it will remain 0 until 19-Jan-2038 and for
-             * our purposes (generate a unique log name sorted by date) it's fine.
+             * We don't query QSV_TIME_HIGH as it will remain 0 until 19-Jan-2038 and for our
+             * purposes (generate a unique log name sorted by date) it's fine. But we query
+             * QSV_MS_COUNT for cases when exceptions happen more often than once a second.
              */
-            ULONG ulTime;
-            DosQuerySysInfo(QSV_TIME_LOW, QSV_TIME_LOW, &ulTime, sizeof(ulTime));
+            ULONG ulTimes[2];
+            DosQuerySysInfo(QSV_MS_COUNT, QSV_TIME_LOW, &ulTimes, sizeof(ulTimes));
 
             /* Get program name and remove .EXE and path info if any. */
             char szExeName[CCHMAXPATH];
@@ -629,9 +630,9 @@ static void *   __libc_logInit(__LIBC_PLOGINST pInst, const char *pszEnvVar, con
 
             int cch;
             if (pInst->pszOrigin)
-                cch =__libc_LogSNPrintf(pInst, pszBuf, cchBuf, "%08lx-%04x-%s-%s.log", ulTime, getPid(), pszExeName, pInst->pszOrigin);
+                cch =__libc_LogSNPrintf(pInst, pszBuf, cchBuf, "%08lX%08lX-%04X-%s-%s.log", ulTimes[1], ulTimes[0], getPid(), pszExeName, pInst->pszOrigin);
             else
-                cch = __libc_LogSNPrintf(pInst, pszBuf, cchBuf, "%08lx-%04x-%s.log", ulTime, getPid(), pszExeName);
+                cch = __libc_LogSNPrintf(pInst, pszBuf, cchBuf, "%08lX%08lX-%04X-%s.log", ulTimes[1], ulTimes[0], getPid(), pszExeName);
             pszBuf += cch;
             cchBuf -= cch;
         }
@@ -739,8 +740,8 @@ static void *   __libc_logInit(__LIBC_PLOGINST pInst, const char *pszEnvVar, con
         DosGetDateTime(&dt);
         DosQuerySysInfo(QSV_MS_COUNT, QSV_MS_COUNT, &ulTs, sizeof(ulTs));
         cch = __libc_LogSNPrintf(pInst, pszMsg, CCHTMPMSGBUFFER,
-                                 "Opened log%s at %04d-%02d-%02d %02d:%02d:%02d.%02d (%08lx ms since boot)\n"
-                                 "Process ID: %#x (%d) Parent PID: %#x (%d) Type: %d Codepage: %d\n",
+                                 "Opened log%s at %04d-%02d-%02d %02d:%02d:%02d.%02d (%#08X ms since boot)\n"
+                                 "Process ID    : %#04X (%d) Parent PID: %#04X (%d) Type: %d Codepage: %d\n",
                                  pInst->uconvFromObj ? " (utf-8)" : "",
                                  dt.year, dt.month, dt.day, dt.hours, dt.minutes, dt.seconds, dt.hundredths, ulTs,
                                  (int)pPib->pib_ulpid, (unsigned)pPib->pib_ulpid, (int)pPib->pib_ulppid, (unsigned)pPib->pib_ulppid,
@@ -749,7 +750,7 @@ static void *   __libc_logInit(__LIBC_PLOGINST pInst, const char *pszEnvVar, con
 
         /* The executable module. */
         cch = __libc_LogSNPrintf(pInst, pszMsg, CCHTMPMSGBUFFER,
-                                 "Exe hmte  : %#x (",
+                                 "EXE Module    : %#04X (",
                                  (unsigned)pPib->pib_hmte);
         DosWrite(pInst->hFile, pszMsg, cch, &cb);
         if (DosQueryModuleName(pPib->pib_hmte, sizeof(pszBuf), pszBuf))
@@ -767,13 +768,13 @@ static void *   __libc_logInit(__LIBC_PLOGINST pInst, const char *pszEnvVar, con
             if (fkLIBC)
             {
                 if (i == 1)
-                    cch = __libc_LogSNPrintf (pInst, pszMsg, CCHTMPMSGBUFFER, "Arg %-3d   : kLIBC Args \"", i ++);
+                    cch = __libc_LogSNPrintf (pInst, pszMsg, CCHTMPMSGBUFFER, "Arg %-3d       : kLIBC Args \"", i ++);
                 else
-                    cch = __libc_LogSNPrintf (pInst, pszMsg, CCHTMPMSGBUFFER, "Arg %-3d   : Flags 0x%02jX \"", i ++,
+                    cch = __libc_LogSNPrintf (pInst, pszMsg, CCHTMPMSGBUFFER, "Arg %-3d       : Flags 0x%02X \"", i ++,
                                               (unsigned char)*pszArg++);
             }
             else
-                cch = __libc_LogSNPrintf(pInst, pszMsg, CCHTMPMSGBUFFER, "Arg %-3d   : \"", i++);
+                cch = __libc_LogSNPrintf(pInst, pszMsg, CCHTMPMSGBUFFER, "Arg %-3d       : \"", i++);
             DosWrite(pInst->hFile, pszMsg, cch, &cb);
             int cchArg = strlen(pszArg);
             cch = __libc_LogSNPrintf(pInst, pszMsg, CCHTMPMSGBUFFER, "%hs", pszArg);
@@ -788,12 +789,12 @@ static void *   __libc_logInit(__LIBC_PLOGINST pInst, const char *pszEnvVar, con
         ULONG fLogical = 0;
         if (!DosQueryCurrentDisk(&ulDisk, &fLogical))
         {
-            cch = __libc_LogSNPrintf(pInst, pszMsg, CCHTMPMSGBUFFER, "Cur dir   : %c:\\", (char)ulDisk + ('A' - 1));
+            cch = __libc_LogSNPrintf(pInst, pszMsg, CCHTMPMSGBUFFER, "Current Dir   : '%c:\\", (char)ulDisk + ('A' - 1));
             DosWrite(pInst->hFile, pszMsg, cch, &cb);
             cb = sizeof(pszBuf);
             if (DosQueryCurrentDir(ulDisk, (PBYTE)pszBuf, &cb))
                 pszBuf[0] = '\0';
-            cch = __libc_LogSNPrintf(pInst, pszMsg, CCHTMPMSGBUFFER, "%s\n", pszBuf);
+            cch = __libc_LogSNPrintf(pInst, pszMsg, CCHTMPMSGBUFFER, "%s'\n", pszBuf);
             DosWrite(pInst->hFile, pszMsg, cch, &cb);
         }
 
@@ -811,13 +812,17 @@ static void *   __libc_logInit(__LIBC_PLOGINST pInst, const char *pszEnvVar, con
             ||  DosQueryModuleName(hmod, sizeof(pszBuf), pszBuf))
             pszBuf[0] = '\0';
         cch = __libc_LogSNPrintf(pInst, pszMsg, CCHTMPMSGBUFFER,
-                                 "CRT Module: %s hmod=%#lx (%s)\n",
+                                 "CRT Module    : %s %#04lX (%s)\n",
                                  szMod, hmod, pszBuf);
+        DosWrite(pInst->hFile, pszMsg, cch, &cb);
+        cch =  __libc_LogSNPrintf(pInst, pszMsg, CCHTMPMSGBUFFER,
+                                 "CRT Version   : %d.%d.%d\n",
+                                 __LIBCN__, __LIBCN_MINOR__, __LIBCN_BUILD__);
         DosWrite(pInst->hFile, pszMsg, cch, &cb);
 
         /* __libc_logInit address */
         cch = __libc_LogSNPrintf(pInst, pszMsg, CCHTMPMSGBUFFER,
-                                 "__libc_logInit: addr %p iObj=%ld offObj=%#lx\n",
+                                 "CRT logInit   : %p (%04lX:%08lX)\n",
                                  (void *)__libc_logInit, iObj, offObj);
         DosWrite(pInst->hFile, pszMsg, cch, &cb);
 
@@ -840,7 +845,7 @@ static void *   __libc_logInit(__LIBC_PLOGINST pInst, const char *pszEnvVar, con
                 {
                     cGroups++;
                     cch = __libc_LogSNPrintf(pInst, pszMsg, CCHTMPMSGBUFFER,
-                                             "%s (%x) ",
+                                             "%s (%X) ",
                                              pInst->pGroups->paGroups[i].pszGroupName, i);
                     DosWrite(pInst->hFile, pszMsg, cch, &cb);
                 }
@@ -854,16 +859,14 @@ static void *   __libc_logInit(__LIBC_PLOGINST pInst, const char *pszEnvVar, con
         if (!(pInst->fFlags & __LIBC_LOG_INIT_NOLEGEND))
         {
             cch = __libc_LogSNPrintf(pInst, pszMsg, CCHTMPMSGBUFFER,
-                                     "   Millsecond Timestamp.\n"
-                                     "   |     Thread ID.\n"
-                                     "   |     |  Call Nesting Level.\n"
-                                     "   |     |  |   Log Group (Asrt for assertions).\n"
-                                     "   |     |  |   |    Message Type.\n"
-                                     "   |     |  |   |    |    errno in hex (0xface if not available).\n"
-                                     "   |     |  |   |    |    |      Function Name.\n"
-                                     "   |     |  |   |    |    |      |       Millisconds In function (Optional).\n"
-                                     "   v     v  v   v    v    v      v       v\n"
-                                     "xxxxxxxx tt nn gggg dddd eeee function [(ms)]: message\n");
+                                     "   Millsecond Timestamp (hex)\n"
+                                     "   |     Thread ID (hex)\n"
+                                     "   |     |  Call Nesting Level (hex)\n"
+                                     "   |     |  |   Log Group (hex)\n"
+                                     "   |     |  |   |    Message Type (Asrt for assertions)\n"
+                                     "   |     |  |   |    |    errno (9999 if not available)\n"
+                                     "   |     |  |   |    |    |      Function Name (millisconds in function, optional)\n"
+                                     "   v     v  v   v    v    v      v\n");
             DosWrite(pInst->hFile, pszMsg, cch, &cb);
         }
     }
@@ -1352,9 +1355,9 @@ unsigned __libc_LogEnter(void *pvInstance, unsigned fGroupAndFlags, const char *
         return uTS;
 
     va_start(args, pszFormat);
-    cch = __libc_logBuildMsg(pInst, pszMsg, pszFormat, args, "%08x %YT %02x %YG Entr %04x %s: ",
+    cch = __libc_logBuildMsg(pInst, pszMsg, pszFormat, args, "%08X %YT %02X %YG Entr %04d %s: ",
                              uTS, 0, cDepth, __LIBC_LOG_GETGROUP(fGroupAndFlags),
-                             pThread ? pThread->iErrNo : 0xface, pszFunction);
+                             pThread ? pThread->iErrNo : 9999, pszFunction);
     va_end(args);
 
     /*
@@ -1438,9 +1441,9 @@ void     __libc_LogLeave(unsigned uEnterTS, void *pvInstance, unsigned fGroupAnd
         return;
 
     va_start(args, pszFormat);
-    cch = __libc_logBuildMsg(pInst, pszMsg, pszFormat, args, "%08x %YT %02x %YG Leav %04x %s (%d ms): ",
+    cch = __libc_logBuildMsg(pInst, pszMsg, pszFormat, args, "%08X %YT %02X %YG Leav %04d %s (%d ms): ",
                              uTS, 0, cDepth, __LIBC_LOG_GETGROUP(fGroupAndFlags),
-                             pThread ? pThread->iErrNo : 0xface, pszFunction, uTS - uEnterTS);
+                             pThread ? pThread->iErrNo : 9999, pszFunction, uTS - uEnterTS);
     va_end(args);
 
     /*
@@ -1526,9 +1529,9 @@ void     __libc_LogErrorLeave(unsigned uEnterTS, void *pvInstance, unsigned fGro
         return;
 
     va_start(args, pszFormat);
-    cch = __libc_logBuildMsg(pInst, pszMsg, pszFormat, args, "%08x %YT %02x %YG ErrL %04x %s (%d ms): %s(%d): ",
+    cch = __libc_logBuildMsg(pInst, pszMsg, pszFormat, args, "%08X %YT %02X %YG ErrL %04d %s (%d ms): %s(%d): ",
                              uTS, 0, cDepth, __LIBC_LOG_GETGROUP(fGroupAndFlags),
-                             pThread ? pThread->iErrNo : 0xface, pszFunction, uTS - uEnterTS,
+                             pThread ? pThread->iErrNo : 9999, pszFunction, uTS - uEnterTS,
                              pszFile, uLine);
     va_end(args);
 
@@ -1596,13 +1599,13 @@ void     __libc_LogMsg(unsigned uEnterTS, void *pvInstance, unsigned fGroupAndFl
 
     va_start(args, pszFormat);
     if (uEnterTS != ~0)
-        cch = __libc_logBuildMsg(pInst, pszMsg, pszFormat, args, "%08x %YT %02x %YG Mesg %04x %s (%d ms): ",
+        cch = __libc_logBuildMsg(pInst, pszMsg, pszFormat, args, "%08X %YT %02X %YG Mesg %04d %s (%d ms): ",
                                  uTS, 0, cDepth, __LIBC_LOG_GETGROUP(fGroupAndFlags),
-                                 pThread ? pThread->iErrNo : 0xface, pszFunction, uTS - uEnterTS);
+                                 pThread ? pThread->iErrNo : 9999, pszFunction, uTS - uEnterTS);
     else
-        cch = __libc_logBuildMsg(pInst, pszMsg, pszFormat, args, "%08x %YT %02x %YG Mesg %04x %s: ",
+        cch = __libc_logBuildMsg(pInst, pszMsg, pszFormat, args, "%08X %YT %02X %YG Mesg %04d %s: ",
                                  uTS, 0, cDepth, __LIBC_LOG_GETGROUP(fGroupAndFlags),
-                                 pThread ? pThread->iErrNo : 0xface, pszFunction);
+                                 pThread ? pThread->iErrNo : 9999, pszFunction);
     va_end(args);
 
     /*
@@ -1674,14 +1677,14 @@ void     __libc_LogError(unsigned uEnterTS, void *pvInstance, unsigned fGroupAnd
      * First message is about where this error occured.
      */
     if (uEnterTS != ~0)
-        cch = __libc_LogSNPrintf(pInst, pszMsg, CCHTMPMSGBUFFER, "%08x %YT %02x %YG ErrM %04x %s (%d ms): %s(%d):\n",
+        cch = __libc_LogSNPrintf(pInst, pszMsg, CCHTMPMSGBUFFER, "%08X %YT %02X %YG ErrM %04d %s (%d ms): %s(%d):\n",
                                  uTS, 0, cDepth, __LIBC_LOG_GETGROUP(fGroupAndFlags),
-                                 pThread ? pThread->iErrNo : 0xface, pszFunction, uTS - uEnterTS,
+                                 pThread ? pThread->iErrNo : 9999, pszFunction, uTS - uEnterTS,
                                  pszFile, uLine);
     else
-        cch = __libc_LogSNPrintf(pInst, pszMsg, CCHTMPMSGBUFFER, "%08x %YT %02x %YG ErrM %04x %s: %s(%d):\n",
+        cch = __libc_LogSNPrintf(pInst, pszMsg, CCHTMPMSGBUFFER, "%08X %YT %02X %YG ErrM %04d %s: %s(%d):\n",
                                  uTS, 0, cDepth, __LIBC_LOG_GETGROUP(fGroupAndFlags),
-                                 pThread ? pThread->iErrNo : 0xface, pszFunction,
+                                 pThread ? pThread->iErrNo : 9999, pszFunction,
                                  pszFile, uLine);
     __libc_logWrite(pInst, fGroupAndFlags, pszMsg, cch, 0);
 
@@ -1689,9 +1692,9 @@ void     __libc_LogError(unsigned uEnterTS, void *pvInstance, unsigned fGroupAnd
      * Second message is the one from the caller.
      */
     va_start(args, pszFormat);
-    cch = __libc_logBuildMsg(pInst, pszMsg, pszFormat, args, "%08x %YT %02x %YG ErrM %04x: ",
+    cch = __libc_logBuildMsg(pInst, pszMsg, pszFormat, args, "%08X %YT %02X %YG ErrM %04d: ",
                              uTS, 0, cDepth, __LIBC_LOG_GETGROUP(fGroupAndFlags),
-                             pThread ? pThread->iErrNo : 0xface);
+                             pThread ? pThread->iErrNo : 9999);
     va_end(args);
     __libc_logWrite(pInst, fGroupAndFlags, pszMsg, cch, 0);
 }
@@ -1809,13 +1812,13 @@ void     __libc_LogDumpHex(unsigned uEnterTS, void *pvInstance, unsigned fGroupA
 
     va_start(args, pszFormat);
     if (uEnterTS != ~0)
-        cch = __libc_logBuildMsg(pInst, pszMsg, pszFormat, args, "%08x %YT %02x %YG Dump %04x %s (%d ms): ",
+        cch = __libc_logBuildMsg(pInst, pszMsg, pszFormat, args, "%08X %YT %02X %YG Dump %04d %s (%d ms): ",
                                  uTS, 0, cDepth, __LIBC_LOG_GETGROUP(fGroupAndFlags),
-                                 pThread ? pThread->iErrNo : 0xface, pszFunction, uTS - uEnterTS);
+                                 pThread ? pThread->iErrNo : 9999, pszFunction, uTS - uEnterTS);
     else
-        cch = __libc_logBuildMsg(pInst, pszMsg, pszFormat, args, "%08x %YT %02x %YG Dump %04x %s: ",
+        cch = __libc_logBuildMsg(pInst, pszMsg, pszFormat, args, "%08X %YT %02X %YG Dump %04d %s: ",
                                  uTS, 0, cDepth, __LIBC_LOG_GETGROUP(fGroupAndFlags),
-                                 pThread ? pThread->iErrNo : 0xface, pszFunction);
+                                 pThread ? pThread->iErrNo : 9999, pszFunction);
     va_end(args);
 
     /*
@@ -1844,7 +1847,7 @@ void     __libc_LogDumpHex(unsigned uEnterTS, void *pvInstance, unsigned fGroupA
     {
         char *pszHex, *pszChar, *pszHexEnd;
         /* print offsets. */
-        pszHex = pszOffset + __libc_LogSNPrintf(pInst, pszOffset, 64, "%08x %08x  ", (unsigned)pvData, off); /* !portability! */
+        pszHex = pszOffset + __libc_LogSNPrintf(pInst, pszOffset, 64, "%08X %08X  ", (unsigned)pvData, off); /* !portability! */
         pszHexEnd = pszChar = pszHex + 16 * 3 + 2;  /* 16 chars with on space, two space before chars column. */
 
         /* output chars. */
@@ -1952,22 +1955,22 @@ void     __libc_LogAssert(void *pvInstance, unsigned fGroupAndFlags,
      */
     FS_SAVE_LOAD();
     va_start(args, pszFormat);          /* make compiler happy we do it here. */
-    cch = __libc_logBuildMsg(pInst, pszMsg, "", args, "%08x %YT %02x %YG Asrt Assertion Failed!!!\n", uTS, 0, cDepth, __LIBC_LOG_GETGROUP(fGroupAndFlags));
+    cch = __libc_logBuildMsg(pInst, pszMsg, "", args, "%08X %YT %02X %YG Asrt Assertion Failed!!!\n", uTS, 0, cDepth, __LIBC_LOG_GETGROUP(fGroupAndFlags));
     __libc_logWrite(pInst, fGroupAndFlags, pszMsg, cch, fEnabled);
 
-    cch = __libc_logBuildMsg(pInst, pszMsg, "", args, "%08x %YT %02x %YG Asrt Function: %s\n", uTS, 0, cDepth, __LIBC_LOG_GETGROUP(fGroupAndFlags), pszFunction);
+    cch = __libc_logBuildMsg(pInst, pszMsg, "", args, "%08X %YT %02X %YG Asrt Function: %s\n", uTS, 0, cDepth, __LIBC_LOG_GETGROUP(fGroupAndFlags), pszFunction);
     __libc_logWrite(pInst, fGroupAndFlags, pszMsg, cch, fEnabled);
 
-    cch = __libc_logBuildMsg(pInst, pszMsg, "", args, "%08x %YT %02x %YG Asrt File:     %s\n", uTS, 0, cDepth, __LIBC_LOG_GETGROUP(fGroupAndFlags), pszFile);
+    cch = __libc_logBuildMsg(pInst, pszMsg, "", args, "%08X %YT %02X %YG Asrt File:     %s\n", uTS, 0, cDepth, __LIBC_LOG_GETGROUP(fGroupAndFlags), pszFile);
     __libc_logWrite(pInst, fGroupAndFlags, pszMsg, cch, fEnabled);
 
-    cch = __libc_logBuildMsg(pInst, pszMsg, "", args, "%08x %YT %02x %YG Asrt Line:     %d\n", uTS, 0, cDepth, __LIBC_LOG_GETGROUP(fGroupAndFlags), uLine);
+    cch = __libc_logBuildMsg(pInst, pszMsg, "", args, "%08X %YT %02X %YG Asrt Line:     %d\n", uTS, 0, cDepth, __LIBC_LOG_GETGROUP(fGroupAndFlags), uLine);
     __libc_logWrite(pInst, fGroupAndFlags, pszMsg, cch, fEnabled);
 
-    cch = __libc_logBuildMsg(pInst, pszMsg, "", args, "%08x %YT %02x %YG Asrt Expr:     %s\n", uTS, 0, cDepth, __LIBC_LOG_GETGROUP(fGroupAndFlags), pszExpression);
+    cch = __libc_logBuildMsg(pInst, pszMsg, "", args, "%08X %YT %02X %YG Asrt Expr:     %s\n", uTS, 0, cDepth, __LIBC_LOG_GETGROUP(fGroupAndFlags), pszExpression);
     __libc_logWrite(pInst, fGroupAndFlags, pszMsg, cch, fEnabled);
 
-    cch = __libc_logBuildMsg(pInst, pszMsg, pszFormat, args, "%08x %YT %02x %YG Asrt ",        uTS, 0, cDepth, __LIBC_LOG_GETGROUP(fGroupAndFlags));
+    cch = __libc_logBuildMsg(pInst, pszMsg, pszFormat, args, "%08X %YT %02X %YG Asrt ",        uTS, 0, cDepth, __LIBC_LOG_GETGROUP(fGroupAndFlags));
     __libc_logWrite(pInst, fGroupAndFlags, pszMsg, cch, fEnabled);
     va_end(args);
 
@@ -2219,9 +2222,10 @@ static char * numtostr(char *psz, long lValue, unsigned int uiBase,
 
     if (fFlags & NTSF_SPECIAL && (uiBase % 8) == 0)
     {
-        psz[i++] = '0';
+        /* Retain original width */
+        psz[i++] = '0', ++cchWidth;
         if (uiBase == 16)
-            psz[i++] = (char)(fFlags & NTSF_CAPITAL ? 'X' : 'x');
+            psz[i++] = 'x', ++cchWidth;
     }
 
 
@@ -2317,9 +2321,10 @@ static char * llnumtostr(char *psz, long long llValue, unsigned int uiBase,
 
     if (fFlags & NTSF_SPECIAL && (uiBase % 8) == 0)
     {
-        psz[i++] = '0';
+        /* Retain original width */
+        psz[i++] = '0', ++cchWidth;
         if (uiBase == 16)
-            psz[i++] = (char)(fFlags & NTSF_CAPITAL ? 'X' : 'x');
+            psz[i++] = 'x', ++cchWidth;
     }
 
 
@@ -2613,10 +2618,10 @@ static int      __libc_logVSNPrintfInt(__LIBC_PLOGINST pInst, char *pszBuffer, s
                                 break;
 
                             case 'p':
-                                fFlags |= NTSF_SPECIAL | NTSF_ZEROPAD; /* Note not standard behaviour (but I like it this way!) */
+                                fFlags |= NTSF_SPECIAL | NTSF_ZEROPAD | NTSF_CAPITAL; /* Note not standard behaviour (but I like it this way!) */
                                 uiBase = 16;
                                 if (cchWidth < 0)
-                                    cchWidth = sizeof(char *) * 2 + 2;
+                                    cchWidth = sizeof(char *) * 2;
                                 break;
 
                             case 'u':
@@ -2739,9 +2744,9 @@ static int      __libc_logVSNPrintfInt(__LIBC_PLOGINST pInst, char *pszBuffer, s
                                 int c;
                                 va_arg(args, int); /* dummy arg so far */
                                 if (pInst && __libc_logIsOutputToConsole(pInst))
-                                    c = __libc_logSNPrintfInt(NULL, pszBuffer, cchBuffer, "%04x:%02x", getPid(), getTid());
+                                    c = __libc_logSNPrintfInt(NULL, pszBuffer, cchBuffer, "%04X:%02X", getPid(), getTid());
                                 else
-                                    c = __libc_logSNPrintfInt(NULL, pszBuffer, cchBuffer, "%02x", getTid());
+                                    c = __libc_logSNPrintfInt(NULL, pszBuffer, cchBuffer, "%02X", getTid());
                                 pszBuffer += c;
                                 cchBuffer -= c;
                                 cch += c;
@@ -2755,9 +2760,9 @@ static int      __libc_logVSNPrintfInt(__LIBC_PLOGINST pInst, char *pszBuffer, s
                                 int c;
                                 unsigned iGroup = va_arg(args, unsigned);
                                 if (pInst && __libc_logIsOutputToConsole(pInst) && pInst->pszOrigin)
-                                    c = __libc_logSNPrintfInt(NULL, pszBuffer, cchBuffer, "%s:%04x", pInst->pszOrigin, iGroup);
+                                    c = __libc_logSNPrintfInt(NULL, pszBuffer, cchBuffer, "%s:%04X", pInst->pszOrigin, iGroup);
                                 else
-                                    c = __libc_logSNPrintfInt(NULL, pszBuffer, cchBuffer, "%04x", iGroup);
+                                    c = __libc_logSNPrintfInt(NULL, pszBuffer, cchBuffer, "%04X", iGroup);
                                 pszBuffer += c;
                                 cchBuffer -= c;
                                 cch += c;
