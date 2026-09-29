@@ -38,7 +38,7 @@
 
 #define CHLOWER(ch)     ((ch) < 'A' || (ch) > 'Z' ? (ch) : (ch) + ('a' - 'A'))
 
-#define ISPRINTABLE(ch) (((ch) >= 0x20 && (ch) <= 0x7E) || (ch) >= 0x80)
+#define ISPRINTABLE(ch) (((ch) >= 0x20 && (ch) <= 0x7E) || ((unsigned char)(ch)) >= 0x80)
 
 #define NTSF_CAPITAL    0x0001
 #define NTSF_LEFT       0x0002
@@ -2523,7 +2523,7 @@ static int      __libc_logVSNPrintfInt(__LIBC_PLOGINST pInst, char *pszBuffer, s
                         {
                             int cchStrOk = 0;
                             if (chArgSize == 'h')
-                                while (cchStr > cchStrOk && cchBuffer > cchStrOk && *pszStr != '\\' && ISPRINTABLE(pszStr[cchStrOk]))
+                                while (cchStr > cchStrOk && cchBuffer > cchStrOk && pszStr[cchStrOk] != '\\' && ISPRINTABLE(pszStr[cchStrOk]))
                                     cchStrOk++;
                             else
                                 while (cchStr > cchStrOk && cchBuffer > cchStrOk)
@@ -2570,14 +2570,28 @@ static int      __libc_logVSNPrintfInt(__LIBC_PLOGINST pInst, char *pszBuffer, s
                             }
                             if (chArgSize == 'h' && cchStr)
                             {
-                                if (cchBuffer < 4)
-                                    break;
-                                cchStr--;
-                                cchBuffer -= 4;
-                                memcpy(pszBuffer, "\\x", 2);
-                                pszBuffer += 2;
-                                pszBuffer = numtostr(pszBuffer, (unsigned char)*pszStr++, 16, 2, 0, NTSF_CAPITAL | NTSF_ZEROPAD);
-                                cch += 4;
+                                if (*pszStr == '\\')
+                                {
+                                    if (cchBuffer < 2)
+                                        break;
+                                    pszStr++;
+                                    cchStr--;
+                                    cchBuffer -= 2;
+                                    memcpy(pszBuffer, "\\\\", 2);
+                                    pszBuffer += 2;
+                                    cch += 2;
+                                }
+                                else
+                                {
+                                    if (cchBuffer < 4)
+                                        break;
+                                    cchStr--;
+                                    cchBuffer -= 4;
+                                    memcpy(pszBuffer, "\\x", 2);
+                                    pszBuffer += 2;
+                                    pszBuffer = numtostr(pszBuffer, (unsigned char)*pszStr++, 16, 2, 0, NTSF_CAPITAL | NTSF_ZEROPAD);
+                                    cch += 4;
+                                }
                             }
                         }
 
