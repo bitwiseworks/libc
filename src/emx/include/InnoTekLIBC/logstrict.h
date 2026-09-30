@@ -199,6 +199,19 @@
 /** Macro to log an typical int return which is an error if not zero and otherwise a success. */
 #define LIBCLOG_MIX0_RETURN_INT(rc)           do { if (rc) LIBCLOG_ERROR_RETURN_INT(rc); LIBCLOG_RETURN_INT(rc); } while (0)
 
+/**
+ * Macro to temporarily disable -Wformat for stmt, useful to avoid warnings on
+ * non-standard format specifiers. Note that this also disables other handy
+ * printf-like checks like mismatches between format specifiers and arguments.
+ */
+#define LIBCLOG_NO_WF(stmt) \
+    do { \
+        _Pragma("GCC diagnostic push") \
+        _Pragma("GCC diagnostic ignored \"-Wformat\"") \
+        stmt; \
+        _Pragma("GCC diagnostic pop") \
+    } while (0)
+
 
 /** @defgroup   __libc_log_init_flags    Flags for __libc_LogInitEx
  *
@@ -785,6 +798,7 @@ extern void     __libc_LogDumpHex(unsigned uEnterTS, void *pvInstance, unsigned 
  *
  * @param   pvInstance      Logger instance. If NULL the message goes to the
  *                          default log instance.
+ * @param   fGroupAndFlags  Logging group and logging flags.
  * @param   pszFunction     Name of the function which was entered.
  * @param   pszFile         Source filename.
  * @param   uLine           Line number.
@@ -797,17 +811,28 @@ extern void     __libc_LogAssert(void *pvInstance, unsigned fGroupAndFlags,
                                  const char *pszFormat, ...) __printflike(7, 8);
 
 /**
- * Special vsprintf implementation that supports extended format specifiers for logging purposes.
+ * Special vsprintf implementation that supports extended format specifiers for
+ * logging purposes.
  *
  * Extended format specifiers are:
- * - %YT - prints current TID or PID:TID if pInst is forced to log to console (argument should be 0)
- * - %YG - prints log GROUP or ORIGIN:GROUP if pInst is forced to log to console (argument is a group number).
- * - %Zd - dumps memory in hex (argument is a pointer to memory block whose length is given in precision or width specs, by default 4 bytes).
+ * - %hc, %hs - replaces non-printable chars with "\xNN", and '\' with "\\".
+ * - %Hc, %Hs - same as h but adds doube qoutes around, and, if the format is
+ *   %+.NNHs, expects a zero-terminated string, appending "..." if it's longer
+ *   than NN.
+ * - %YT - prints current TID or PID:TID if pInst is forced to log to console
+ *   (argument should be 0)
+ * - %YG - prints log GROUP or ORIGIN:GROUP if pInst is forced to log to console
+ *   (argument is a group number).
+ * - %Zd - dumps memory in hex (argument is a pointer to memory block whose
+ *   length is given in precision or width specs, by default 4 bytes).
+ *
+ * If pInst is NULL, %Y format extensions and UTF-8 output support in %c and %s
+ * are disabled.
  *
  * Note that it does not support the full set of standard format specifiers.
  *
  * @returns number of bytes formatted.
- * @param   pInst       Log instance (for %Y format extensions, may be NULL).
+ * @param   pInst       Log instance (may be NULL).
  * @param   pszBuffer   Where to put the the formatted string.
  * @param   cchBuffer   Size of the buffer.
  * @param   pszFormat   Format string.
@@ -816,12 +841,13 @@ extern void     __libc_LogAssert(void *pvInstance, unsigned fGroupAndFlags,
 extern int      __libc_LogVSNPrintf(void *pvInstance, char *pszBuffer, size_t cchBuffer, const char *pszFormat, va_list args);
 
 /**
- * Special sprintf implementation that supports extended format specifiers for logging purposes.
+ * Special sprintf implementation that supports extended format specifiers for
+ * logging purposes.
  *
  * See __libc_LogVSNPrintf for more info.
  *
  * @returns number of bytes formatted.
- * @param   pInst       Log instance (for %Y format extensions, may be NULL).
+ * @param   pInst       Log instance (for %Y format extensions and Unicode support, may be NULL).
  * @param   pszBuffer   Where to put the the formatted string.
  * @param   cchBuffer   Size of the buffer.
  * @param   pszFormat   Format string.

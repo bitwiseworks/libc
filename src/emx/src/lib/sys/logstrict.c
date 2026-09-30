@@ -30,7 +30,12 @@
 *******************************************************************************/
 #define __LIBC_LOG_GROUP    __LIBC_LOG_GRP_NOGROUP
 
-#define CCHTMPMSGBUFFER     512
+/**
+ * Message buffer size to fit a longest file name in UTF-8 encoding (roughly 260
+ * * 3) plus the standard prefix part. This also accounts for converting (some)
+ * non-printable chars by %hs and %Hs format extensions to \xNN strings.
+ */
+#define CCHTMPMSGBUFFER     1024
 
 #define ISDIGIT(c) ((c) >= '0' && (c) <= '9')
 //#define MAX(a, b)  ((a) >= (b) ? (a) : (b))
@@ -763,23 +768,25 @@ static void *   __libc_logInit(__LIBC_PLOGINST pInst, const char *pszEnvVar, con
         int i = 0, fkLIBC = 0;
         while (*pszArg)
         {
+            int cchArg = strlen(pszArg);
             if (i == 1 && !__strcmp(pszArg, __KLIBC_ARG_SIGNATURE))
                 fkLIBC = 1;
             if (fkLIBC)
             {
                 if (i == 1)
-                    cch = __libc_LogSNPrintf (pInst, pszMsg, CCHTMPMSGBUFFER, "Arg %-3d       : kLIBC Args \"", i ++);
+                    cch = __libc_LogSNPrintf(pInst, pszMsg, CCHTMPMSGBUFFER, "Arg %-3d       : kLIBC Args %.512hhs (%d)\n",
+                                             i++, pszArg, cchArg);
                 else
-                    cch = __libc_LogSNPrintf (pInst, pszMsg, CCHTMPMSGBUFFER, "Arg %-3d       : Flags 0x%02X \"", i ++,
-                                              (unsigned char)*pszArg++);
+                {
+                    unsigned char f = (unsigned char)*pszArg++;
+                    --cchArg;
+                    cch = __libc_LogSNPrintf(pInst, pszMsg, CCHTMPMSGBUFFER, "Arg %-3d       : Flags 0x%02X %.512hhs (%d)\n",
+                                             i++, f, pszArg, cchArg);
+                }
             }
             else
-                cch = __libc_LogSNPrintf(pInst, pszMsg, CCHTMPMSGBUFFER, "Arg %-3d       : \"", i++);
-            DosWrite(pInst->hFile, pszMsg, cch, &cb);
-            int cchArg = strlen(pszArg);
-            cch = __libc_LogSNPrintf(pInst, pszMsg, CCHTMPMSGBUFFER, "%hs", pszArg);
-            DosWrite(pInst->hFile, pszMsg, cch, &cb);
-            cch = __libc_LogSNPrintf(pInst, pszMsg, CCHTMPMSGBUFFER, "\"%s (%d)\n", cch < cchArg ? "..." : "", cchArg);
+                cch = __libc_LogSNPrintf(pInst, pszMsg, CCHTMPMSGBUFFER, "Arg %-3d       : %.512hhs (%d)\n",
+                                         i++, pszArg, cchArg);
             DosWrite(pInst->hFile, pszMsg, cch, &cb);
             pszArg += cchArg + 1;
         }
@@ -1162,9 +1169,11 @@ static int __libc_logBuildMsg(__LIBC_PLOGINST pInst, char *pszMsg, const char *p
     cch += __libc_LogVSNPrintf(pInst, pszMsg + cch, CCHTMPMSGBUFFER - cch, pszFormatMsg, args);
 
     /*
-     * ensure '\n'.
+     * Ensure '\n'. Note that __libc_LogVSNPrintf is non-standard and returns
+     * exactly how many chars were written, excluding the terminator. Therefore,
+     * assume an overflow if cch >= CCHTMPMSGBUFFER - 1
      */
-    if (cch >= CCHTMPMSGBUFFER)
+    if (cch >= CCHTMPMSGBUFFER - 1)
         memcpy(pszMsg + CCHTMPMSGBUFFER - 5, "...\n", 5);
     else if (pszMsg[cch - 1] != '\n')
         memcpy(&pszMsg[cch++], "\n", 2);
@@ -1886,6 +1895,7 @@ void     __libc_LogDumpHex(unsigned uEnterTS, void *pvInstance, unsigned fGroupA
  *
  * @param   pvInstance      Logger instance. If NULL the message goes to the
  *                          default log instance.
+ * @param   fGroupAndFlags  Logging group and logging flags.
  * @param   pszFunction     Name of the function which was entered.
  * @param   pszFile         Source filename.
  * @param   uLine           Line number.
@@ -2387,6 +2397,11 @@ static inline int __libc_logSNPrintfInt(__LIBC_PLOGINST pInst, char *pszBuffer, 
  */
 static int      __libc_logVSNPrintfInt(__LIBC_PLOGINST pInst, char *pszBuffer, size_t cchBuffer, const char *pszFormat, va_list args)
 {
+    if (!pszBuffer || !cchBuffer)
+        return 0;
+
+    --cchBuffer; /* reserve space for the terminator */
+
     int cch = 0;
     while (*pszFormat != '\0' && cchBuffer)
     {
@@ -2496,14 +2511,14 @@ static int      __libc_logVSNPrintfInt(__LIBC_PLOGINST pInst, char *pszBuffer, s
                         ch = (char)va_arg(args, int);
                         cchStr = 1;
                         pszStr = &ch;
-                        /* fallback to 's' case: the code is identical */
+                        /* fall through to 's' case: the code is identical */
                     }
 
                     case 's':   /* string */
                     {
                         int fNull = 0;
 
-                        if (!cchStr) /* not a fallback from 'c' case */
+                        if (!cchStr) /* not a fall through from 'c' case */
                         {
                             pszStr = va_arg(args, char*);
                             if ((fNull = pszStr < (char*)0x10000))
@@ -2519,10 +2534,17 @@ static int      __libc_logVSNPrintfInt(__LIBC_PLOGINST pInst, char *pszBuffer, s
                                 cch++;
                             }
 
+                        if (!fNull && chArgSize == 'H' && cchBuffer)
+                        {
+                            cchBuffer--;
+                            *pszBuffer++ = '"';
+                            cch++;
+                        }
+
                         while (cchStr && cchBuffer)
                         {
                             int cchStrOk = 0;
-                            if (chArgSize == 'h')
+                            if (chArgSize == 'h' || chArgSize == 'H')
                                 while (cchStr > cchStrOk && cchBuffer > cchStrOk && pszStr[cchStrOk] != '\\' && ISPRINTABLE(pszStr[cchStrOk]))
                                     cchStrOk++;
                             else
@@ -2568,7 +2590,7 @@ static int      __libc_logVSNPrintfInt(__LIBC_PLOGINST pInst, char *pszBuffer, s
                                     cch += cchStrOk;
                                 }
                             }
-                            if (chArgSize == 'h' && cchStr)
+                            if ((chArgSize == 'h' || chArgSize == 'H') && cchStr)
                             {
                                 if (*pszStr == '\\')
                                 {
@@ -2595,12 +2617,32 @@ static int      __libc_logVSNPrintfInt(__LIBC_PLOGINST pInst, char *pszBuffer, s
                             }
                         }
 
-                        while (--cchWidth >= cchStr && cchBuffer)
+                        if (!fNull && chArgSize == 'H' && cchBuffer)
                         {
                             cchBuffer--;
-                            *pszBuffer++ = ' ';
+                            *pszBuffer++ = '"';
                             cch++;
+
+                            if ((fFlags & NTSF_PLUS) && *pszStr)
+                            {
+                                /* truncated string, add ... */
+                                int cchCnt = 3;
+                                while (--cchCnt >= 0 && cchBuffer)
+                                {
+                                    cchBuffer--;
+                                    *pszBuffer++ = '.';
+                                    cch++;
+                                }
+                            }
                         }
+
+                        if (fFlags & NTSF_LEFT)
+                            while (--cchWidth >= cchStr && cchBuffer)
+                            {
+                                cchBuffer--;
+                                *pszBuffer++ = ' ';
+                                cch++;
+                            }
                         continue;
                     }
 
@@ -2807,13 +2849,7 @@ static int      __libc_logVSNPrintfInt(__LIBC_PLOGINST pInst, char *pszBuffer, s
     /*
      * Terminator.
      */
-    if (cchBuffer)
-        *pszBuffer = '\0';
-    else /* Use last buffer entry */
-    {
-        pszBuffer[-1] = '\0';
-        cch--;
-    }
+    *pszBuffer = '\0';
 
     return cch;
 }
@@ -2834,17 +2870,28 @@ static inline int __libc_logSNPrintfInt(__LIBC_PLOGINST pInst, char *pszBuffer, 
 
 
 /**
- * Special vsprintf implementation that supports extended format specifiers for logging purposes.
+ * Special vsprintf implementation that supports extended format specifiers for
+ * logging purposes.
  *
  * Extended format specifiers are:
- * - %YT - prints current TID or PID:TID if pInst is forced to log to console (argument should be 0)
- * - %YG - prints log GROUP or ORIGIN:GROUP if pInst is forced to log to console (argument is a group number).
- * - %Zd - dumps memory in hex (argument is a pointer to memory block whose length is given in precision or width specs, by default 4 bytes).
+ * - %hc, %hs - replaces non-printable chars with "\xNN", and '\' with "\\".
+ * - %Hc, %Hs - same as h but adds doube qoutes around, and, if the format is
+ *   %+.NNHs, expects a zero-terminated string, appending "..." if it's longer
+ *   than NN.
+ * - %YT - prints current TID or PID:TID if pInst is forced to log to console
+ *   (argument should be 0)
+ * - %YG - prints log GROUP or ORIGIN:GROUP if pInst is forced to log to console
+ *   (argument is a group number).
+ * - %Zd - dumps memory in hex (argument is a pointer to memory block whose
+ *   length is given in precision or width specs, by default 4 bytes).
  *
+* If pInst is NULL, %Y format extensions and UTF-8 output support in %c and %s
+ * are disabled.
+  *
  * Note that it does not support the full set of standard format specifiers.
  *
  * @returns number of bytes formatted.
- * @param   pInst       Log instance (for %Y format extensions, may be NULL).
+ * @param   pInst       Log instance (may be NULL).
  * @param   pszBuffer   Where to put the the formatted string.
  * @param   cchBuffer   Size of the buffer.
  * @param   pszFormat   Format string.
@@ -2915,7 +2962,7 @@ int      __libc_LogVSNPrintf(void *pvInstance, char *pszBuffer, size_t cchBuffer
  * See __libc_LogVSNPrintf for more info.
  *
  * @returns number of bytes formatted.
- * @param   pInst       Log instance (for %Y format extensions, may be NULL).
+ * @param   pInst       Log instance (for %Y format extensions and Unicode support, may be NULL).
  * @param   pszBuffer   Where to put the the formatted string.
  * @param   cchBuffer   Size of the buffer.
  * @param   pszFormat   Format string.
