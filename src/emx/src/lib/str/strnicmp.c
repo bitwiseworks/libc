@@ -12,6 +12,9 @@
 #include <os2emx.h>
 #include "libc-alias.h"
 #include <stddef.h>
+#ifndef __USE_GNU /* __strnlen */
+# define __USE_GNU
+#endif
 #include <string.h>
 #include <InnoTekLIBC/locale.h>
 
@@ -43,11 +46,11 @@ int _STD(strnicmp) (__const__ char *s1, __const__ char *s2, size_t len)
            not defined how memicmp should work on multi-byte characters... */
         UniChar uc1, uc2;
         int c1l, c2l;
-        if (!(c1l = __libc_ucs2To (__libc_GLocaleCtype.uobj, (const unsigned char *)s1, len, &uc1)))
+        if (!(c1l = __libc_ucs2To (__libc_GLocaleCtype.uobj, (const unsigned char *)s1, __strnlen (s1, len < 3 ? len : 3), &uc1)))
           uc1 = c1, c1l = 1;
         else
           uc1 = UniTransLower (__libc_GLocaleCtype.lobj, uc1);
-        if (!(c2l = __libc_ucs2To (__libc_GLocaleCtype.uobj, (const unsigned char *)s2, len, &uc2)))
+        if (!(c2l = __libc_ucs2To (__libc_GLocaleCtype.uobj, (const unsigned char *)s2, __strnlen (s2, len < 3 ? len : 3), &uc2)))
           uc2 = c2, c2l = 1;
         else
           uc2 = UniTransLower (__libc_GLocaleCtype.lobj, uc2);
