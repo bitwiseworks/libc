@@ -200,7 +200,7 @@ static __LIBC_PATHREWRITE   gUnixRootRewriteRule =
 /** The full path to the executable directory. */
 char __libc_gszExecPath[CCHMAXPATH];
 /** The system drive. */
-char __libc_gszSystemDrive[4] = "C:";
+char __libc_gszSystemDrive[4] = "C:/";
 /** The full path to the host system root directory. */
 char __libc_gszSystemRoot[8] = "C:/OS2";
 /** The path to the default tmp directory (might be a winding path). */
@@ -212,7 +212,7 @@ char __libc_gszTmpDir[CCHMAXPATH] = "C:/TEMP";
 static __LIBC_PATHREWRITE   gaMiscRewriteRules[4] =
 {
     { __LIBC_PRWF_CASE_SENSITIVE | __LIBC_PRWF_TYPE_DIR,  "/@executable_path",  17, __libc_gszExecPath, 0 },
-    { __LIBC_PRWF_CASE_SENSITIVE | __LIBC_PRWF_TYPE_DIR,  "/@system_drive",     14, __libc_gszSystemDrive, 2 },
+    { __LIBC_PRWF_CASE_SENSITIVE | __LIBC_PRWF_TYPE_DIR,  "/@system_drive",     14, __libc_gszSystemDrive, 3 },
     { __LIBC_PRWF_CASE_SENSITIVE | __LIBC_PRWF_TYPE_DIR,  "/@system_root",      13, __libc_gszSystemRoot, 6 },
     { __LIBC_PRWF_CASE_SENSITIVE | __LIBC_PRWF_TYPE_DIR,  "/@tmpdir",            8, __libc_gszTmpDir, 7 }
 };
