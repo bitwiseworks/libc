@@ -1,11 +1,10 @@
 .MODULE := realrealpath
 .MDESC  := Print the resolved absolute file name
-.MDEP	:= omflib@omf moddef@omf
 .INSDIR := bin/
 
 .TARGET := realrealpath.exe
 .TKIND	:= $(TOOLFMT)
 .TSRC   := $(wildcard src/realrealpath/*.c)
 .TCF	:= $(CFLAGS.DEF.VERSION)
-.TDEP	:= @O@libomflib$A @O@libmoddef$A
+.TDEP	:= $.omf/libc_dll.lib
 include mkexe.smak

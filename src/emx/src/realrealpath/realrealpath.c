@@ -57,7 +57,7 @@ getprogname()
 
 static void usage()
 {
-    fprintf(stderr, "Usage: %s [--help] | [-eU] FILE...\n", getprogname());
+    fprintf(stderr, "Usage: %s --help | [-eU] FILE...\n", getprogname());
     exit(1);
 }
 
