@@ -697,7 +697,7 @@ void  __libc_spmInheritFree(void);
 __LIBC_PSPMPROCESS __libc_spmCreateEmbryo(pid_t pidParent);
 
 /**
- * Wait for a embryo to become a live process and complete 
+ * Wait for a embryo to become a live process and complete
  * inheriting (file handles / sockets issues).
  *
  * @returns non-zero if the process has started.
@@ -1146,6 +1146,9 @@ int     __libc_spmSigDequeue(int iSignalNo, siginfo_t *paSignals, unsigned cSign
 
 /**
  * Checks the SPM memory for trouble.
+ *
+ * Specify -1 in fVerbose to use stdout, or non-zero to use to the default log
+ * instance.
  *
  * @returns 0 on perfect state.
  * @returns -1 and errno on mutex failure.

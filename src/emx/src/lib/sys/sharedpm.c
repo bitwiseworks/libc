@@ -2066,6 +2066,9 @@ int     __libc_spmSigDequeue(int iSignalNo, siginfo_t *paSignals, unsigned cSign
 /**
  * Checks the SPM memory for trouble.
  *
+ * Specify -1 in fVerbose to use stdout, or non-zero to use to the default log
+ * instance.
+ *
  * @returns 0 on perfect state.
  * @returns -1 and errno on mutex failure.
  * @returns Number of failures if SPM is broken.
@@ -4141,7 +4144,7 @@ static int spmCheck(int fBreakpoint, int fVerbose)
 
 
 #define CHECK_LOG(...) \
-    do { if (fVerbose) LIBCLOG_REL(__VA_ARGS__); } while (0)
+    do { if (fVerbose == -1) printf(__VA_ARGS__); else if (fVerbose) LIBCLOG_REL(__VA_ARGS__); } while (0)
 #define CHECK_FAILED(...) \
     do { CHECK_LOG(__VA_ARGS__); if (fBreakpoint) __asm__ __volatile__("int3\n"); cErrors++; } while (0)
 #define CHECK_PTR(ptr, msg) \
