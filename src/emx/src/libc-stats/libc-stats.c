@@ -35,7 +35,8 @@
 #include <emx/startup.h>
 #include <libcn/version.h>
 #include <InnoTekLIBC/sharedpm.h>
-#include <InnotekLIBC/errno.h>
+#include <InnoTekLIBC/errno.h>
+#include "defs.h"
 
 
 struct __libcn_version version = { sizeof(version) };
@@ -52,6 +53,7 @@ static void help()
 "\n"
 "Options:\n"
 "  --version    Print LIBC version\n"
+"  --signature  Print LIBC DLL BLDLEVEL signature\n"
 "  --hmod       Print LIBC DLL module handle\n"
 "  --path       Print LIBC DLL full path\n"
 "  --spm-dump   Print LIBC SPM dump\n"
@@ -86,11 +88,52 @@ static void unslashify(char *path)
         *p++ = '\\';
 }
 
+static void file_error(FILE *f, const char *opname, const char *path)
+{
+    error("%s(%s): %s\n", opname, path, !f || ferror(f) ? strerror(errno) : "Premature EOF");
+}
+
+static char description[256 + 1 /* \0 */] = "aaa";
+
+static void get_description(const char *path)
+{
+    FILE *f = fopen(path, "rb");
+    if (!f)
+        file_error(NULL, "fopen", path);
+
+    struct exe1p2_header hdr;
+    if (fread(&hdr, sizeof(hdr), 1, f) != 1)
+        file_error(f, "fread", path);
+    if (hdr.e_magic != EXE_MAGIC_MZ)
+        error("%s: Invalid MZ header\n", path);
+
+    struct os2_header lx;
+    if (fseek(f, hdr.e_lfanew, SEEK_SET))
+        file_error(NULL, "fseek", path);
+    if (fread(&lx, sizeof(lx), 1, f) != 1)
+        file_error(f, "fread", path);
+    if (lx.magic != EXE_MAGIC_LX)
+        error("%s: Invalid LX header\n", path);
+
+    unsigned char len = 0;
+    if (lx.nonresname_size > 0)
+    {
+        if (fseek(f, lx.nonresname_offset, SEEK_SET))
+            file_error(NULL, "fseek", path);
+        if (fread(&len, sizeof(len), 1, f) != 1 || (len && fread(description, len, 1, f) != 1))
+            file_error(f, "fread", path);
+    }
+    description[len] = '\0';
+
+    fclose(f);
+}
+
 int main(int argc, char **argv)
 {
     static const struct option long_options[] =
     {
         { "version", no_argument, NULL, 'V' },
+        { "signature", no_argument, NULL, 'S' },
         { "hmod", no_argument, NULL, 'H' },
         { "path", no_argument, NULL, 'P' },
         { "spm-dump", no_argument, NULL, 'D' },
@@ -114,6 +157,8 @@ int main(int argc, char **argv)
         error("realpath: %s\n", strerror(errno));
     unslashify(szModName);
 
+    get_description(szModName);
+
     ver_rc = __libcn_query_version(&version);
     ver_errno = errno;
 
@@ -132,6 +177,9 @@ int main(int argc, char **argv)
                 exit(0);
             case 'H':
                 printf("0x%04lX\n", hmod);
+                exit(0);
+            case 'S':
+                printf("%s\n", description);
                 exit(0);
             case 'P':
                 printf("%s\n", szModName);
@@ -170,13 +218,14 @@ int main(int argc, char **argv)
         usage();
 
     if (!ver_rc)
-        printf("LIBC version: Next %u.%u.%u (struct size: %u bytes)\n",
+        printf("LIBC version:    Next %u.%u.%u (struct size: %u bytes)\n",
                version.major, version.minor, version.build, version.cb);
     else
         /* TODO: detect older versions */
-        printf("LIBC version: Unknown\n");
+        printf("LIBC version:    Unknown\n");
 
-    printf("LIBC module:  %s (0x%04lX)\n", szModName, hmod);
+    printf("LIBC signature:  %s\n", description);
+    printf("LIBC module:     %s (0x%04lX)\n", szModName, hmod);
 
     return 0;
 }
