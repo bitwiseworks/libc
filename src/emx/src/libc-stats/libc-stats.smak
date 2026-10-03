@@ -1,0 +1,10 @@
+.MODULE := libc-stats
+.MDESC  := Print runtime LIBC version information and statistics
+.INSDIR := bin/
+
+.TARGET := libc-stats.exe
+.TKIND	:= $(TOOLFMT)
+.TSRC   := $(wildcard src/libc-stats/*.c)
+.TCF	:= $(CFLAGS.DEF.VERSION)
+.TDEP	:= $.omf/libc_dll.lib
+include mkexe.smak
