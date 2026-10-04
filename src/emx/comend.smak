@@ -13,6 +13,7 @@ ifndef .TKEEP
 .TSRC.386 :=
 .TLDF :=
 .TCF :=
+.TDEF :=
 .TDEP :=
 .IMPS :=
 .TKVAR :=
