@@ -2,8 +2,8 @@
 
 MAKEFILE := toolonly.gmk
 GENRULES  = $.genrules-toolonly.smak
-SUBMAK   := version.smak $(filter-out src/regexp/% src/realrealpath/%, \
-	$(filter-out src/lib%, $(wildcard src/*/*.smak))) \
+SUBMAK   := version.smak $(filter-out src/regexp/%, \
+	$(filter-out src/lib%  src/realpath2/%, $(wildcard src/*/*.smak))) \
 	$(wildcard src/libmoddef/*.smak) \
 	$(wildcard src/libomflib/*.smak) \
 

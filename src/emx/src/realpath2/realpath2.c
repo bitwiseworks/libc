@@ -39,7 +39,7 @@ static int forward_slashes = 0;
 static void help()
 {
     printf(
-"realrealpath " VERSION VERSION_DETAILS "\n" VERSION_COPYRIGHT "\n"
+"realpath2 " VERSION VERSION_DETAILS "\n" VERSION_COPYRIGHT "\n"
 "\n"
 "Print the resolved absolute native file name;\n"
 "all but the last component must exist\n"

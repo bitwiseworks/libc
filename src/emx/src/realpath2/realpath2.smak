@@ -1,10 +1,10 @@
-.MODULE := realrealpath
+.MODULE := realpath2
 .MDESC  := Print the resolved absolute file name
 .INSDIR := bin/
 
-.TARGET := realrealpath.exe
+.TARGET := realpath2.exe
 .TKIND	:= $(TOOLFMT)
-.TSRC   := $(wildcard src/realrealpath/*.c)
+.TSRC   := $(wildcard src/realpath2/*.c)
 .TCF	:= $(CFLAGS.DEF.VERSION)
 .TDEP	:= $.omf/libc_dll.lib
 include mkexe.smak
