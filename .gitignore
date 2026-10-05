@@ -1,2 +1,8 @@
 *.exe
+*.dll
 *.map
+*.obj
+*.lib
+*.o
+*.a
+*.log
