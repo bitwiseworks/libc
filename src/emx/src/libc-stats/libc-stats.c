@@ -93,7 +93,7 @@ static void file_error(FILE *f, const char *opname, const char *path)
     error("%s(%s): %s\n", opname, path, !f || ferror(f) ? strerror(errno) : "Premature EOF");
 }
 
-static char description[256 + 1 /* \0 */] = "aaa";
+static char description[256 + 1 /* \0 */];
 
 static void get_description(const char *path)
 {
@@ -105,7 +105,7 @@ static void get_description(const char *path)
     if (fread(&hdr, sizeof(hdr), 1, f) != 1)
         file_error(f, "fread", path);
     if (hdr.e_magic != EXE_MAGIC_MZ)
-        error("%s: Invalid MZ header\n", path);
+        hdr.e_lfanew = 0; /* LXLITE may strip MZ header, check for LX */
 
     struct os2_header lx;
     if (fseek(f, hdr.e_lfanew, SEEK_SET))
@@ -113,7 +113,7 @@ static void get_description(const char *path)
     if (fread(&lx, sizeof(lx), 1, f) != 1)
         file_error(f, "fread", path);
     if (lx.magic != EXE_MAGIC_LX)
-        error("%s: Invalid LX header\n", path);
+        error("%s: Invalid LX header at offset 0x%08X: 0x%02X\n", path, hdr.e_lfanew, lx.magic);
 
     unsigned char len = 0;
     if (lx.nonresname_size > 0)
