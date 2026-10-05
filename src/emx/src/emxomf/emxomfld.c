@@ -648,7 +648,7 @@ static int      make_tempfile(char *pszFile, const char *pszPrefix, const char *
     static char     s_szTmp[_MAX_PATH + 1];
 
     /* We need to apply _realrealpath to the tmpdir, so resolve that once and for all. */
-    if (!s_szTmp[0]) 
+    if (!s_szTmp[0])
     {
         const char *    pszTmp = getenv("TMP");
         if (!pszTmp)    pszTmp = getenv("TMPDIR");
@@ -1351,7 +1351,9 @@ static int def_2_watcom(struct _md *md, const _md_stmt *stmt, _md_token token, v
         break;
 
       case _MD_IMPORTS:
-        fprintf (response_file, "IMPORT '%s' '%s'", stmt->import.internalname,
+        fprintf (response_file, "IMPORT '%s' '%s'",
+                 stmt->import.internalname[0] ?
+                   stmt->import.internalname : stmt->import.entryname,
                  stmt->import.modulename);
         if (stmt->import.flags & _MDEP_ORDINAL)
           fprintf (response_file, ".%d", stmt->import.ordinal);
