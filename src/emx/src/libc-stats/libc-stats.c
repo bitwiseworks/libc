@@ -224,7 +224,35 @@ int main(int argc, char **argv)
         /* TODO: detect older versions */
         printf("LIBC version:    Unknown\n");
 
-    printf("LIBC signature:  %s\n", description);
+    int fParsed = 0;
+    if (*description)
+    {
+        char vendor[33], revision[32], host[12], build[32];
+        char date_time[27] = {0};
+        char descr[256];
+        int fields = sscanf(description, "@#%32[^:]:%31[^#]#@##1##%26c%11[^:]::::%31[^:]::@@%255[^\r\n]",
+            vendor, revision, date_time, host, build, descr);
+        if (fields == 6)
+        {
+            fParsed = 1;
+            char *dt = date_time + sizeof(date_time) - 2;
+            while (dt > date_time && *dt == ' ')
+                *dt-- = '\0';
+            dt = date_time;
+            while (*dt == ' ')
+                ++dt;
+            printf("LIBC signature:\n"
+                   "  Vendor:        %s\n"
+                   "  Version:       %s.%s\n"
+                   "  Date/time:     %s\n"
+                   "  Build host:    %s\n"
+                   "  Description:   %s\n",
+                   vendor, revision, build, dt, host, descr);
+        }
+    }
+    if (!fParsed)
+        printf("LIBC signature:  %s\n", description);
+
     printf("LIBC module:     %s (0x%04lX)\n", szModName, hmod);
 
     return 0;
