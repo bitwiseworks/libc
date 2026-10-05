@@ -1,0 +1,169 @@
+#!/@unixroot/usr/bin/sh
+
+#
+# LIBC Next Script Launcher service script
+#
+# Copyright (c) 2026 Dmitrii Kuminov <coding@dmik.org>
+#
+#
+# This file is part of LIBC Next.
+#
+# LIBC Next is free software; you can redistribute it and/or modify
+# it under the terms of the GNU Lesser General Public License as published
+# by the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+#
+# LIBC Next is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Lesser General Public License for more details.
+#
+# You should have received a copy of the GNU Lesser General Public License
+# along with LIBC Next; if not, write to the Free Software
+# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+#
+
+
+set -f
+
+launcher="${0##*/}"
+if [ "$launcher" != "libc-script-launcher" ]; then
+  echo "$launcher: File '$0' must be named 'libc-script-launcher'"
+  exit 1
+fi
+
+launcher_exe="$0.exe"
+if [ ! -e "$launcher_exe" ]; then
+  echo "$launcher: File '$launcher_exe' does not exist or is not executable"
+  exit 1
+fi
+
+if [ "$1" = "--help" ]; then
+  echo "LIBC Next Script Launcher tool @VERSION@ @VERSION_DETAILS@
+@COPYRIGHT@
+
+To create a launcher for a script file named 'my-script', make sure it has a
+valid shebang line and copy '$launcher.exe' to 'my-script.exe'
+located in the same directory as 'my-script', or call:
+
+$launcher [--force] --install my-script
+
+Using --install is recommended. It sets the OS/2 HIDDEN attribute on script
+files with an extension (e.g. 'my-script.X.Y') so OS/2 always selects the
+'.exe' launcher and handles other installation details.
+
+The --install option will refuse to overwrite the target '.exe' file unless
+--force is also given.
+
+Specifying multiple script files will create a launcher for each of them."
+
+  if [ -t 1 ]; then
+    printf "\nPress Enter to exit..."
+    read -r _
+  fi
+  exit 0
+fi
+
+find_tool()
+{
+  __var="$1"; shift
+  __help="$1"; shift
+  __tool=
+  for t in "$@"; do
+    if "$t" "$__help" >/dev/null 2>&1; then
+      __tool="$t"; break
+    fi
+  done
+  if [ -z "$__tool" ]; then
+    echo "$launcher: Cannot find valid $__var tool (tried $*)"
+    exit 1
+  fi
+  eval "$__var=\"$t\""
+}
+
+force=
+if [ "$1" = "--force" ]; then
+  force="1"; shift
+fi
+
+if [ "$1" != "--install" ] || ! shift || [ $# -eq 0 ]; then
+  echo "Usage: $launcher --help | [--force] --install SCRIPT..."
+  exit 1
+fi
+
+for install_script in "$@"; do
+
+  install_script_name="${install_script##*/}"
+  if [ "$install_script_name" = "$launcher" ]; then
+    echo "$launcher: Target script cannot be named '$launcher'"
+    exit 1
+  fi
+
+  install_script_ext="${install_script_name##*.}"
+  if [ "$install_script_ext" = "$install_script_name" ]; then
+    install_script_ext=""
+  else
+    install_script_ext=".$install_script_ext"
+  fi
+
+  if [ "$install_script_ext" = ".exe" ]; then
+    echo "$launcher: Script file cannot have '.exe' extension"
+    exit 1
+  fi
+
+  find_tool CP --help /@unixroot/usr/bin/cp.exe cp
+  find_tool ATTRIB /? /@system_root/attrib.exe attrib
+  find_tool REALPATH2 --help /@system_root/realpath2.exe realpath2
+
+  echo "Installing launcher for '$install_script' as '$install_script.exe'"
+  if [ ! -e "$install_script" ]; then
+    echo "WARNING: File '$install_script' does not exist or is not executable"
+  fi
+
+  if [ -d "$install_script.exe" ]; then
+    echo "$launcher: Path '$install_script.exe' is directory"
+    exit 1
+  fi
+
+  cp_opts="-a" # preserve attrs
+  if [ -z "$force" ]; then
+    if [ -f "$install_script.exe" ] || [ -L "$install_script.exe" ]; then
+      echo "$launcher: File '$install_script.exe' already exists"
+      exit 1
+    fi
+    cp_opts="$cp_opts -n" # no overwrite
+  else
+    cp_opts="$cp_opts --remove-destination" # always overwrite
+  fi
+
+  # shellcheck disable=SC2086
+  if ! msg=$("$CP" $cp_opts -- "$launcher.exe" "$install_script.exe" 2>&1); then
+    echo "$launcher: $msg"
+    exit 1
+  fi
+
+  if [ -n "$install_script_ext" ]; then
+    if [ ! -e "$install_script" ]; then
+      echo "WARNING: Skipping setting HIDDEN attribute on '$install_script'"
+    else
+      echo "Setting HIDDEN attribute on '$install_script'"
+      # ATTRIB needs backslashes and no Unix mode path rewrite prefixes
+      if ! install_script=$("$REALPATH2" -- "$install_script" 2>&1); then
+        echo "$launcher: $install_script"
+        exit 1
+      fi
+      # ATTRIB barfs on file names starting with -, fix it
+      if [ -z "${install_script##-*}" ]; then
+        install_script=".\\$install_script"
+      fi
+      if ! msg=$("$ATTRIB" +H "$install_script" 2>&1); then
+        echo "$launcher: $ATTRIB:"
+        echo "$msg"
+        exit 1
+      fi
+    fi
+  fi
+  echo "Install successful"
+
+done
+exit 0

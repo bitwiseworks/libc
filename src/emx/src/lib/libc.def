@@ -2051,3 +2051,4 @@ EXPORTS
 
     ; LIBC Next 0.1.15
     "___libcn_version" @2034
+    "___libcn_script_launcher" @2035

@@ -50,5 +50,10 @@
     "TCPNAMEG",
     "TIMEBOMB",
     "USEDENTRY"
-  ]
+  ],
+  "files.associations": {
+      "*.smak": "makefile",
+      "*.gmk": "makefile",
+      "*.s": "asm-intel-x86-generic",
+  },
 }

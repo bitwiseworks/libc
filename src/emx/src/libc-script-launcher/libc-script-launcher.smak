@@ -1,0 +1,24 @@
+.MODULE := libc-script-launcher
+.MDESC  := LIBC Next script launcher stub/tool
+.INSDIR := bin/
+
+.TARGET := libc-script-launcher.exe
+.TKIND	:= $(TOOLFMT)
+.TSRC   := $(wildcard src/libc-script-launcher/*.s)
+# .TSRC   := $(wildcard src/libc-script-launcher/*.c)
+.TDEF   := $.omf/libc-script-launcher.def
+.TCF	:= $(CFLAGS.DEF.VERSION)
+.TDEP	:= $.omf/libc_dll.lib $.omf/libos2.lib $.omf/libc-script-launcher
+include mkexe.smak
+
+$.omf/libc-script-launcher.def: src/libc-script-launcher/libc-script-launcher.def
+	sed -e 's|@VERSION@|$(VERSION)|g' "$<" > "$@"
+
+$.omf/libc-script-launcher: src/libc-script-launcher/libc-script-launcher
+	sed -e 's|@VERSION@|$(VERSION)|g' \
+	    -e 's|@VERSION_DETAILS@|$(VERSION_DETAILS)|g' \
+	    -e 's|@COPYRIGHT@|$(COPYRIGHT)|g' "$<" > "$@"
+
+INS.FILES += $(INS)$(.INSDIR)libc-script-launcher
+$(INS)$(.INSDIR)libc-script-launcher: $.omf/libc-script-launcher
+	$(call CP,$<,$@)

@@ -26,6 +26,17 @@
 #include <InnoTekLIBC/logstrict.h>
 #include <InnoTekLIBC/tcpip.h>
 #include "syscalls.h"
+#include "defs.h"
+
+
+/*******************************************************************************
+*   Defined Constants And Macros                                               *
+*******************************************************************************/
+/**
+ * Base of LIBCn script Launcher version string stored as a resident name with
+ * ordinal 0. Should match src/libc-script-launcher/libc-script-launcher.def.
+ */
+#define __LIBCN_SCRIPT_LAUNCHER_BASE "LIBCn script launcher v"
 
 
 /*******************************************************************************
@@ -257,27 +268,23 @@ int __spawnve(struct _new_proc *np)
     size_t cch;
 
 #ifdef DEBUG_LOGGING
-    LIBCLOG_MSG("fname=%s,arg_off=0x%lx,env_off=0x%lx\n", (char *)np->fname_off, np->arg_off, np->env_off);
+    LIBCLOG_MSG("fname='%s',arg_off=%p,env_off=%p\n", (char *)np->fname_off, (void *)np->arg_off, (void *)np->env_off);
     LIBCLOG_MSG("arg_off:\n");
     psz = (char *)np->arg_off;
     for (i = 0; i < np->arg_count; ++i)
     {
-        cch = __libc_LogSNPrintf(__LIBC_LOG_INSTANCE, szLineBuf, sizeof(szLineBuf), "arg[%d]=", i);
-        LIBCLOG_RAW(szLineBuf, cch);
+        unsigned char f = (unsigned char)*psz++;
         cch = strlen(psz);
-        LIBCLOG_RAW(psz, cch);
-        LIBCLOG_RAW("\n", 1);
+        LIBCLOG_NO_WF(LIBCLOG_MSG2(" %3d: Flags 0x%02X %.512hhs (%d)\n", i, f, psz, cch));
         psz += cch + 1;
     }
+
     LIBCLOG_MSG("env_off:\n");
     psz = (char *)np->env_off;
     for (i = 0; i < np->env_count; ++i)
     {
-        cch = __libc_LogSNPrintf(__LIBC_LOG_INSTANCE, szLineBuf, sizeof(szLineBuf), "env[%d]=", i);
-        LIBCLOG_RAW(szLineBuf, cch);
         cch = strlen(psz);
-        LIBCLOG_RAW(psz, cch);
-        LIBCLOG_RAW("\n", 1);
+        LIBCLOG_NO_WF(LIBCLOG_MSG2(" %3d: %+.512hhs (%d)\n", i, psz, cch));
         psz += cch + 1;
     }
 #endif
@@ -324,6 +331,7 @@ int __spawnve(struct _new_proc *np)
     if (pszPgmName[cchFname]) /* update the length if .exe was added */
         cchFname = strlen(pszPgmName);
     pszPgmName = &szNativePath[0];
+    LIBCLOG_MSG("pszPgmName='%s'\n", pszPgmName);
 
     /*
      * cmd.exe and 4os2.exe needs different argument handling, and
@@ -375,7 +383,68 @@ int __spawnve(struct _new_proc *np)
                     {
                         char const *pchVer = &szLineBuf[__KLIBC_STUB_SIGNATURE_OFF + sizeof(__KLIBC_STUB_SIGNATURE_BASE) - 1];
                         if (*pchVer >= '0' && *pchVer <= '9')
+                        {
+                            /*
+                             * Check for libcn-script-launcher, to shortcut to its script instead of
+                             * creating another process (that'll do just the same). Assumes that
+                             * sizeof(szLineBuf) is enough to fit the first EXE's resident name.
+                             */
+                            if (   (psz = _getext(pszPgmName)) && !stricmp(psz, ".exe")
+                                && cbRead > sizeof(struct exe1p2_header))
+                            {
+                                struct exe1p2_header *pMZ = (struct exe1p2_header *)&szLineBuf;
+                                size_t cbLeft = cbRead - pMZ->e_lfanew;
+                                if (cbRead > pMZ->e_lfanew && cbLeft > sizeof(struct os2_header))
+                                {
+                                    struct os2_header *pLX = (struct os2_header *)&szLineBuf[pMZ->e_lfanew];
+                                    if (   pLX->magic == EXE_MAGIC_LX
+                                        && !(pLX->mod_flags & 0x00038000) /* EXE? */)
+                                    {
+                                        if (cbLeft > pLX->resname_offset /* + 1b name length */)
+                                        {
+                                            size_t offResTbl = pMZ->e_lfanew + pLX->resname_offset;
+                                            size_t cbName = (unsigned char)szLineBuf[offResTbl];
+                                            cbLeft -= pLX->resname_offset + 1;
+                                            if (cbLeft >= cbName + 2 /* ordinal*/)
+                                            {
+                                                word ord = *(word*)&szLineBuf[offResTbl + 1 + cbName];
+                                                char *pszName = &szLineBuf[offResTbl + 1];
+                                                pszName[cbName] = '\0';
+                                                LIBCLOG_MSG("1st ResidentName: '%s'@%d\n", pszName, ord);
+                                                if (   ord == 0
+                                                    && !strncmp(pszName, __LIBCN_SCRIPT_LAUNCHER_BASE, sizeof(__LIBCN_SCRIPT_LAUNCHER_BASE) - 1))
+                                                {
+                                                    pchVer = pszName + sizeof(__LIBCN_SCRIPT_LAUNCHER_BASE) - 1;
+                                                    if (*pchVer >= '0' && *pchVer <= '9')
+                                                    {
+                                                        /* Got a valid launcher, try its script (with .exe removed) */
+                                                        ++cTries;
+                                                        *psz = '\0';
+                                                        /*
+                                                         * Remove .exe from fname_off too as it is what the interpreter
+                                                         * gets. Do it after trimming trailing spaces ignored by OS/2.
+                                                         * when opening files. See also __libcn_script_launcher.
+                                                         */
+                                                        psz = (char *)np->fname_off;
+                                                        while (cchFname && psz[cchFname - 1] == ' ')
+                                                            psz[--cchFname] = '\0';
+                                                        psz = _getext(psz);
+                                                        if (psz && !stricmp(psz, ".exe"))
+                                                        {
+                                                            *psz = '\0';
+                                                            cchFname -= 4;
+                                                        }
+                                                        continue;
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+
                             enmMethod = !(ulMode & P_NOUNIXARGV) ? args_unix : args_standard;
+                        }
                         break;
                     }
                     else if (cTries > 0 && __libc_Back_gfProcessHandleHashBangScripts)
@@ -453,8 +522,9 @@ int __spawnve(struct _new_proc *np)
                 }
             }
             /* Catch some plain failures here, leave the rest for later. */
-            else if (   rc == ERROR_FILE_NOT_FOUND
-                    || rc == ERROR_PATH_NOT_FOUND)
+            else if (  rc == ERROR_FILE_NOT_FOUND
+                    || rc == ERROR_PATH_NOT_FOUND
+                    || rc == ERROR_OPEN_FAILED)
             {
                 _sys_set_errno(rc);
                 LIBCLOG_RETURN_INT(-1);
@@ -702,7 +772,7 @@ int __spawnve(struct _new_proc *np)
                 {
                     /*
                      * Don't apply any special processing to interpreter args (we don't recognize
-                     * quotes or any special chars there yet), see hash bang handling above)
+                     * quotes or any special chars there yet), see hash bang handling above
                      */
                     ADD(cchInterpreterArgs);
                     memcpy(pszArg, pszInterpreterArgs, cchInterpreterArgs);
@@ -712,6 +782,10 @@ int __spawnve(struct _new_proc *np)
             }
             else if (i == 0)
             {
+                /*
+                 * TODO: Should _realrealpath fname_off to get rid of possible path rewrite prefixes
+                 * since neither OS/2 nor EMX understand them
+                 */
                 pszSrcSave = pszSrc;
                 pszSrc = (const char*)np->fname_off;
             }
