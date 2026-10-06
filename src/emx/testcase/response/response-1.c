@@ -1,3 +1,8 @@
+/*
+ * Verify that response file lines longer than 8192 bytes remain single
+ * arguments, including a final line without a newline.
+ */
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
