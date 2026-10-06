@@ -1,5 +1,6 @@
 /* response.c (emx+gcc) -- Copyright (c) 1990-1996 by Eberhard Mattes */
 
+#define _GNU_SOURCE
 #include "libc-alias.h"
 #include <stdio.h>
 #include <stdlib.h>
@@ -23,7 +24,9 @@ void _response (int *argcp, char ***argvp)
 {
   int i, old_argc, new_argc, new_alloc;
   char **old_argv, **new_argv;
-  char line[1+8192], *p;
+  char *line, *p;
+  size_t line_alloc;
+  ssize_t line_len;
   FILE *f;
 
   old_argc = *argcp; old_argv = *argvp;
@@ -44,14 +47,16 @@ void _response (int *argcp, char ***argvp)
         RPUT (old_argv[i]);
       else
         {
-          line[0] = __KLIBC_ARG_NONZERO | __KLIBC_ARG_RESPONSE;
-          while (fgets (line+1, sizeof (line)-1, f) != NULL)
+          line = NULL; line_alloc = 0;
+          while ((line_len = getline (&line, &line_alloc, f)) != -1)
             {
-              p = strchr (line+1, '\n');
-              if (p != NULL) *p = 0;
-              p = strdup (line);
+              if (line_len > 0 && line[line_len-1] == '\n')
+                line[line_len-1] = 0;
+              p = (char *)malloc (strlen (line) + 2);
               if (p == NULL)
                 goto out_of_memory;
+              p[0] = (char)(__KLIBC_ARG_NONZERO | __KLIBC_ARG_RESPONSE);
+              strcpy (p+1, line);
               RPUT (p+1);
             }
           if (ferror (f))
@@ -59,6 +64,9 @@ void _response (int *argcp, char ***argvp)
               fputs ("Cannot read response file\n", stderr);
               exit (255);
             }
+          if (!feof (f))
+            goto out_of_memory;
+          free (line);
           fclose (f);
         }
     }
