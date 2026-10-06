@@ -1321,6 +1321,10 @@ static __LIBC_PFH fhGet(int fh)
                 case HANDTYPE_PIPE:
                     fLibc = F_PIPE;
                     Dev = makedev('p', 0);
+                    /* Get the blocking flag */
+                    if (   DosQueryNPHState((HFILE)fh, &fulDevFlags) == NO_ERROR
+                        && (fulDevFlags & NP_NOWAIT))
+                        fLibc |= O_NONBLOCK;
                     break;
             }
 
@@ -1346,7 +1350,6 @@ static __LIBC_PFH fhGet(int fh)
              */
             if (!_fmode_bin)
                 fLibc |= O_TEXT;
-
 
             /*
              * Allocate a new handle for this filehandle.
@@ -1459,6 +1462,24 @@ int __libc_FHSetFlags(__LIBC_PFH pFH, int fh, unsigned fFlags)
         {
             fulNewState &= OPEN_FLAGS_WRITE_THROUGH | OPEN_FLAGS_FAIL_ON_ERROR | OPEN_FLAGS_NO_CACHE | OPEN_FLAGS_NOINHERIT; /* Turn off non-participating bits. */
             rc = DosSetFHState(fh, fulNewState);
+        }
+    }
+    if (   !rc && (pFH->fFlags & __LIBC_FH_TYPEMASK) == F_PIPE
+        && !(DosQueryNPHState(fh, &fulState)))
+    {
+        ULONG fulNewState;
+        LIBC_ASSERTM(     ((fulState & NP_NOWAIT) != 0 )
+                      ==  ((pFH->fFlags & O_NONBLOCK) != 0),
+                     "Blocking flags are out of sync for pipe hFile %d (%#x)! fulState=%08lx fFlags=%08x\n",
+                     fh, fh, fulState, pFH->fFlags);
+        if (fFlags & O_NONBLOCK)
+            fulNewState = fulState | NP_NOWAIT;
+        else
+            fulNewState = fulState & ~NP_NOWAIT;
+        if (fulNewState != fulState)
+        {
+            fulNewState &= NP_NOWAIT | NP_READMODE_MESSAGE; /* Turn off non-participating bits. */
+            rc = DosSetNPHState(fh, fulNewState);
         }
     }
     FS_RESTORE();
