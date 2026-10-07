@@ -420,6 +420,15 @@ int __spawnve(struct _new_proc *np)
                                                         /* Got a valid launcher, try its script (with .exe removed) */
                                                         ++cTries;
                                                         *psz = '\0';
+                                                        /* Resolve symlinks, if any */
+                                                        rc = __libc_back_fsResolve(pszPgmName, BACKFS_FLAGS_RESOLVE_FULL, &szNativePath[0], NULL);
+                                                        if (rc)
+                                                        {
+                                                            errno = -rc;
+                                                            LIBCLOG_ERROR_RETURN(-1, "ret -1 - Failed to resolve program name: '%s' rc=%d.\n", pszPgmName, rc);
+                                                        }
+                                                        pszPgmName = &szNativePath[0];
+                                                        LIBCLOG_MSG("pszPgmName='%s'\n", pszPgmName);
                                                         /*
                                                          * Remove .exe from fname_off too as it is what the interpreter
                                                          * gets. Do it after trimming trailing spaces ignored by OS/2.
