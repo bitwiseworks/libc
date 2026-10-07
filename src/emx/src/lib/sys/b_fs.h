@@ -317,10 +317,13 @@ dev_t __libc_back_fsUnixAttribsInit(struct __LIBC_FSUNIXATTRIBSCREATEFEA2LIST *p
 /**
  * Reads the unix EAs for a file which is being stat'ed.
  *
+ * Repairs a copied inode EA if its path CRC no longer matches.
+ *
  * @returns 0 on success.
  * @returns Negative errno on failure.
  * @param   hFile           File handle to the fs object. If no handle handy, set to -1.
- * @param   pszNativePath   Native path to the fs object. If handle is give this will be ignored.
+ * @param   pszNativePath   Native path to the fs object. If handle is given, used for inode
+ *                          calculation when appropriate.
  * @param   pStat           Pointer to the stat buffer.
  *                          The buffer is only updated if and with the EAs we find,
  *                          so the caller must fill the fields with defaults before

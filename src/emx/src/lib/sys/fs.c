@@ -1759,7 +1759,7 @@ static int fsResolveOS2(const char *pszUserPath, unsigned fFlags, char *pszNativ
 
 /**
  * Initializes a unix attribute structure before creating a new inode.
- * The call must have assigned default values to the the structure before doing this call!
+ * The caller must have assigned default values to the the structure before doing this call!
  *
  * @returns Device number.
  * @param   pFEas           The attribute structure to fill with actual values.
@@ -1819,10 +1819,13 @@ dev_t __libc_back_fsUnixAttribsInit(struct __LIBC_FSUNIXATTRIBSCREATEFEA2LIST *p
 /**
  * Reads the unix EAs for a file which is being stat'ed.
  *
+ * Repairs a copied inode EA if its path CRC no longer matches.
+ *
  * @returns 0 on success.
  * @returns Negative errno on failure.
  * @param   hFile           File handle to the fs object. If no handle handy, set to -1.
- * @param   pszNativePath   Native path to the fs object. If handle is give this will be ignored.
+ * @param   pszNativePath   Native path to the fs object. If handle is given, used for inode
+ *                          calculation when appropriate.
  * @param   pStat           Pointer to the stat buffer.
  *                          The buffer is only updated if and with the EAs we find,
  *                          so the caller must fill the fields with defaults before
@@ -1885,6 +1888,7 @@ int __libc_back_fsUnixAttribsGet(int hFile, const char *pszNativePath, struct st
     /*
      * Parse the result.
      */
+    int     fInoEA = 0;
     PFEA2   pFea2 = &pEaOp2->fpFEA2List->list[0];
     for (;;)
     {
@@ -1927,7 +1931,10 @@ int __libc_back_fsUnixAttribsGet(int hFile, const char *pszNativePath, struct st
                     {
                         uint64_t u64 = *(uint64_t *)++pusType;
                         if (COMPARE_EANAME(__libc_gszInoEA))
+                        {
                             pStat->st_ino = u64;
+                            fInoEA = 1;
+                        }
                         else
                             LIBC_ASSERTM_FAILED("Huh?!? got an ea named '%s', namelen=%d! u64=%#llx (%lld)\n", pFea2->szName, pFea2->cbName, u64, u64);
                     }
@@ -1948,12 +1955,55 @@ int __libc_back_fsUnixAttribsGet(int hFile, const char *pszNativePath, struct st
     }
 
     /*
-     * Calc st_ino and st_dev if not found.
+     * Calc missing values and validate the path CRC in the inode EA. Native
+     * copies carry the source EA, so repair its high half on the destination.
      */
-    if ((!pStat->st_ino || !pStat->st_dev) && pszNativePath)
+    if ((fInoEA || !pStat->st_ino || !pStat->st_dev) && pszNativePath)
     {
-        ino_t Inode;
-        dev_t Dev = __libc_back_fsPathCalcInodeAndDev(pszNativePath, &Inode);
+        ino_t Inode = 0;
+        dev_t Dev = 0;
+        uint32_t u32Path;
+        if (!pStat->st_ino || !pStat->st_dev)
+        {
+            Dev = __libc_back_fsPathCalcInodeAndDev(pszNativePath, &Inode);
+            u32Path = (uint32_t)(Inode >> 32);
+        }
+        else /* fInoEA, get the actual path CRC */
+        {
+            const char *psz = pszNativePath;
+            if (psz[1] == ':')
+                psz += 2;
+            u32Path = crc32str(psz);
+        }
+        if (fInoEA && (uint32_t)(pStat->st_ino >> 32) != u32Path)
+        {
+            LIBCLOG_MSG("Stale inode CRC %#X, updating with %#X\n", (uint32_t)(pStat->st_ino >> 32), u32Path);
+            pStat->st_ino = ((uint64_t)u32Path << 32) | (uint32_t)pStat->st_ino;
+
+            /* Update EA_INO ignoring errors to avoid stat from failing */
+            #pragma pack(1)
+            struct
+            {
+                ULONG    cbList;
+                ULONG    off;
+                BYTE     fEA;
+                BYTE     cbName;
+                USHORT   cbValue;
+                CHAR     szName[sizeof(EA_INO)];
+                USHORT   usType;
+                USHORT   cbData;
+                uint64_t u64INO;
+            } EAs =
+            {
+                sizeof(EAs), 0, 0, sizeof(EA_INO) - 1, sizeof(uint64_t) + 4, EA_INO, EAT_BINARY, sizeof(uint64_t), pStat->st_ino
+            };
+            #pragma pack()
+
+            EAOP2 EaOp2;
+            rc = __libc_back_fsNativeSetEAs(hFile, pszNativePath, (PFEA2LIST)&EAs, &EaOp2);
+            if (rc)
+                LIBCLOG_MSG("__libc_back_fsNativeSetEAs('%s',,,,) -> %d, oError=%lx\n", pszNativePath, rc, EaOp2.oError);
+        }
         if (!pStat->st_ino)
             pStat->st_ino = Inode;
         if (!pStat->st_dev)
