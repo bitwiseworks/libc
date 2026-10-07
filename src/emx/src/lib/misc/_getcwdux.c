@@ -104,7 +104,7 @@ char *_getcwdux(char *buf, size_t bufsize)
     }
     else
     {
-        rc = __libc_Back_fsDirCurrentGet(buf, bufsize, 0, 0);
+        rc = __libc_Back_fsDirCurrentGet(buf, bufsize, 0, __LIBC_BACK_FSCWD_NO_DRIVE);
         if (!rc)
         {
             /*

@@ -1,4 +1,4 @@
-all: version-1.exe inode-copy-1.exe
+all: version-1.exe inode-copy-1.exe getcwdux-1.exe
 
 %.exe: %.c
 	gcc -g -Zomf -Zmap -o $@ $^
