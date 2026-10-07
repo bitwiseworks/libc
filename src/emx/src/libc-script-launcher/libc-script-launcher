@@ -27,6 +27,9 @@
 set -f
 
 launcher="${0##*/}"
+if [ "$launcher" = "$0" ]; then
+  launcher="${0##*\\}"
+fi
 if [ "$launcher" != "libc-script-launcher" ]; then
   echo "$launcher: File '$0' must be named 'libc-script-launcher'"
   exit 1
