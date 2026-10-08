@@ -7,14 +7,21 @@
 #$(_MDIRS)
 #TARGDIRS += $(_MDIRS)
 
+.TARGET	:= libsocket_lazy.a
+.TKIND	:= aout lazy
+.TSRC   :=
+.IMPS   := src/libsocket/socket.imp
+.INSDIR	:= lib/
+.TCF    := -Wno-unused -s
+.TKEEP	:= 1
+include mkimplib.smak
+
 .TARGET	:= libsocket_p.a
 .TKIND	:= aout prof
 .TSRC   := $(wildcard src/libsocket/386/*.s) \
            $(filter-out src/libsocket/aliases/herror%, $(wildcard src/libsocket/aliases/*.s)) \
            $(filter-out src/libsocket/herror%, $(wildcard src/libsocket/*.c))
 .TCF    := -I$.
-.IMPS   := src/libsocket/socket.imp
-.INSDIR	:= lib/
 .TKEEP	:= 1
 include mkimplib.smak
 
@@ -25,19 +32,26 @@ include mkimplib.smak
 
 .TARGET	:= libsocket.a
 .TKIND	:= aout
+.TKEEP	:=
+include mkimplib.smak
+
+
+
+.TARGET	:= libsocket_lazy.a
+.TKIND	:= aout lazy
+.TKVAR	:= tcpipv4
+.TSRC   :=
+.IMPS   := src/libsocket/socket_tcpipv4.imp
+.INSDIR	:= lib/tcpipv4/
+.TCF    := -Wno-unused -s
 .TKEEP	:= 1
 include mkimplib.smak
 
-		
-	
 .TARGET	:= libsocket_p.a
 .TKIND	:= aout prof
-.TKVAR	:= tcpipv4
 .TSRC   := $(wildcard src/libsocket/386/*.s) $(wildcard src/libsocket/aliases/*.s) \
            $(wildcard src/libsocket/*.c)
 .TCF    := -I$. -DTCPV40HDRS -D__USE_LIBC_TCPIP
-.IMPS   := src/libsocket/socket_tcpipv4.imp
-.INSDIR	:= lib/tcpipv4/
 .TKEEP	:= 1
 include mkimplib.smak
 
@@ -48,6 +62,7 @@ include mkimplib.smak
 
 .TARGET	:= libsocket.a
 .TKIND	:= aout
+.TKEEP	:=
 include mkimplib.smak
 
 

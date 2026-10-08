@@ -120,6 +120,13 @@ include mkimplib.smak
 		   src/libos2/ctls.imp
 include mkimplib.smak
 
+.TARGET := libos2_ses_lazy.a
+.TKIND	:= aout lazy
+.TSRC	:=
+.TCF	:= -Wno-unused -s
+.IMPS	:= src/libos2/ses.imp
+include mkimplib.smak
+
 .TARGET := libos2_dos_lazy.a
 .TKIND	:= aout lazy
 .TSRC	:=
