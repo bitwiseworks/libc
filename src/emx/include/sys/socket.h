@@ -201,10 +201,10 @@ struct	linger {
  */
 struct sockaddr {
 #ifdef TCPV40HDRS
-	u_short	sa_family;		/* address family */
-	char	sa_data[14];		/* up to 14 bytes of direct address */
+	unsigned short	sa_family;	/* address family */
+	char		sa_data[14];	/* up to 14 bytes of direct address */
 #else
-	u_char		sa_len;		/* total length */
+	unsigned char	sa_len;		/* total length */
 	sa_family_t	sa_family;	/* address family */
 	char		sa_data[14];	/* actually longer; address value */
 #endif
@@ -215,8 +215,8 @@ struct sockaddr {
  * information in raw sockets.
  */
 struct sockproto {
-	u_short	sp_family;		/* address family */
-	u_short	sp_protocol;		/* protocol */
+	unsigned short	sp_family;	/* address family */
+	unsigned short	sp_protocol;	/* protocol */
 };
 
 #include <sys/_sockaddr_storage.h>
@@ -355,7 +355,7 @@ struct msghdr {
 #else
         socklen_t   msg_namelen;            /* size of address */
         struct iovec *msg_iov;              /* scatter/gather array */
-        u_int       msg_iovlen;             /* # elements in msg_iov */
+        int         msg_iovlen;             /* # elements in msg_iov */
         void       *msg_control;            /* ancillary data, see below */
         socklen_t   msg_controllen;         /* ancillary data buffer len */
         long        msg_flags;              /* flags on received message */
@@ -393,11 +393,11 @@ struct cmsghdr {
 	socklen_t	cmsg_len;	/* data byte count, including hdr */
 	int		cmsg_level;	/* originating protocol */
 	int		cmsg_type;	/* protocol-specific type */
-/* followed by	u_char  cmsg_data[]; */
+/* followed by	unsigned char  cmsg_data[]; */
 };
 
 /* given pointer to struct adatahdr, return pointer to data */
-#define	CMSG_DATA(cmsg)		((u_char *)((cmsg) + 1))
+#define	CMSG_DATA(cmsg)		((unsigned char *)((cmsg) + 1))
 
 /* given pointer to struct adatahdr, return pointer to next adatahdr */
 #define	CMSG_NXTHDR(mhdr, cmsg)	\
@@ -422,8 +422,8 @@ struct cmsghdr {
  * 4.3 compat sockaddr, move to compat file later
  */
 struct osockaddr {
-        u_short sa_family;              /* address family */
-        char    sa_data[14];            /* up to 14 bytes of direct address */
+        unsigned short sa_family;       /* address family */
+        char           sa_data[14];     /* up to 14 bytes of direct address */
 };
 
 /*
@@ -548,12 +548,12 @@ int     TCPCALL getinetversion(char *);
 #define	MT_IFADDR	13
 
 struct mbstat {
-	u_short		m_mbufs;
-	u_short		m_clusters;
-	u_short		m_clfree;
-	u_short		m_drops;
-	u_long		m_wait;
-	u_short		m_mtypes[256];
+	unsigned short	m_mbufs;
+	unsigned short	m_clusters;
+	unsigned short	m_clfree;
+	unsigned short	m_drops;
+	unsigned long	m_wait;
+	unsigned short	m_mtypes[256];
 };
 
 

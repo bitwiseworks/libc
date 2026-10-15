@@ -335,31 +335,13 @@ int      on_exit(void (*)(int, void *), void *);
 #define _MAX_EXT    256
 #endif
 
-#if !defined (__STRICT_ANSI__) && !defined (_POSIX_SOURCE) || defined(__USE_EMX)
-
-#if !defined (OS2_MODE)
-#define DOS_MODE 0
-#define OS2_MODE 1
-#endif
+#if (!defined (__STRICT_ANSI__) && !defined (_POSIX_SOURCE)) || defined (_WITH_UNDERSCORE) || defined(__USE_EMX)
 
 #ifndef _INTPTR_T_DECLARED
 typedef	__intptr_t	intptr_t;
 typedef	__uintptr_t	uintptr_t;
 #define	_INTPTR_T_DECLARED
 #endif
-
-#if !defined(_MODE_T_DECLARED) && !defined(_MODE_T) /* bird: emx */
-typedef	__mode_t	mode_t;
-#define	_MODE_T_DECLARED
-#define _MODE_T                         /* bird: emx */
-#endif
-
-/* declare _errno to be compatible with MS/VAC/WATCOM */
-#if !defined (_ERRNO)
-#define _ERRNO
-extern int * _errno(void);
-#define errno (* _errno())
-#endif /* bird: emx */
 
 #if !defined (_ULDIV_T)
 #define _ULDIV_T
@@ -384,6 +366,28 @@ typedef struct
   unsigned long long rem;
 } _ulldiv_t;
 #endif
+
+#endif
+
+#if !defined (__STRICT_ANSI__) && !defined (_POSIX_SOURCE) || defined(__USE_EMX)
+
+#if !defined (OS2_MODE)
+#define DOS_MODE 0
+#define OS2_MODE 1
+#endif
+
+#if !defined(_MODE_T_DECLARED) && !defined(_MODE_T) /* bird: emx */
+typedef	__mode_t	mode_t;
+#define	_MODE_T_DECLARED
+#define _MODE_T                         /* bird: emx */
+#endif
+
+/* declare _errno to be compatible with MS/VAC/WATCOM */
+#if !defined (_ERRNO)
+#define _ERRNO
+extern int * _errno(void);
+#define errno (* _errno())
+#endif /* bird: emx */
 
 extern char **environ;
 
