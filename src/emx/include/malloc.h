@@ -29,10 +29,22 @@ typedef __size_t size_t;
 #endif
 
 
+#ifndef _CALLOC_DECLARED
+#define	_CALLOC_DECLARED
 void *calloc (size_t, size_t);
+#endif
+#ifndef _FREE_DECLARED
+#define	_FREE_DECLARED
 void free (void *);
+#endif
+#ifndef _MALLOC_DECLARED
+#define	_MALLOC_DECLARED
 void *malloc (size_t);
+#endif
+#ifndef _REALLOC_DECLARED
+#define	_REALLOC_DECLARED
 void *realloc (void *, size_t);
+#endif
 
 
 #if (!defined (__STRICT_ANSI__) && !defined (_POSIX_SOURCE)) || defined (_WITH_UNDERSCORE) || defined(__USE_EMX)
@@ -62,7 +74,10 @@ size_t _msize (const void *);
 
 #endif
 
+#ifndef _VALLOC_DECLARED
+#define	_VALLOC_DECLARED
 void    *valloc(size_t);
+#endif
 void    *memalign(size_t, size_t);
 
 #if defined (__cplusplus)

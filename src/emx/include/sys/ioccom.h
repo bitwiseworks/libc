@@ -87,8 +87,14 @@ int         TCPCALL so_ioctl __P((int, unsigned long, ...));
 int         TCPCALL os2_ioctl __P((int, unsigned long, char *, int));
 #endif
 
+#ifndef _IOCTL_DECLARED
+#define	_IOCTL_DECLARED
 int	            ioctl __P((int, unsigned long, ...));
+#endif
+#ifndef __IOCTL_DECLARED
+#define	__IOCTL_DECLARED
 int                 _ioctl __P((int, unsigned long, ...));
+#endif
 __END_DECLS
 
 #endif

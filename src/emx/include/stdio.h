@@ -291,13 +291,22 @@ size_t	 fwrite(const void * __restrict, size_t, size_t, FILE * __restrict);
 int	 getc(FILE *);
 int	 getchar(void);
 char	*gets(char *);
+#ifndef _PERROR_DECLARED
+#define	_PERROR_DECLARED
 void	 perror(const char *);
+#endif
 int	 printf(const char * __restrict, ...);
 int	 putc(int, FILE *);
 int	 putchar(int);
 int	 puts(const char *);
+#ifndef _REMOVE_DECLARED
+#define	_REMOVE_DECLARED
 int	 remove(const char *);
+#endif
+#ifndef _RENAME_DECLARED
+#define	_RENAME_DECLARED
 int	 rename(const char *, const char *);
+#endif
 void	 rewind(FILE *);
 int	 scanf(const char * __restrict, ...);
 void	 setbuf(FILE * __restrict, char * __restrict);

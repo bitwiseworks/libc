@@ -464,7 +464,10 @@ struct sf_parms {
 int     TCPCALL accept (int, struct sockaddr *, socklen_t *);
 int     TCPCALL bind (int, const struct sockaddr *, socklen_t);
 int     TCPCALL connect (int, const struct sockaddr *, socklen_t);
+#ifndef _GETHOSTID_DECLARED
+#define	_GETHOSTID_DECLARED
 int     TCPCALL gethostid (void);
+#endif
 int     TCPCALL getpeername (int, struct sockaddr *, socklen_t *);
 int     TCPCALL getsockname (int, struct sockaddr *, socklen_t *);
 int     TCPCALL getsockopt (int, int, int, void *, socklen_t *);
@@ -498,7 +501,10 @@ int     TCPCALL sock_init( void );
 int     TCPCALL sock_errno( void );
 int     TCPCALL os2_sock_errno( void );
 void    TCPCALL psock_errno( char * );
+#ifndef _SOCLOSE_DECLARED
+#define	_SOCLOSE_DECLARED
 int     TCPCALL soclose( int );
+#endif
 int     TCPCALL so_cancel(int);
 int     TCPCALL Raccept(int, struct sockaddr *, int *);
 #ifdef TCPV40HDRS

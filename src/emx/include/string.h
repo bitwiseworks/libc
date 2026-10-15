@@ -73,7 +73,10 @@ void	*memchr(const void *, int, size_t);
 int	 memcmp(const void *, const void *, size_t);
 void	*memcpy(void * __restrict, const void * __restrict, size_t);
 void	*memmove(void *, const void *, size_t);
+#ifndef _MEMSET_DECLARED
+#define	_MEMSET_DECLARED
 void	*memset(void *, int, size_t);
+#endif
 #if __POSIX_VISIBLE >= 200809
 char	*stpcpy(char * __restrict, const char * __restrict);
 char	*stpncpy(char * __restrict, const char * __restrict, size_t);
@@ -159,7 +162,6 @@ char *  strupr(char *);
 #if (!defined (__STRICT_ANSI__) && !defined (_POSIX_SOURCE)) || defined (_WITH_UNDERSCORE) || defined(__USE_EMX)
 size_t _memcount (const void *, int, size_t);
 size_t _memdif (const void *, const void *, size_t);
-void *_memrchr (const void *, int, size_t);
 void _memswap (void *, void *, size_t);
 char *_strncpy (char *, const char *, size_t);
 void *_memccpy (void *, const void *, int, size_t);
@@ -177,11 +179,16 @@ char *_strsep (char **, const char *);
 
 /* bird: EMX stuff - end */
 
+/* bird: EMX & GNU stuff - start */
+#if (!defined (__STRICT_ANSI__) && !defined (_POSIX_SOURCE)) || defined (_WITH_UNDERSCORE) || defined(__USE_EMX) || defined(__USE_GNU)
+void *_memrchr (const void *, int, size_t);
+#endif
+/* bird: EMX & GNU stuff - end */
+
 /* bird: LIBC extensions - start */
 #ifdef __USE_EMX
 void *_memcpy_amd(void *, const void *, size_t);
 #endif
-
 /* bird: LIBC extensions - end */
 
 /* bird: GNU stuff - start */
@@ -197,7 +204,6 @@ void    *rawmemchr(const void *, int);
 size_t   __strnlen(const char *, size_t);
 void    *__mempcpy(void *, const void *, size_t);
 char    *__strndup(const char *, size_t);
-void    *_memrchr(const void *, int, size_t);
 void    *__memrchr(const void *, int, size_t);
 #define  __memrchr(pach, ch, cch)   _memrchr(pach, ch, cch)
 int      __strverscmp(const char *, const char *);

@@ -265,8 +265,14 @@ struct flock {
 
 #ifndef _KERNEL
 __BEGIN_DECLS
+#ifndef _OPEN_DECLARED
+#define	_OPEN_DECLARED
 int	open(const char *, int, ...);
+#endif
+#ifndef _CREAT_DECLARED
+#define	_CREAT_DECLARED
 int	creat(const char *, mode_t);
+#endif
 int	fcntl(int, int, ...);
 #if __BSD_VISIBLE
 int	flock(int, int);
@@ -299,10 +305,16 @@ __END_DECLS
 
 #if !defined (_POSIX_SOURCE) || defined (_WITH_UNDERSCORE) || defined(__USE_EMX)
 __BEGIN_DECLS
+#ifndef __CREAT_DECLARED
+#define	__CREAT_DECLARED
 int _creat (const char *, int);
+#endif
 int _fcntl (int, int, ...);
 int _flock (int, int);
+#ifndef __OPEN_DECLARED
+#define	__OPEN_DECLARED
 int _open (const char *, int, ...);
+#endif
 __END_DECLS
 #endif
 /* bird: EMX stuff - end */

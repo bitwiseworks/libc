@@ -44,23 +44,56 @@ typedef	__size_t	size_t;
 
 __BEGIN_DECLS
 
+#ifndef __CHDIR_DECLARED
+#define	__CHDIR_DECLARED
 int _chdir (const char *);
+#endif
+#ifndef __GETCWD_DECLARED
+#define	__GETCWD_DECLARED
 char *_getcwd (char *, size_t);
+#endif
+#ifndef __MKDIR_DECLARED
+#define	__MKDIR_DECLARED
 int _mkdir (const char *, long);
+#endif
+#ifndef __RMDIR_DECLARED
+#define	__RMDIR_DECLARED
 int _rmdir (const char *);
+#endif
 
+#ifndef _CHDIR_DECLARED
+#define	_CHDIR_DECLARED
 int chdir (const char *);
+#endif
+#ifndef _GETCWD_DECLARED
+#define	_GETCWD_DECLARED
 char *getcwd (char *, size_t);
+#endif
+#ifndef _MKDIR_DECLARED
+#define	_MKDIR_DECLARED
 int mkdir(const char *, mode_t);
+#endif
+#ifndef _RMDIR_DECLARED
+#define	_RMDIR_DECLARED
 int rmdir (const char *);
+#endif
 
+#ifndef __CHDRIVE_DECLARED
+#define	__CHDRIVE_DECLARED
 int _chdrive(int);
+#endif
 char * _getdcwd(int, char *, int);
+#ifndef __GETDRIVE_DECLARED
+#define	__GETDRIVE_DECLARED
 int _getdrive(void);
+#endif
 
 /* Special LIBC addition. */
 #ifdef __BSD_VISIBLE
+#ifndef __GETCWDUX_DECLARED
+#define	__GETCWDUX_DECLARED
 char *_getcwdux(char *, size_t);
+#endif
 #endif
 
 __END_DECLS

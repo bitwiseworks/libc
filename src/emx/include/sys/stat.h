@@ -338,12 +338,18 @@ __BEGIN_DECLS
 #if __BSD_VISIBLE
 /** @todo int	chflags(const char *, unsigned long); */
 #endif
+#ifndef _CHMOD_DECLARED
+#define	_CHMOD_DECLARED
 int	chmod(const char *, mode_t);
+#endif
 #if __BSD_VISIBLE
 /** @todo int	fchflags(int, unsigned long); */
 int	fchmod(int, mode_t);
 #endif
+#ifndef _FSTAT_DECLARED
+#define	_FSTAT_DECLARED
 int	fstat(int, struct stat *);
+#endif
 #if __BSD_VISIBLE
 /** @todo int	lchflags(const char *, int); */
 int	lchmod(const char *, mode_t);
@@ -351,19 +357,43 @@ int	lchmod(const char *, mode_t);
 #if __POSIX_VISIBLE >= 200112
 int	lstat(const char *, struct stat *);
 #endif
+#ifndef _MKDIR_DECLARED
+#define	_MKDIR_DECLARED
 int	mkdir(const char *, mode_t);
+#endif
 int	mkfifo(const char *, mode_t);
+#ifndef _STAT_DECLARED
+#define	_STAT_DECLARED
 int	stat(const char *, struct stat *);
+#endif
+#ifndef _UMASK_DECLARED
+#define	_UMASK_DECLARED
 mode_t	umask(mode_t);
+#endif
 
 /* bird: emx stuff - start */
 #if !defined (_POSIX_SOURCE) || defined (_WITH_UNDERSCORE) || defined(__USE_EMX)
+#ifndef __CHMOD_DECLARED
+#define	__CHMOD_DECLARED
 int _chmod (const char *, int);
+#endif
+#ifndef __FSTAT_DECLARED
+#define	__FSTAT_DECLARED
 int _fstat (int, struct stat *);
+#endif
+#ifndef __MKDIR_DECLARED
+#define	__MKDIR_DECLARED
 int _mkdir (const char *, long);
+#endif
 /* _mkfifo() */
+#ifndef __STAT_DECLARED
+#define	__STAT_DECLARED
 int _stat (const char *, struct stat *);
+#endif
+#ifndef __UMASK_DECLARED
+#define	__UMASK_DECLARED
 int _umask (int);
+#endif
 #endif
 /* bird: emx stuff - end */
 

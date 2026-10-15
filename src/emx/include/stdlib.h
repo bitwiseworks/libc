@@ -95,21 +95,33 @@ int	 atoi(const char *);
 long	 atol(const char *);
 void	*bsearch(const void *, const void *, size_t,
 	    size_t, int (*)(const void *, const void *));
+#ifndef _CALLOC_DECLARED
+#define	_CALLOC_DECLARED
 void	*calloc(size_t, size_t);
+#endif
 div_t	 div(int, int) __pure2;
 void	 exit(int) __dead2;
+#ifndef _FREE_DECLARED
+#define	_FREE_DECLARED
 void	 free(void *);
+#endif
 char	*getenv(const char *);
 long	 labs(long) __pure2;
 ldiv_t	 ldiv(long, long) __pure2;
+#ifndef _MALLOC_DECLARED
+#define	_MALLOC_DECLARED
 void	*malloc(size_t);
+#endif
 int	 mblen(const char *, size_t);
 size_t	 mbstowcs(wchar_t * __restrict , const char * __restrict, size_t);
 int	 mbtowc(wchar_t * __restrict, const char * __restrict, size_t);
 void	 qsort(void *, size_t, size_t,
 	    int (*)(const void *, const void *));
 int	 rand(void);
+#ifndef _REALLOC_DECLARED
+#define	_REALLOC_DECLARED
 void	*realloc(void *, size_t);
+#endif
 void	 srand(unsigned);
 double	 strtod(const char * __restrict, char ** __restrict);
 float	 strtof(const char * __restrict, char ** __restrict);
@@ -291,7 +303,10 @@ extern char *suboptarg;			/* getsubopt(3) external variable */
 
 /* bird: LIBC stuff - start  */
 #ifdef __BSD_VISIBLE
+#ifndef __GETCWDUX_DECLARED
+#define	__GETCWDUX_DECLARED
 char    *_getcwdux(char *, size_t);
+#endif
 char    *_realrealpath(const char *, char *, size_t);
 int     _getenv_longlong(const char *, long long *);
 int     _getenv_long(const char *, long *);
@@ -299,7 +314,10 @@ int     _getenv_int(const char *, int *);
 #endif
 #ifdef  __USE_GNU
 char    *canonicalize_file_name(const char *);
+#ifndef _VALLOC_DECLARED
+#define	_VALLOC_DECLARED
 void    *valloc(size_t);
+#endif
 #endif
 int      on_exit(void (*)(int, void *), void *);
 /* bird: LIBC stuff - end  */
@@ -375,18 +393,51 @@ extern const unsigned char _osmajor;
 /* No DOS support ... */
 #define _osmode OS2_MODE
 
+#ifndef _ALARM_DECLARED
+#define	_ALARM_DECLARED
 unsigned alarm (unsigned);
+#endif
+#ifndef _BRK_DECLARED
+#define	_BRK_DECLARED
 int brk(const void *);
+#endif
+#ifndef _CHDIR_DECLARED
+#define	_CHDIR_DECLARED
 int chdir (const char *);
+#endif
 char *gcvt (double, int, char *); /* this is rubbish standardwise */
+#ifndef _GETCWD_DECLARED
+#define	_GETCWD_DECLARED
 char *getcwd (char *, size_t);
-int getpagesize (void);
+#endif
+#ifndef _GETPAGESIZE_DECLARED
+#define	_GETPAGESIZE_DECLARED
+int getpagesize (void) __pure2;
+#endif
+#ifndef _GETWD_DECLARED
+#define	_GETWD_DECLARED
 char *getwd (char *);
+#endif
+#ifndef _MKDIR_DECLARED
+#define	_MKDIR_DECLARED
 int	mkdir(const char *, mode_t);
+#endif
+#ifndef _PERROR_DECLARED
+#define	_PERROR_DECLARED
 void perror (const char *);
+#endif
+#ifndef _RMDIR_DECLARED
+#define	_RMDIR_DECLARED
 int rmdir (const char *);
+#endif
+#ifndef _SBRK_DECLARED
+#define	_SBRK_DECLARED
 void *sbrk(intptr_t);
+#endif
+#ifndef _SLEEP_DECLARED
+#define	_SLEEP_DECLARED
 unsigned sleep (unsigned);
+#endif
 long ulimit (int, ...);
 
 char *itoa (int, char *, int);
@@ -404,18 +455,42 @@ extern char **_environ;
 extern const char * const _sys_errlist[];
 extern const int _sys_nerr;
 
+#ifndef __ALARM_DECLARED
+#define	__ALARM_DECLARED
 unsigned _alarm (unsigned);
+#endif
+#ifndef __BRK_DECLARED
+#define	__BRK_DECLARED
 int _brk(const void *);
+#endif
+#ifndef __CHDIR_DECLARED
+#define	__CHDIR_DECLARED
 int _chdir (const char *);
+#endif
 char *_gcvt (double, int, char *);
+#ifndef __GETCWD_DECLARED
+#define	__GETCWD_DECLARED
 char *_getcwd (char *, size_t);
+#endif
 int _getpagesize (void);
 char *_getwd (char *);
+#ifndef __MKDIR_DECLARED
+#define	__MKDIR_DECLARED
 int _mkdir (const char *, long);
+#endif
 int _putenv (const char *);
+#ifndef __RMDIR_DECLARED
+#define	__RMDIR_DECLARED
 int _rmdir (const char *);
+#endif
+#ifndef __SBRK_DECLARED
+#define	__SBRK_DECLARED
 void *_sbrk(intptr_t);
+#endif
+#ifndef __SLEEP_DECLARED
+#define	__SLEEP_DECLARED
 unsigned _sleep (unsigned);
+#endif
 void _swab (const void *, void *, size_t);
 long _ulimit (int, ...);
 
@@ -424,12 +499,18 @@ long long _atoll (const char *);
 long double _atofl (const char *);
 int _chdir2 (const char *);
 int _chdir_os2 (const char *);
+#ifndef __CHDRIVE_DECLARED
+#define	__CHDRIVE_DECLARED
 int _chdrive (int);
+#endif
 int _core (int);
 void _defext (char *, const char *);
 void _envargs (int *, char ***, const char *);
 int _execname (char *, size_t);
-void _exit (int) __attribute__ ((__noreturn__));
+#ifndef __EXIT_DECLARED
+#define	__EXIT_DECLARED
+void _exit (int) __dead2;
+#endif
 int _filesys (const char *, char *, size_t);
 char **_fnexplode (const char *);
 void _fnexplodefree (char **);
@@ -442,16 +523,17 @@ char *_fnslashify (char *);
 int _fullpath (char *, const char *, int);
 int _getcwd1 (char *, char);
 char *_getcwd2 (char *, int);
+#ifndef __GETDRIVE_DECLARED
+#define	__GETDRIVE_DECLARED
 int _getdrive (void);
+#endif
 char *_getext (const char *);
 char *_getext2 (const char *);
 char *_getname (const char *);
 int _getsockhandle (int);
 int _gettid (void);
 char *_getvol (char);
-char *_itoa (int, char *, int);
 _lldiv_t _lldiv (long long, long long);
-char *_lltoa (long long, char *, int);
 _uldiv_t _uldiv (unsigned long, unsigned long);
 _ulldiv_t _ulldiv (unsigned long long, unsigned long long);
 char *_itoa (int, char *, int);

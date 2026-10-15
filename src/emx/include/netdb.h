@@ -174,14 +174,16 @@ struct servent_data {
 
 
 /* BSD */
+#ifndef _GETHOSTNAME_DECLARED
+#define	_GETHOSTNAME_DECLARED
 int                 TCPCALL gethostname( char *, int );
+#endif
 struct hostent *    TCPCALL gethostbyname( const char * );
 struct hostent *    TCPCALL gethostbyaddr( const char *, int, int );
 struct netent *     TCPCALL getnetbyname( const char * );
 struct netent *     TCPCALL getnetbyaddr( unsigned long, int );
 struct servent *    TCPCALL getservbyname( const char *, const char * );
 struct servent *    TCPCALL getservbyport( int, const char * );
-struct servent *    TCPCALL getservent( void );
 struct protoent *   TCPCALL getprotobyname( const char * );
 struct protoent *   TCPCALL getprotobynumber( int );
 void                TCPCALL sethostent( int );

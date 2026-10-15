@@ -344,15 +344,36 @@ typedef	__useconds_t	useconds_t;	/* microseconds (unsigned) */
 
 __BEGIN_DECLS
 /* 1003.1-1990 */
+#ifndef __EXIT_DECLARED
+#define	__EXIT_DECLARED
 void	 _exit(int) __dead2;
+#endif
+#ifndef _ACCESS_DECLARED
+#define	_ACCESS_DECLARED
 int	 access(const char *, int);
+#endif
+#ifndef _ALARM_DECLARED
+#define	_ALARM_DECLARED
 unsigned int	 alarm(unsigned int);
+#endif
+#ifndef _CHDIR_DECLARED
+#define	_CHDIR_DECLARED
 int	 chdir(const char *);
+#endif
 int	 chown(const char *, uid_t, gid_t);
+#ifndef _CLOSE_DECLARED
+#define	_CLOSE_DECLARED
 int	 close(int);
+#endif
 void	 closefrom(int);
+#ifndef _DUP_DECLARED
+#define	_DUP_DECLARED
 int	 dup(int);
+#endif
+#ifndef _DUP2_DECLARED
+#define	_DUP2_DECLARED
 int	 dup2(int, int);
+#endif
 int	 eaccess(const char *, int);
 int	 execl(const char *, const char *, ...);
 int	 execle(const char *, const char *, ...);
@@ -362,7 +383,10 @@ int	 execve(const char *, char * const *, char * const *);
 int	 execvp(const char *, char * const *);
 pid_t	 fork(void);
 long	 fpathconf(int, int);
+#ifndef _GETCWD_DECLARED
+#define	_GETCWD_DECLARED
 char	*getcwd(char *, size_t);
+#endif
 gid_t	 getegid(void);
 uid_t	 geteuid(void);
 gid_t	 getgid(void);
@@ -372,7 +396,10 @@ pid_t	 getpgrp(void);
 pid_t	 getpid(void);
 pid_t	 getppid(void);
 uid_t	 getuid(void);
+#ifndef _ISATTY_DECLARED
+#define	_ISATTY_DECLARED
 int	 isatty(int);
+#endif
 int	 link(const char *, const char *);
 #ifndef _LSEEK_DECLARED
 #define	_LSEEK_DECLARED
@@ -380,21 +407,39 @@ off_t	 lseek(int, off_t, int);
 #endif
 long	 pathconf(const char *, int);
 int	 pause(void);
+#ifndef _PIPE_DECLARED
+#define	_PIPE_DECLARED
 int	 pipe(int *);
+#endif
+#ifndef _READ_DECLARED
+#define	_READ_DECLARED
 ssize_t	 read(int, void *, size_t);
+#endif
+#ifndef _RMDIR_DECLARED
+#define	_RMDIR_DECLARED
 int	 rmdir(const char *);
+#endif
 int	 setgid(gid_t);
 int	 setpgid(pid_t, pid_t);
 void	 setproctitle(const char *_fmt, ...) __printf0like(1, 2);
 pid_t	 setsid(void);
 int	 setuid(uid_t);
+#ifndef _SLEEP_DECLARED
+#define	_SLEEP_DECLARED
 unsigned int	 sleep(unsigned int);
+#endif
 long	 sysconf(int);
 pid_t	 tcgetpgrp(int);
 int	 tcsetpgrp(int, pid_t);
 char	*ttyname(int);
+#ifndef _UNLINK_DECLARED
+#define	_UNLINK_DECLARED
 int	 unlink(const char *);
+#endif
+#ifndef _WRITE_DECLARED
+#define	_WRITE_DECLARED
 ssize_t	 write(int, const void *, size_t);
+#endif
 
 /* 1003.2-1992 */
 #if __POSIX_VISIBLE >= 199209 || __XSI_VISIBLE
@@ -410,7 +455,10 @@ extern int optind, opterr, optopt;
 
 /* ISO/IEC 9945-1: 1996 */
 #if __POSIX_VISIBLE >= 199506 || __XSI_VISIBLE
+#ifndef _FSYNC_DECLARED
+#define	_FSYNC_DECLARED
 int	 fsync(int);
+#endif
 
 /*
  * ftruncate() was in the POSIX Realtime Extension (it's used for shared
@@ -455,7 +503,10 @@ int	 fchdir(int);
 /* tcpip: long	 gethostid(void); */
 pid_t	 getpgid(pid_t _pid);       /* bird: SuS say pid_r return. */
 pid_t	 getsid(pid_t _pid);        /* bird: SuS say pid_r return? */
+#ifndef _GETWD_DECLARED
+#define	_GETWD_DECLARED
 char	*getwd(char *);			/* LEGACY: obsoleted by getcwd() */
+#endif
 int	 lchown(const char *, uid_t, gid_t);
 int	 lockf(int, int, off_t);
 int	 nice(int);
@@ -482,12 +533,21 @@ int	 truncate(const char *, off_t);
 #endif /* __XSI_VISIBLE */
 
 #if __XSI_VISIBLE <= 500 || __BSD_VISIBLE
+#ifndef _BRK_DECLARED
+#define	_BRK_DECLARED
 int	 brk(const void *);
+#endif
 int	 chroot(const char *);
 int	 getdtablesize(void);
+#ifndef _GETPAGESIZE_DECLARED
+#define	_GETPAGESIZE_DECLARED
 int	 getpagesize(void) __pure2;
+#endif
 char	*getpass(const char *);
+#ifndef _SBRK_DECLARED
+#define	_SBRK_DECLARED
 void	*sbrk(intptr_t);
+#endif
 #endif
 
 #if __BSD_VISIBLE
@@ -574,7 +634,10 @@ void	 setusershell(void);
 /** @todo int	 ttyslot(void); */
 /** @todo int	 undelete(const char *); */
 /** @todo int	 unwhiteout(const char *); */
+#ifndef _VALLOC_DECLARED
+#define	_VALLOC_DECLARED
 void	*valloc(size_t); 			/* obsoleted by malloc() */
+#endif
 
 #ifndef _OPTRESET_DECLARED
 #define	_OPTRESET_DECLARED
@@ -587,7 +650,10 @@ extern int optreset;			/* getopt(3) external variable */
  * LIBC additions.
  */
 #ifdef __BSD_VISIBLE
+#ifndef __GETCWDUX_DECLARED
+#define	__GETCWDUX_DECLARED
 char    *_getcwdux(char *, size_t);
+#endif
 #endif
 #ifdef __USE_GNU
 char    *get_current_dir_name(void);
@@ -605,14 +671,32 @@ char    *_getpass2(const char *, int);
 #if !defined(_POSIX_SOURCE) || defined(_WITH_UNDERSCORE)
 /** @todo update this section to match the one without underscores as far as needed! */
 void     __exit(int) __dead2;
+#ifndef __ACCESS_DECLARED
+#define	__ACCESS_DECLARED
 int      _access(const char *, int);
+#endif
+#ifndef __ALARM_DECLARED
+#define	__ALARM_DECLARED
 unsigned int _alarm(unsigned int);
+#endif
+#ifndef __CHDIR_DECLARED
+#define	__CHDIR_DECLARED
 int      _chdir(const char *);
+#endif
 int	 _chown(const char *, uid_t, gid_t);
+#ifndef __CLOSE_DECLARED
+#define	__CLOSE_DECLARED
 int      _close(int);
+#endif
 char    *_cuserid(char *);
+#ifndef __DUP_DECLARED
+#define	__DUP_DECLARED
 int      _dup(int);
+#endif
+#ifndef __DUP2_DECLARED
+#define	__DUP2_DECLARED
 int      _dup2(int, int);
+#endif
 int	 _eaccess(const char *, int);
 int      _execl(const char *, const char *, ...);
 int      _execle(const char *, const char *, ...);
@@ -622,7 +706,10 @@ int      _execve(const char *, char * const *, char * const *);
 int      _execvp(const char *, char * const *);
 pid_t    _fork(void);
 long     _fpathconf(int, int);
+#ifndef __GETCWD_DECLARED
+#define	__GETCWD_DECLARED
 char    *_getcwd(char *, size_t);
+#endif
 gid_t    _getegid(void);
 uid_t    _geteuid(void);
 gid_t    _getgid(void);
@@ -632,7 +719,10 @@ pid_t    _getpgrp(void);
 pid_t    _getpid(void);
 pid_t    _getppid(void);
 uid_t    _getuid(void);
+#ifndef __ISATTY_DECLARED
+#define	__ISATTY_DECLARED
 int      _isatty(int);
+#endif
 int	 _link(const char *, const char *);
 #ifndef __LSEEK_DECLARED
 #define	__LSEEK_DECLARED
@@ -640,29 +730,59 @@ off_t    _lseek(int, off_t, int);
 #endif
 long     _pathconf(const char *, int);
 int      _pause(void);
+#ifndef __PIPE_DECLARED
+#define	__PIPE_DECLARED
 int      _pipe(int *);
+#endif
+#ifndef __READ_DECLARED
+#define	__READ_DECLARED
 ssize_t  _read(int, void *, size_t);
+#endif
+#ifndef __RMDIR_DECLARED
+#define	__RMDIR_DECLARED
 int      _rmdir(const char *);
+#endif
 int      _setgid(gid_t);
 /** @todo void	 _setproctitle(const char *_fmt, ...) __printf0like(1, 2); */
 int      _setpgid(pid_t, pid_t);
 pid_t    _setsid(void);
 int      _setuid(uid_t);
+#ifndef __SLEEP_DECLARED
+#define	__SLEEP_DECLARED
 unsigned _sleep(unsigned);
+#endif
 long     _sysconf(int);
 pid_t    _tcgetpgrp(int);
 pid_t    _tcsetpgrp(int, int);
 char    *_ttyname(int);
+#ifndef __UNLINK_DECLARED
+#define	__UNLINK_DECLARED
 int      _unlink(const char *);
+#endif
+#ifndef __WRITE_DECLARED
+#define	__WRITE_DECLARED
 int      _write(int, const void *, size_t);
+#endif
 
+#ifndef __BRK_DECLARED
+#define	__BRK_DECLARED
 int      _brk(const void *);
+#endif
 char    *_getpass(const char *);
 char    *_getpass1(const char *);
 char    *_getpass2(const char *, int);
+#ifndef __MKSTEMP_DECLARED
+#define	__MKSTEMP_DECLARED
 int     _mkstemp(char *);
+#endif
+#ifndef __MKTEMP_DECLARED
+#define	__MKTEMP_DECLARED
 char    *_mktemp(char *);
+#endif
+#ifndef __SBRK_DECLARED
+#define	__SBRK_DECLARED
 void	*_sbrk(intptr_t);
+#endif
 /** @todo int     _profil(void *, unsigned, unsigned, unsigned); */
 
 /* 1003.2-1992 */
@@ -677,10 +797,19 @@ int      _getopt(int, char **, const char *);
 /* Toolkit compatibility */
 #include <sys/cdefs.h>
 #include <sys/types.h>
+#ifndef _SOCLOSE_DECLARED
+#define	_SOCLOSE_DECLARED
 int     TCPCALL     soclose(int);
+#endif
 #if !defined(_POSIX_SOURCE) || defined(__USE_EMX)
+#ifndef _GETHOSTID_DECLARED
+#define	_GETHOSTID_DECLARED
 int     TCPCALL     gethostid(void);
+#endif
+#ifndef _GETHOSTNAME_DECLARED
+#define	_GETHOSTNAME_DECLARED
 int     TCPCALL     gethostname(char *, int);
+#endif
 #ifndef TCPV40HDRS
 int     TCPCALL     iruserok(unsigned long, int, const char *, const char *);
 int     TCPCALL     rcmd(char **, int, const char *, const char *, const char *, int *);

@@ -79,9 +79,18 @@ typedef	__size_t	size_t;
 #endif
 
 struct timeval;
+#ifndef _SELECT_DECLARED
+#define	_SELECT_DECLARED
 int select (int, struct fd_set *, struct fd_set *, struct fd_set *, struct timeval *);
+#endif
+#ifndef __SELECT_DECLARED
+#define	__SELECT_DECLARED
 int _select (int, struct fd_set *, struct fd_set *, struct fd_set *, struct timeval *);
+#endif
+#ifndef _MEMSET_DECLARED
+#define	_MEMSET_DECLARED
 void *memset (void *, int, size_t); /* Used by FD_ZERO */
+#endif
 #ifdef _LIBC_TODO
 /** A slightly different select call which have better time precision and signal support. */
 #warning int pselect(int, fd_set *, fd_set *, fd_set *, const struct timespec *, const sigset_t *);
