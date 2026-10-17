@@ -397,6 +397,28 @@ int __wcwidth(__wint_t __wc)
 }
 
 /**
+ * Look up the screen-width information missing from the OS/2 Unicode data.
+ */
+static unsigned unicodeWidthFlags(__wchar_t wc)
+{
+    size_t first = 0;
+    size_t count = __libc_gcLocaleWCWidth;
+    while (first < count)
+    {
+        size_t middle = first + (count - first) / 2;
+        const __LIBC_LOCALEWCWIDTH *range = &__libc_gaLocaleWCWidth[middle];
+        if (wc < range->first)
+            count = middle;
+        else if (wc > range->last)
+            first = middle + 1;
+        else
+            return range->fWidth;
+    }
+    return 0;
+}
+
+
+/**
  * Get unicode type.
  * ASSUMES that none of the locals differs from the unicode spec
  */
@@ -406,8 +428,12 @@ unsigned ___wctype(__wchar_t wc)
         ||  wc <= 127)
     {
         UNICTYPE *pUniType = UniQueryCharType(wc);
-        if (pUniType)
-            return ___wctype_uni(pUniType, wc);
+        unsigned ufType = pUniType ? ___wctype_uni(pUniType, wc) : 0;
+        /*
+         * Explicit widths also cover marks unknown to the native tables.
+         * Keep the existing print-ability fallback for other characters.
+         */
+        return ufType | unicodeWidthFlags(wc);
     }
     return 0;
 }

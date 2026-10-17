@@ -143,6 +143,18 @@ typedef struct __libc_localeWCType
 /** Pointer to the Ctype unicode struct. */
 typedef __LIBC_LOCALEWCTYPE *__LIBC_PLOCALEWCTYPE;
 
+
+/**
+ * A Unicode interval with an explicit screen-width flag (__CT_SCRW0/2).
+ */
+typedef struct __libc_LocaleWCWidth
+{
+    unsigned short first;
+    unsigned short last;
+    unsigned       fWidth;
+} __LIBC_LOCALEWCWIDTH;
+
+
 /**
  * This structure keeps the time formatting rules.
  * The fConsts flag indicates what kind of memory is backing the strings.
@@ -244,6 +256,10 @@ extern __LIBC_LOCALECTYPE           __libc_GLocaleCtype;
 extern const __LIBC_LOCALECTYPE     __libc_GLocaleCtypeDefault;
 /** Cached Unicode (__wchar_t) case conversion tables and flags. */
 extern __LIBC_LOCALEWCTYPE          __libc_GLocaleWCtype;
+/** Sorted, disjoint Unicode screen-width intervals. */
+extern const __LIBC_LOCALEWCWIDTH   __libc_gaLocaleWCWidth[];
+/** Number of Unicode screen-width intervals. */
+extern const size_t                 __libc_gcLocaleWCWidth;
 /** Locale information structure. */
 extern __LIBC_LOCALELCONV           __libc_gLocaleLconv;
 /* Locale information structure for the 'C'/'POSIX' locale. */
@@ -353,7 +369,7 @@ static inline unsigned ___wctype_uni(const UNICTYPE *pUniType, wchar_t wc)
     }
     ufType |= (pUniType->bidi & 0xf << 24);
 
-    /** @todo screen width. */
+    /* Screen width is supplied separately by ___wctype(). */
     return ufType;
 }
 

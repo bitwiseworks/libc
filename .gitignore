@@ -1,3 +1,4 @@
+/src/emx/src/lib/locale/*.txt
 *.exe
 *.dll
 *.map
