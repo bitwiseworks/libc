@@ -1,4 +1,4 @@
-all: mbcs-1.exe
+all: mbcs-1.exe mbcs-2.exe
 
 %.exe: %.c
 	gcc -g -Zomf -Zmap -o $@ $^

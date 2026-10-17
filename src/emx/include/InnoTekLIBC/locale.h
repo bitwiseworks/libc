@@ -308,7 +308,7 @@ extern size_t   __libc_locale_none_wcsnrtombs(char * __restrict, const __wchar_t
     a[((unsigned char)(c)) >> 2] |= (v) << (2 * ((c) & 3))
 
 #define LEN_MBCS_PREFIX(a, c) \
-    ((a[((unsigned char)(c)) >> 2] >> (2 * (((c) & 3) ^ 3))) & 3)
+    ((a[((unsigned char)(c)) >> 2] >> (2 * ((c) & 3))) & 3)
 
 #define IS_MBCS_PREFIX(p, c) \
     (LEN_MBCS_PREFIX((p)->au2MBCSPrefixs, c) != 1)
