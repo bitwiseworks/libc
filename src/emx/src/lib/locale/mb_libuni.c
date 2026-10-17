@@ -300,7 +300,7 @@ size_t  __libc_localeFuncsGeneric_mbsnrtowcs(size_t  (*pfnmbrtowc)(__wchar_t * _
                                              __wchar_t * __restrict dst, const char * __restrict * __restrict src, size_t nms, size_t len, __mbstate_t * __restrict ps)
 {
     const char *pch = *src;
-    size_t      cbIn = nms;
+    size_t      nchr = 0;
     if (dst == NULL)
     {
         __wchar_t wc;
@@ -312,12 +312,13 @@ size_t  __libc_localeFuncsGeneric_mbsnrtowcs(size_t  (*pfnmbrtowc)(__wchar_t * _
                 if (cb == (size_t)-1)
                     return (size_t)-1;    /* Invalid sequence - mbrtowc() sets errno. */
                 else /* if (cb == 0 || cb == (size_t)-2) */
-                    return cbIn - nms;
+                    return nchr;
             }
 
             /* advance */
             pch += cb;
             nms -= cb;
+            nchr++;
         }
         /* (won't ever get here.) */
     }
@@ -331,12 +332,12 @@ size_t  __libc_localeFuncsGeneric_mbsnrtowcs(size_t  (*pfnmbrtowc)(__wchar_t * _
                 if (!cb)
                 {
                     *src = NULL;
-                    return cbIn - nms;
+                    return nchr;
                 }
                 else if (cb == (size_t)-2)
                 {
                     *src = pch + nms;
-                    return cbIn - nms;
+                    return nchr;
                 }
                 else /*if (cb == (size_t)-1) */
                 {
@@ -349,10 +350,11 @@ size_t  __libc_localeFuncsGeneric_mbsnrtowcs(size_t  (*pfnmbrtowc)(__wchar_t * _
             pch += cb;
             nms -= cb;
             dst++;
+            nchr++;
         }
 
         *src = pch;
-        return cbIn - nms;
+        return nchr;
     }
 }
 
