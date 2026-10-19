@@ -140,7 +140,7 @@ for install_script in "$@"; do
   fi
 
   # shellcheck disable=SC2086
-  if ! msg=$("$CP" $cp_opts -- "$launcher.exe" "$install_script.exe" 2>&1); then
+  if ! msg=$("$CP" $cp_opts -- "$launcher_exe" "$install_script.exe" 2>&1); then
     echo "$launcher: $msg"
     exit 1
   fi
