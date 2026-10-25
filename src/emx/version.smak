@@ -5,7 +5,7 @@ VH = 0
 # Middle part of version number
 VM = 1
 # Low part of version number
-VL = 14
+VL = 15
 
 # NOTE: Our versioning rules:
 #
@@ -18,7 +18,7 @@ VL = 14
 #   is retained. __LIBCN_MINOR__ in features.h must be updated together
 #   with VM.
 #
-# - VL++ with every public release (this covers rackward-compatible additions to
+# - VL++ with every public release (this covers backward-compatible additions to
 #   the public API, compatible extensions of existing APIs). __LIBCN_BUILD__
 #   in features.h must be updated together with VL.
 
@@ -42,7 +42,7 @@ endif
 CFLAGS.DEF.VERSION += '-DVERSION_DETAILS=" $(VERSION_DETAILS)"'
 
 # Copyright
-COPYRIGHT = Copyright (c) 2023 bww bitwise works GmbH
+COPYRIGHT = Copyright (c) 2026 bww bitwise works GmbH
 CFLAGS.DEF.VERSION += '-DVERSION_COPYRIGHT="$(COPYRIGHT)"'
 
 # Grab build properties suitable for BLDLEVEL
